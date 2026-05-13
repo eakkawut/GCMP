@@ -1,6 +1,6 @@
 {
-    "name": "gcmp",
-    "publisher": "vicanent",
+    "name": "ccmp",
+    "publisher": "guokoko",
     "displayName": "AI Chat Models",
     "description": "为 GitHub Copilot Chat 提供 智谱AI、MiniMax、MoonshotAI、DeepSeek、阿里云百炼、快手万擎、火山方舟、腾讯云、Xiaomi MiMo、百度千帆 模型支持的扩展，并提供 `OpenAI / Anthropic Compatible` 自定义模型支持。",
     "version": "0.22.11",
@@ -38,7 +38,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/VicBilibily/GCMP.git"
+        "url": "https://github.com/VicBilibily/CCMP.git"
     },
     "engines": {
         "vscode": ">=1.116.0",
@@ -52,247 +52,247 @@
         "AI",
         "Chat"
     ],
-    "icon": "./gcmp-logo.png",
+    "icon": "./ccmp-logo.png",
     "main": "./dist/extension.js",
     "enabledApiProposals": [
         "chatProvider"
     ],
     "activationEvents": [
         "onStartupFinished",
-        "onLanguageModelProvider:gcmp.zhipu",
-        "onLanguageModelProvider:gcmp.minimax",
-        "onLanguageModelProvider:gcmp.moonshot",
-        "onLanguageModelProvider:gcmp.deepseek",
-        "onLanguageModelProvider:gcmp.dashscope",
-        "onLanguageModelProvider:gcmp.streamlake",
-        "onLanguageModelProvider:gcmp.volcengine",
-        "onLanguageModelProvider:gcmp.tencent",
-        "onLanguageModelProvider:gcmp.xiaomimimo",
-        "onLanguageModelProvider:gcmp.gemini",
-        "onLanguageModelProvider:gcmp.codex",
-        "onLanguageModelProvider:gcmp.baidu",
-        "onLanguageModelProvider:gcmp.compatible",
-        "onLanguageModelTool:gcmp_zhipuWebSearch",
-        "onLanguageModelTool:gcmp_minimaxWebSearch",
-        "onLanguageModelTool:gcmp_kimiWebSearch",
-        "onLanguageModelTool:gcmp_dashscopeWebSearch",
-        "onFileSystem:gcmp-settings"
+        "onLanguageModelProvider:ccmp.zhipu",
+        "onLanguageModelProvider:ccmp.minimax",
+        "onLanguageModelProvider:ccmp.moonshot",
+        "onLanguageModelProvider:ccmp.deepseek",
+        "onLanguageModelProvider:ccmp.dashscope",
+        "onLanguageModelProvider:ccmp.streamlake",
+        "onLanguageModelProvider:ccmp.volcengine",
+        "onLanguageModelProvider:ccmp.tencent",
+        "onLanguageModelProvider:ccmp.xiaomimimo",
+        "onLanguageModelProvider:ccmp.gemini",
+        "onLanguageModelProvider:ccmp.codex",
+        "onLanguageModelProvider:ccmp.baidu",
+        "onLanguageModelProvider:ccmp.compatible",
+        "onLanguageModelTool:ccmp_zhipuWebSearch",
+        "onLanguageModelTool:ccmp_minimaxWebSearch",
+        "onLanguageModelTool:ccmp_kimiWebSearch",
+        "onLanguageModelTool:ccmp_dashscopeWebSearch",
+        "onFileSystem:ccmp-settings"
     ],
     "contributes": {
         "commands": [
             {
-                "command": "gcmp.zhipu.setApiKey",
+                "command": "ccmp.zhipu.setApiKey",
                 "title": "设置 智谱AI API密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.zhipu.configWizard",
+                "command": "ccmp.zhipu.configWizard",
                 "title": "智谱AI 配置向导（API密钥 & 搜索 MCP 模式）",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.minimax.setApiKey",
+                "command": "ccmp.minimax.setApiKey",
                 "title": "设置 MiniMax API密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.minimax.setCodingPlanApiKey",
+                "command": "ccmp.minimax.setCodingPlanApiKey",
                 "title": "设置 MiniMax Coding Plan 专用密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.minimax.setCodingPlanEndpoint",
+                "command": "ccmp.minimax.setCodingPlanEndpoint",
                 "title": "设置 MiniMax Coding Plan 接入点（国内/国际站）",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.minimax.configWizard",
+                "command": "ccmp.minimax.configWizard",
                 "title": "启动 MiniMax 配置向导",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.kimi.setApiKey",
+                "command": "ccmp.kimi.setApiKey",
                 "title": "设置 Kimi API密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.moonshot.setApiKey",
+                "command": "ccmp.moonshot.setApiKey",
                 "title": "设置 MoonshotAI API密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.moonshot.configWizard",
+                "command": "ccmp.moonshot.configWizard",
                 "title": "启动 MoonshotAI 配置向导",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.deepseek.setApiKey",
+                "command": "ccmp.deepseek.setApiKey",
                 "title": "设置 DeepSeek API密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.volcengine.setApiKey",
+                "command": "ccmp.volcengine.setApiKey",
                 "title": "设置 火山方舟 API密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.volcengine.setAgentPlanApiKey",
+                "command": "ccmp.volcengine.setAgentPlanApiKey",
                 "title": "设置 火山方舟 Agent Plan 专用密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.volcengine.configWizard",
+                "command": "ccmp.volcengine.configWizard",
                 "title": "火山方舟 配置向导",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.streamlake.setApiKey",
+                "command": "ccmp.streamlake.setApiKey",
                 "title": "设置 快手万擎 API密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.dashscope.setApiKey",
+                "command": "ccmp.dashscope.setApiKey",
                 "title": "设置 阿里云百炼 API密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.dashscope.setCodingPlanApiKey",
+                "command": "ccmp.dashscope.setCodingPlanApiKey",
                 "title": "设置 阿里云百炼 Coding Plan 专用密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.dashscope.setTokenPlanApiKey",
+                "command": "ccmp.dashscope.setTokenPlanApiKey",
                 "title": "设置 阿里云百炼 Token Plan 专用密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.dashscope.configWizard",
+                "command": "ccmp.dashscope.configWizard",
                 "title": "启动 阿里云百炼 配置向导",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.tencent.setApiKey",
+                "command": "ccmp.tencent.setApiKey",
                 "title": "设置 腾讯云大模型 API密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.tencent.setCodingPlanApiKey",
+                "command": "ccmp.tencent.setCodingPlanApiKey",
                 "title": "设置 腾讯云 Coding Plan 专用密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.tencent.setTokenPlanApiKey",
+                "command": "ccmp.tencent.setTokenPlanApiKey",
                 "title": "设置 腾讯云 Token Plan 专用密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.tencent.setDeepSeekApiKey",
+                "command": "ccmp.tencent.setDeepSeekApiKey",
                 "title": "设置 腾讯云 DeepSeek 专用密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.tencent.setTokenHubApiKey",
+                "command": "ccmp.tencent.setTokenHubApiKey",
                 "title": "设置 腾讯云 TokenHub 密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.tencent.configWizard",
+                "command": "ccmp.tencent.configWizard",
                 "title": "启动 腾讯云 配置向导",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.xiaomimimo.setApiKey",
+                "command": "ccmp.xiaomimimo.setApiKey",
                 "title": "设置 Xiaomi MiMo API密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.xiaomimimo.setTokenPlanApiKey",
+                "command": "ccmp.xiaomimimo.setTokenPlanApiKey",
                 "title": "设置 Xiaomi MiMo Token Plan 专用密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.xiaomimimo.setTokenPlanEndpoint",
+                "command": "ccmp.xiaomimimo.setTokenPlanEndpoint",
                 "title": "设置 Xiaomi MiMo Token Plan 接入点",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.xiaomimimo.configWizard",
+                "command": "ccmp.xiaomimimo.configWizard",
                 "title": "启动 Xiaomi MiMo 配置向导",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.baidu.setApiKey",
+                "command": "ccmp.baidu.setApiKey",
                 "title": "设置 百度千帆 API密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.baidu.setCodingPlanApiKey",
+                "command": "ccmp.baidu.setCodingPlanApiKey",
                 "title": "设置 百度千帆 Coding Plan 专用密钥",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.baidu.configWizard",
+                "command": "ccmp.baidu.configWizard",
                 "title": "启动 百度千帆 配置向导",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.gemini.configWizard",
+                "command": "ccmp.gemini.configWizard",
                 "title": "Gemini CLI 配置向导（CLI 认证）",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.codex.configWizard",
+                "command": "ccmp.codex.configWizard",
                 "title": "Codex CLI 配置向导（CLI 认证）",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.compatible.manageModels",
+                "command": "ccmp.compatible.manageModels",
                 "title": "Compatible Provider 设置",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.nesCompletion.toggleManual",
+                "command": "ccmp.nesCompletion.toggleManual",
                 "title": "切换 NES 手动触发模式",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.tokenUsage.showDetails",
+                "command": "ccmp.tokenUsage.showDetails",
                 "title": "查看今日 Token 消耗统计详情",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.cli.auth",
+                "command": "ccmp.cli.auth",
                 "title": "CLI 认证管理",
-                "category": "GCMP"
+                "category": "CCMP"
             },
             {
-                "command": "gcmp.commit.generateMessage",
+                "command": "ccmp.commit.generateMessage",
                 "title": "生成提交消息",
-                "category": "GCMP",
-                "icon": "$(gcmp-git-commit)"
+                "category": "CCMP",
+                "icon": "$(ccmp-git-commit)"
             },
             {
-                "command": "gcmp.commit.generateMessageStaged",
+                "command": "ccmp.commit.generateMessageStaged",
                 "title": "生成提交消息 - 暂存的更改",
-                "category": "GCMP",
-                "icon": "$(gcmp-git-commit)"
+                "category": "CCMP",
+                "icon": "$(ccmp-git-commit)"
             },
             {
-                "command": "gcmp.commit.generateMessageWorkingTree",
+                "command": "ccmp.commit.generateMessageWorkingTree",
                 "title": "生成提交消息 - 未暂存的更改",
-                "category": "GCMP",
-                "icon": "$(gcmp-git-commit)"
+                "category": "CCMP",
+                "icon": "$(ccmp-git-commit)"
             },
             {
-                "command": "gcmp.commit.selectModel",
+                "command": "ccmp.commit.selectModel",
                 "title": "选择 Commit 消息生成模型",
-                "category": "GCMP"
+                "category": "CCMP"
             }
         ],
         "configuration": {
-            "title": "GCMP - AI Chat Models",
+            "title": "CCMP - AI Chat Models",
             "properties": {
-                "gcmp.maxTokens": {
+                "ccmp.maxTokens": {
                     "type": "number",
                     "default": 16000,
                     "minimum": 32,
@@ -300,7 +300,7 @@
                     "description": "控制AI模型输出的最大token数量。较大的值允许更长的响应。",
                     "scope": "application"
                 },
-                "gcmp.retry.maxAttempts": {
+                "ccmp.retry.maxAttempts": {
                     "type": "number",
                     "default": 3,
                     "minimum": 1,
@@ -308,25 +308,25 @@
                     "description": "请求失败后的最大自动重试次数，仅对可重试错误生效。重试延迟按 1s、3s、6s、10s、15s 的累加序列递增。",
                     "scope": "application"
                 },
-                "gcmp.temperature": {
+                "ccmp.temperature": {
                     "type": "number",
                     "deprecationMessage": "temperature 已被弃用，请改用模型的 extraBody 参数传递",
                     "description": "模型采样温度（已弃用）",
                     "scope": "application"
                 },
-                "gcmp.topP": {
+                "ccmp.topP": {
                     "type": "number",
                     "deprecationMessage": "topP 已被弃用，请改用模型的 extraBody 参数传递",
                     "description": "模型采样 top-p 参数（已弃用）",
                     "scope": "application"
                 },
-                "gcmp.rememberLastModel": {
+                "ccmp.rememberLastModel": {
                     "type": "boolean",
                     "deprecationMessage": "rememberLastModel 已被弃用，此功能不再被支持",
                     "description": "是否记住上次选择的模型（已弃用）",
                     "scope": "application"
                 },
-                "gcmp.editToolMode": {
+                "ccmp.editToolMode": {
                     "type": "string",
                     "enum": [
                         "claude",
@@ -343,19 +343,19 @@
                     "description": "选择编辑工具模式。Claude 使用高效的ReplaceString，GPT-5 使用ApplyPatch进行批量编辑，None 直接使用基础文件编辑。",
                     "scope": "application"
                 },
-                "gcmp.autoPrefixModelId": {
+                "ccmp.autoPrefixModelId": {
                     "type": "boolean",
                     "default": false,
                     "description": "在模型列表中为模型ID自动添加提供商前缀（例如：zhipu:::glm-5）。启用此选项可缓解 VS Code 模型选择器显示模型不全的问题。",
                     "scope": "application"
                 },
-                "gcmp.zhipu.search.enableMCP": {
+                "ccmp.zhipu.search.enableMCP": {
                     "type": "boolean",
                     "default": true,
                     "description": "启用智谱AI搜索的MCP SDK模式。使用标准 MCP 协议和官方 SDK 实现搜索功能，提供更稳定的连接和更好的错误处理。非订阅套餐请关闭此开关以使用标准计费接口（按次计费）。需要有效的智谱AI API密钥。",
                     "scope": "application"
                 },
-                "gcmp.zhipu.endpoint": {
+                "ccmp.zhipu.endpoint": {
                     "type": "string",
                     "enum": [
                         "open.bigmodel.cn",
@@ -365,7 +365,7 @@
                     "description": "智谱AI接入站点。open.bigmodel.cn 为国内站（推荐），api.z.ai 为国际站。",
                     "scope": "application"
                 },
-                "gcmp.minimax.endpoint": {
+                "ccmp.minimax.endpoint": {
                     "type": "string",
                     "enum": [
                         "minimaxi.com",
@@ -375,7 +375,7 @@
                     "description": "MiniMax Coding Plan 接入站点。minimaxi.com 为国内站（推荐），minimax.io 为国际站。",
                     "scope": "application"
                 },
-                "gcmp.xiaomimimo.endpoint": {
+                "ccmp.xiaomimimo.endpoint": {
                     "type": "string",
                     "enum": [
                         "cn",
@@ -386,7 +386,7 @@
                     "description": "Xiaomi MiMo Token Plan 接入点。cn 为中国接入点（默认），sgp 为新加坡接入点，ams 为欧洲接入点。",
                     "scope": "application"
                 },
-                "gcmp.usages.retentionDays": {
+                "ccmp.usages.retentionDays": {
                     "type": "number",
                     "default": 100,
                     "minimum": 0,
@@ -394,13 +394,13 @@
                     "description": "Token消耗记录历史数据保留天数（按日期保存，0表示永久保留）。",
                     "scope": "application"
                 },
-                "gcmp.fimCompletion.enabled": {
+                "ccmp.fimCompletion.enabled": {
                     "type": "boolean",
                     "default": false,
                     "description": "启用 FIM (Fill In the Middle) 建议功能。",
                     "scope": "application"
                 },
-                "gcmp.fimCompletion.debounceMs": {
+                "ccmp.fimCompletion.debounceMs": {
                     "type": "number",
                     "default": 500,
                     "minimum": 50,
@@ -408,7 +408,7 @@
                     "description": "FIM 补全的防抖延迟（毫秒）。",
                     "scope": "application"
                 },
-                "gcmp.fimCompletion.timeoutMs": {
+                "ccmp.fimCompletion.timeoutMs": {
                     "type": "number",
                     "default": 5000,
                     "minimum": 1000,
@@ -416,7 +416,7 @@
                     "description": "FIM 补全的请求超时时间（毫秒）。",
                     "scope": "application"
                 },
-                "gcmp.fimCompletion.modelConfig": {
+                "ccmp.fimCompletion.modelConfig": {
                     "type": "object",
                     "default": {
                         "provider": "",
@@ -460,13 +460,13 @@
                         "model"
                     ]
                 },
-                "gcmp.nesCompletion.enabled": {
+                "ccmp.nesCompletion.enabled": {
                     "type": "boolean",
                     "default": false,
                     "description": "启用 NES (Next Edit Suggestions) 建议功能。",
                     "scope": "application"
                 },
-                "gcmp.nesCompletion.debounceMs": {
+                "ccmp.nesCompletion.debounceMs": {
                     "type": "number",
                     "default": 500,
                     "minimum": 50,
@@ -474,7 +474,7 @@
                     "description": "NES 补全的防抖延迟（毫秒）。",
                     "scope": "application"
                 },
-                "gcmp.nesCompletion.timeoutMs": {
+                "ccmp.nesCompletion.timeoutMs": {
                     "type": "number",
                     "default": 5000,
                     "minimum": 1000,
@@ -482,13 +482,13 @@
                     "description": "NES 补全的请求超时时间（毫秒）。",
                     "scope": "application"
                 },
-                "gcmp.nesCompletion.manualOnly": {
+                "ccmp.nesCompletion.manualOnly": {
                     "type": "boolean",
                     "default": false,
                     "description": "启用后，NES 补全仅响应手动触发（Alt+/），不会自动触发。",
                     "scope": "application"
                 },
-                "gcmp.nesCompletion.modelConfig": {
+                "ccmp.nesCompletion.modelConfig": {
                     "type": "object",
                     "default": {
                         "provider": "",
@@ -532,7 +532,7 @@
                         "model"
                     ]
                 },
-                "gcmp.commit.language": {
+                "ccmp.commit.language": {
                     "type": "string",
                     "enum": [
                         "chinese",
@@ -546,7 +546,7 @@
                     "description": "生成提交消息使用的语言。auto 模式会优先从仓库最近提交历史推断语言；当历史语言不明确时回退为此配置。支持在工作区和全局配置中设置，工作区配置优先级更高。",
                     "scope": "window"
                 },
-                "gcmp.commit.format": {
+                "ccmp.commit.format": {
                     "type": "string",
                     "enum": [
                         "auto",
@@ -578,13 +578,13 @@
                     "description": "生成提交消息使用的格式。auto 会根据历史提交记录推断提交规范；无法推断则回退为 plain。支持在工作区和全局配置中设置，工作区配置优先级更高。",
                     "scope": "window"
                 },
-                "gcmp.commit.customInstructions": {
+                "ccmp.commit.customInstructions": {
                     "type": "string",
                     "default": "",
                     "description": "自定义的提交消息生成指令（当 commitFormat=custom 时生效）。",
                     "scope": "window"
                 },
-                "gcmp.commit.model": {
+                "ccmp.commit.model": {
                     "type": "object",
                     "default": {
                         "provider": "",
@@ -607,13 +607,13 @@
                         "model"
                     ]
                 },
-                "gcmp.providerOverrides": {
+                "ccmp.providerOverrides": {
                     "type": "object",
                     "default": {},
                     "description": "提供商配置覆盖。允许覆盖提供商的baseUrl和模型配置，支持添加新模型或覆盖现有模型的参数。",
                     "scope": "application"
                 },
-                "gcmp.compatibleModels": {
+                "ccmp.compatibleModels": {
                     "type": "array",
                     "default": [],
                     "description": "Compatible Provider 的自定义模型配置。完全由用户配置的 OpenAI / Anthropic 兼容模型列表。",
@@ -624,79 +624,79 @@
         "jsonValidation": [
             {
                 "fileMatch": "settings.json",
-                "url": "gcmp-settings://root/schema.json"
+                "url": "ccmp-settings://root/schema.json"
             }
         ],
         "languageModelChatProviders": [
             {
-                "vendor": "gcmp.zhipu",
-                "displayName": "GCMP · ZhipuAI",
-                "managementCommand": "gcmp.zhipu.configWizard"
+                "vendor": "ccmp.zhipu",
+                "displayName": "CCMP · ZhipuAI",
+                "managementCommand": "ccmp.zhipu.configWizard"
             },
             {
-                "vendor": "gcmp.minimax",
-                "displayName": "GCMP · MiniMax",
-                "managementCommand": "gcmp.minimax.configWizard"
+                "vendor": "ccmp.minimax",
+                "displayName": "CCMP · MiniMax",
+                "managementCommand": "ccmp.minimax.configWizard"
             },
             {
-                "vendor": "gcmp.moonshot",
-                "displayName": "GCMP · MoonshotAI",
-                "managementCommand": "gcmp.moonshot.configWizard"
+                "vendor": "ccmp.moonshot",
+                "displayName": "CCMP · MoonshotAI",
+                "managementCommand": "ccmp.moonshot.configWizard"
             },
             {
-                "vendor": "gcmp.deepseek",
-                "displayName": "GCMP · DeepSeek",
-                "managementCommand": "gcmp.deepseek.setApiKey"
+                "vendor": "ccmp.deepseek",
+                "displayName": "CCMP · DeepSeek",
+                "managementCommand": "ccmp.deepseek.setApiKey"
             },
             {
-                "vendor": "gcmp.dashscope",
-                "displayName": "GCMP · Aliyun DashScope",
-                "managementCommand": "gcmp.dashscope.configWizard"
+                "vendor": "ccmp.dashscope",
+                "displayName": "CCMP · Aliyun DashScope",
+                "managementCommand": "ccmp.dashscope.configWizard"
             },
             {
-                "vendor": "gcmp.streamlake",
-                "displayName": "GCMP · StreamLake",
-                "managementCommand": "gcmp.streamlake.setApiKey"
+                "vendor": "ccmp.streamlake",
+                "displayName": "CCMP · StreamLake",
+                "managementCommand": "ccmp.streamlake.setApiKey"
             },
             {
-                "vendor": "gcmp.volcengine",
-                "displayName": "GCMP · Volcengine",
-                "managementCommand": "gcmp.volcengine.configWizard"
+                "vendor": "ccmp.volcengine",
+                "displayName": "CCMP · Volcengine",
+                "managementCommand": "ccmp.volcengine.configWizard"
             },
             {
-                "vendor": "gcmp.tencent",
-                "displayName": "GCMP · Tencent Cloud",
-                "managementCommand": "gcmp.tencent.configWizard"
+                "vendor": "ccmp.tencent",
+                "displayName": "CCMP · Tencent Cloud",
+                "managementCommand": "ccmp.tencent.configWizard"
             },
             {
-                "vendor": "gcmp.xiaomimimo",
-                "displayName": "GCMP · Xiaomi MiMo",
-                "managementCommand": "gcmp.xiaomimimo.configWizard"
+                "vendor": "ccmp.xiaomimimo",
+                "displayName": "CCMP · Xiaomi MiMo",
+                "managementCommand": "ccmp.xiaomimimo.configWizard"
             },
             {
-                "vendor": "gcmp.baidu",
-                "displayName": "GCMP · Baidu Qianfan",
-                "managementCommand": "gcmp.baidu.configWizard"
+                "vendor": "ccmp.baidu",
+                "displayName": "CCMP · Baidu Qianfan",
+                "managementCommand": "ccmp.baidu.configWizard"
             },
             {
-                "vendor": "gcmp.gemini",
-                "displayName": "GCMP · Gemini CLI",
-                "managementCommand": "gcmp.gemini.configWizard"
+                "vendor": "ccmp.gemini",
+                "displayName": "CCMP · Gemini CLI",
+                "managementCommand": "ccmp.gemini.configWizard"
             },
             {
-                "vendor": "gcmp.codex",
-                "displayName": "GCMP · Codex CLI",
-                "managementCommand": "gcmp.codex.configWizard"
+                "vendor": "ccmp.codex",
+                "displayName": "CCMP · Codex CLI",
+                "managementCommand": "ccmp.codex.configWizard"
             },
             {
-                "vendor": "gcmp.compatible",
-                "displayName": "GCMP · OpenAI / Anthropic Compatible",
-                "managementCommand": "gcmp.compatible.manageModels"
+                "vendor": "ccmp.compatible",
+                "displayName": "CCMP · OpenAI / Anthropic Compatible",
+                "managementCommand": "ccmp.compatible.manageModels"
             }
         ],
         "languageModelTools": [
             {
-                "name": "gcmp_zhipuWebSearch",
+                "name": "ccmp_zhipuWebSearch",
                 "displayName": "智谱AI联网搜索",
                 "toolReferenceName": "zhipuWebSearch",
                 "modelDescription": "使用智谱AI提供的联网搜索功能获取实时信息。支持多种搜索引擎：search_std（标准搜索，¥0.01）、search_pro（高级搜索，¥0.03）、search_pro_sogou（搜狗搜索，¥0.05）、search_pro_quark（夸克搜索，¥0.05）。注意：Pro+ 套餐可通过 MCP SSE 调用，非订阅套餐使用标准计费接口。",
@@ -765,7 +765,7 @@
                 "canBeReferencedInPrompt": true
             },
             {
-                "name": "gcmp_minimaxWebSearch",
+                "name": "ccmp_minimaxWebSearch",
                 "displayName": "MiniMax网络搜索",
                 "toolReferenceName": "minimaxWebSearch",
                 "modelDescription": "使用 MiniMax Coding Plan 提供的网络搜索功能获取实时信息。需要订阅 MiniMax Coding Plan 套餐并设置专用API密钥。",
@@ -785,7 +785,7 @@
                 "canBeReferencedInPrompt": true
             },
             {
-                "name": "gcmp_kimiWebSearch",
+                "name": "ccmp_kimiWebSearch",
                 "displayName": "Kimi网络搜索",
                 "toolReferenceName": "kimiWebSearch",
                 "modelDescription": "使用 Kimi Code 提供的网络搜索功能获取实时信息。需要使用 Kimi For Coding 专用 API 密钥或 Moonshot API 密钥。",
@@ -817,7 +817,7 @@
                 "canBeReferencedInPrompt": true
             },
             {
-                "name": "gcmp_dashscopeWebSearch",
+                "name": "ccmp_dashscopeWebSearch",
                 "displayName": "阿里云百炼联网搜索",
                 "toolReferenceName": "bailianWebSearch",
                 "modelDescription": "使用阿里云百炼提供的联网搜索MCP服务获取实时信息。需要订阅百炼Coding Plan并开通联网搜索MCP服务（限时免费，每月2000次免费额度），使用百炼通用API密钥（sk-xxx格式）进行鉴权。",
@@ -845,119 +845,119 @@
             }
         ],
         "icons": {
-            "gcmp-zhipu": {
+            "ccmp-zhipu": {
                 "description": "Zhipu",
                 "default": {
                     "fontPath": "./fonts/zhipu.ttf",
                     "fontCharacter": "\\e889"
                 }
             },
-            "gcmp-kimi": {
+            "ccmp-kimi": {
                 "description": "Kimi",
                 "default": {
                     "fontPath": "./fonts/kimi.ttf",
                     "fontCharacter": "\\e7de"
                 }
             },
-            "gcmp-minimax": {
+            "ccmp-minimax": {
                 "description": "MiniMax",
                 "default": {
                     "fontPath": "./fonts/minimax.ttf",
                     "fontCharacter": "\\ea4b"
                 }
             },
-            "gcmp-deepseek": {
+            "ccmp-deepseek": {
                 "description": "DeepSeek",
                 "default": {
                     "fontPath": "./fonts/deepseek.ttf",
                     "fontCharacter": "\\e726"
                 }
             },
-            "gcmp-moonshot": {
+            "ccmp-moonshot": {
                 "description": "Moonshot",
                 "default": {
                     "fontPath": "./fonts/moonshot.ttf",
                     "fontCharacter": "\\e6e0"
                 }
             },
-            "gcmp-openai": {
+            "ccmp-openai": {
                 "description": "OpenAI/Codex",
                 "default": {
                     "fontPath": "./fonts/openai.ttf",
                     "fontCharacter": "\\eac8"
                 }
             },
-            "gcmp-compatible": {
+            "ccmp-compatible": {
                 "description": "Compatible",
                 "default": {
                     "fontPath": "./fonts/compatible.ttf",
                     "fontCharacter": "\\e620"
                 }
             },
-            "gcmp-tokens": {
+            "ccmp-tokens": {
                 "description": "Tokens",
                 "default": {
                     "fontPath": "./fonts/tokens.ttf",
                     "fontCharacter": "\\e64d"
                 }
             },
-            "gcmp-token1": {
+            "ccmp-token1": {
                 "description": "Tokens 1/8",
                 "default": {
                     "fontPath": "./fonts/tokens.ttf",
                     "fontCharacter": "\\e677"
                 }
             },
-            "gcmp-token2": {
+            "ccmp-token2": {
                 "description": "Tokens 2/8",
                 "default": {
                     "fontPath": "./fonts/tokens.ttf",
                     "fontCharacter": "\\e676"
                 }
             },
-            "gcmp-token3": {
+            "ccmp-token3": {
                 "description": "Tokens 3/8",
                 "default": {
                     "fontPath": "./fonts/tokens.ttf",
                     "fontCharacter": "\\e679"
                 }
             },
-            "gcmp-token4": {
+            "ccmp-token4": {
                 "description": "Tokens 4/8",
                 "default": {
                     "fontPath": "./fonts/tokens.ttf",
                     "fontCharacter": "\\e67d"
                 }
             },
-            "gcmp-token5": {
+            "ccmp-token5": {
                 "description": "Tokens 5/8",
                 "default": {
                     "fontPath": "./fonts/tokens.ttf",
                     "fontCharacter": "\\e67e"
                 }
             },
-            "gcmp-token6": {
+            "ccmp-token6": {
                 "description": "Tokens 6/8",
                 "default": {
                     "fontPath": "./fonts/tokens.ttf",
                     "fontCharacter": "\\e678"
                 }
             },
-            "gcmp-token7": {
+            "ccmp-token7": {
                 "description": "Tokens 7/8",
                 "default": {
                     "fontPath": "./fonts/tokens.ttf",
                     "fontCharacter": "\\e67f"
                 }
             },
-            "gcmp-token8": {
+            "ccmp-token8": {
                 "description": "Tokens 8/8",
                 "default": {
                     "fontPath": "./fonts/tokens.ttf",
                     "fontCharacter": "\\e67a"
                 }
             },
-            "gcmp-git-commit": {
+            "ccmp-git-commit": {
                 "description": "Git Commit",
                 "default": {
                     "fontPath": "./fonts/git-commit.ttf",
@@ -972,27 +972,27 @@
                 "when": "editorHasCompletionItemProvider && textInputFocus && !editorReadonly && !suggestWidgetVisible"
             },
             {
-                "command": "gcmp.nesCompletion.toggleManual",
+                "command": "ccmp.nesCompletion.toggleManual",
                 "key": "shift+alt+/"
             }
         ],
         "menus": {
             "scm/title": [
                 {
-                    "command": "gcmp.commit.generateMessage",
+                    "command": "ccmp.commit.generateMessage",
                     "group": "navigation",
-                    "when": "config.git.enabled && scmProvider == git && gcmp.gitAvailable"
+                    "when": "config.git.enabled && scmProvider == git && ccmp.gitAvailable"
                 }
             ],
             "scm/resourceGroup/context": [
                 {
-                    "command": "gcmp.commit.generateMessageStaged",
-                    "when": "config.git.enabled && scmProvider == git && scmResourceGroup == index && gcmp.gitAvailable",
+                    "command": "ccmp.commit.generateMessageStaged",
+                    "when": "config.git.enabled && scmProvider == git && scmResourceGroup == index && ccmp.gitAvailable",
                     "group": "inline@-3"
                 },
                 {
-                    "command": "gcmp.commit.generateMessageWorkingTree",
-                    "when": "config.git.enabled && scmProvider == git && scmResourceGroup == workingTree && gcmp.gitAvailable",
+                    "command": "ccmp.commit.generateMessageWorkingTree",
+                    "when": "config.git.enabled && scmProvider == git && scmResourceGroup == workingTree && ccmp.gitAvailable",
                     "group": "inline@-3"
                 }
             ]

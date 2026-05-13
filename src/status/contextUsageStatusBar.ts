@@ -94,12 +94,12 @@ export class ContextUsageStatusBar {
      */
     async initialize(context: vscode.ExtensionContext): Promise<void> {
         this.statusBarItem = vscode.window.createStatusBarItem(
-            'gcmp.statusBar.contextUsage',
+            'ccmp.statusBar.contextUsage',
             vscode.StatusBarAlignment.Right,
             12
         );
 
-        this.statusBarItem.name = 'GCMP: Context Usage';
+        this.statusBarItem.name = 'CCMP: Context Usage';
 
         // 初始显示
         this.updateUI(this.defaultData);
@@ -144,23 +144,23 @@ export class ContextUsageStatusBar {
      */
     private getPieChartIcon(percentage: number): string {
         if (percentage === 0) {
-            return '$(gcmp-tokens)'; // 0%
+            return '$(ccmp-tokens)'; // 0%
         } else if (percentage <= 25) {
-            return '$(gcmp-token1)'; // 1/8
+            return '$(ccmp-token1)'; // 1/8
         } else if (percentage <= 35) {
-            return '$(gcmp-token2)'; // 2/8
+            return '$(ccmp-token2)'; // 2/8
         } else if (percentage <= 45) {
-            return '$(gcmp-token3)'; // 3/8
+            return '$(ccmp-token3)'; // 3/8
         } else if (percentage <= 55) {
-            return '$(gcmp-token4)'; // 4/8
+            return '$(ccmp-token4)'; // 4/8
         } else if (percentage <= 65) {
-            return '$(gcmp-token5)'; // 5/8
+            return '$(ccmp-token5)'; // 5/8
         } else if (percentage <= 75) {
-            return '$(gcmp-token6)'; // 6/8
+            return '$(ccmp-token6)'; // 6/8
         } else if (percentage <= 85) {
-            return '$(gcmp-token7)'; // 7/8
+            return '$(ccmp-token7)'; // 7/8
         } else {
-            return '$(gcmp-token8)'; // 8/8 (满)
+            return '$(ccmp-token8)'; // 8/8 (满)
         }
     }
 
@@ -198,7 +198,7 @@ export class ContextUsageStatusBar {
 
         // 如果是默认数据（无请求），显示提示信息
         if (data.inputTokens === 0 && data.maxInputTokens === 0) {
-            md.appendMarkdown('💡 发送任意 GCMP 提供的模型请求后显示\n');
+            md.appendMarkdown('💡 发送任意 CCMP 提供的模型请求后显示\n');
             return md;
         }
 

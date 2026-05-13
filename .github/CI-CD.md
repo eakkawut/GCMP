@@ -105,7 +105,7 @@ npm run publish
 ## 🚨 注意事项
 
 1. **版本号同步**：确保 `package.json` 中的版本号与 Git 标签一致
-2. **扩展 ID**：发布后扩展 ID 为 `vicanent.gcmp`
+2. **扩展 ID**：发布后扩展 ID 为 `guokoko.ccmp`
 3. **审核时间**：VS Code 扩展商店审核通常需要几分钟到几小时
 4. **回滚**：如需撤回版本，需要手动在扩展商店中操作
 5. **Proposed API**：本扩展使用了 `chatProvider` proposed API，因此在打包和发布时会自动添加 `--allow-proposed-apis chatProvider` 参数

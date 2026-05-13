@@ -17,7 +17,7 @@ export function registerCommitCommands(context: vscode.ExtensionContext): vscode
 
     // 注册生成提交消息命令
     disposables.push(
-        vscode.commands.registerCommand('gcmp.commit.generateMessage', async (sourceControlRepository?: Repository) => {
+        vscode.commands.registerCommand('ccmp.commit.generateMessage', async (sourceControlRepository?: Repository) => {
             await CommitMessage.generateAndSetCommitMessage(sourceControlRepository);
         })
     );
@@ -25,7 +25,7 @@ export function registerCommitCommands(context: vscode.ExtensionContext): vscode
     // 暂存区按钮：强制仅分析 staged 变更
     disposables.push(
         vscode.commands.registerCommand(
-            'gcmp.commit.generateMessageStaged',
+            'ccmp.commit.generateMessageStaged',
             async (resContext?: vscode.SourceControlResourceGroup) => {
                 await CommitMessage.generateAndSetCommitMessage(undefined, { scope: 'staged', resContext });
             }
@@ -35,7 +35,7 @@ export function registerCommitCommands(context: vscode.ExtensionContext): vscode
     // 变更区按钮：强制分析 working tree（包含 tracked + untracked）
     disposables.push(
         vscode.commands.registerCommand(
-            'gcmp.commit.generateMessageWorkingTree',
+            'ccmp.commit.generateMessageWorkingTree',
             async (resContext?: vscode.SourceControlResourceGroup) => {
                 await CommitMessage.generateAndSetCommitMessage(undefined, { scope: 'workingTree', resContext });
             }
@@ -44,12 +44,12 @@ export function registerCommitCommands(context: vscode.ExtensionContext): vscode
 
     // 注册选择模型命令
     disposables.push(
-        vscode.commands.registerCommand('gcmp.commit.selectModel', async () => {
+        vscode.commands.registerCommand('ccmp.commit.selectModel', async () => {
             try {
                 // 1) 先选择提供商（providerKey），再选择该提供商的模型
                 const providers = await GeneratorService.getAvailableCommitProviders();
                 if (providers.length === 0) {
-                    vscode.window.showWarningMessage('没有可用的 GCMP 提供商');
+                    vscode.window.showWarningMessage('没有可用的 CCMP 提供商');
                     return;
                 }
 
@@ -88,7 +88,7 @@ export function registerCommitCommands(context: vscode.ExtensionContext): vscode
                 const { modelId, modelName } = modelPick;
 
                 // 2) 更新配置（保存 provider + model）
-                const config = vscode.workspace.getConfiguration('gcmp.commit');
+                const config = vscode.workspace.getConfiguration('ccmp.commit');
                 await config.update(
                     'model',
                     {

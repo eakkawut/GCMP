@@ -198,7 +198,7 @@ async function activateInlineCompletionProvider(context: vscode.ExtensionContext
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
     // 将单例实例存储到 globalThis，供 copilot.bundle.js 中的模块使用
-    globalThis.__gcmp_singletons = {
+    globalThis.__ccmp_singletons = {
         CompletionLogger,
         ApiKeyManager,
         StatusBarManager,
@@ -208,18 +208,18 @@ export async function activate(context: vscode.ExtensionContext) {
     const activationStartTime = Date.now();
 
     try {
-        Logger.initialize('GitHub Copilot Models Provider (GCMP)'); // 初始化日志管理器
+        Logger.initialize('GitHub Copilot Models Provider (CCMP)'); // 初始化日志管理器
         StatusLogger.initialize('GitHub Copilot Models Provider Status'); // 初始化高频状态日志管理器
-        CompletionLogger.initialize('GitHub Copilot Inline Completion via GCMP'); // 初始化高频内联补全日志管理器
+        CompletionLogger.initialize('GitHub Copilot Inline Completion via CCMP'); // 初始化高频内联补全日志管理器
 
         const isDevelopment = context.extensionMode === vscode.ExtensionMode.Development;
-        Logger.debug(`🔧 GCMP 扩展模式: ${isDevelopment ? 'Development' : 'Production'}`);
+        Logger.debug(`🔧 CCMP 扩展模式: ${isDevelopment ? 'Development' : 'Production'}`);
         // 检查和提示VS Code的日志级别设置
         if (isDevelopment) {
             Logger.checkAndPromptLogLevel();
         }
 
-        Logger.debug('⏱️ 开始激活 GCMP 扩展...');
+        Logger.debug('⏱️ 开始激活 CCMP 扩展...');
 
         // 步骤0: 初始化主实例竞选服务
         let stepStartTime = Date.now();
@@ -278,7 +278,7 @@ export async function activate(context: vscode.ExtensionContext) {
         stepStartTime = Date.now();
         // 查看今日用量统计详情命令（单例模式，同一窗口只允许打开一个统计页面）
         let tokenUsagesView: TokenUsagesView | undefined;
-        const viewStatsCommand = vscode.commands.registerCommand('gcmp.tokenUsage.showDetails', () => {
+        const viewStatsCommand = vscode.commands.registerCommand('ccmp.tokenUsage.showDetails', () => {
             if (!tokenUsagesView) {
                 tokenUsagesView = new TokenUsagesView(context);
             }
@@ -307,18 +307,18 @@ export async function activate(context: vscode.ExtensionContext) {
 
         // 步骤9: 检查 Git 可用性（不阻塞扩展激活）
         // 默认设置为不可用，检查完成后更新
-        vscode.commands.executeCommand('setContext', 'gcmp.gitAvailable', false);
+        vscode.commands.executeCommand('setContext', 'ccmp.gitAvailable', false);
         const gitDisposable = checkGitAvailability();
         context.subscriptions.push(gitDisposable);
 
         const totalActivationTime = Date.now() - activationStartTime;
-        Logger.info(`✅ GCMP 扩展激活完成 (总耗时: ${totalActivationTime}ms)`);
+        Logger.info(`✅ CCMP 扩展激活完成 (总耗时: ${totalActivationTime}ms)`);
     } catch (error) {
-        const errorMessage = `GCMP 扩展激活失败: ${error instanceof Error ? error.message : '未知错误'}`;
+        const errorMessage = `CCMP 扩展激活失败: ${error instanceof Error ? error.message : '未知错误'}`;
         Logger.error(errorMessage, error instanceof Error ? error : undefined);
 
         // 尝试显示用户友好的错误消息
-        vscode.window.showErrorMessage('GCMP 扩展启动失败。请检查输出窗口获取详细信息。');
+        vscode.window.showErrorMessage('CCMP 扩展启动失败。请检查输出窗口获取详细信息。');
         // 重新抛出错误，让VS Code知道扩展启动失败
         throw error;
     }
@@ -327,7 +327,7 @@ export async function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated
 export function deactivate() {
     try {
-        Logger.info('开始停用 GCMP 扩展...');
+        Logger.info('开始停用 CCMP 扩展...');
 
         // 清理所有状态栏
         StatusBarManager.disposeAll();
@@ -381,11 +381,11 @@ export function deactivate() {
         });
         Logger.trace('已清理 Token 用量管理器');
 
-        Logger.info('GCMP 扩展停用完成');
+        Logger.info('CCMP 扩展停用完成');
         StatusLogger.dispose(); // 清理状态日志管理器
         CompletionLogger.dispose(); // 清理内联补全日志管理器
         Logger.dispose(); // 在扩展销毁时才 dispose Logger
     } catch (error) {
-        Logger.error('GCMP 扩展停用时出错:', error);
+        Logger.error('CCMP 扩展停用时出错:', error);
     }
 }

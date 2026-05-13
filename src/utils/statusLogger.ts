@@ -16,7 +16,7 @@ export class StatusLogger {
     /**
      * 初始化高频状态日志管理器
      */
-    static initialize(channelName = 'GCMP-Status'): void {
+    static initialize(channelName = 'CCMP-Status'): void {
         // 使用LogOutputChannel (VS Code 1.74+)，支持原生的日志级别和格式化
         this.outputChannel = vscode.window.createOutputChannel(channelName, { log: true });
     }

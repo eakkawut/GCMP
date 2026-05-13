@@ -63,7 +63,7 @@ export class DashscopeMCPWebSearchClient {
     static async getInstance(apiKey?: string): Promise<DashscopeMCPWebSearchClient> {
         const key = apiKey || (await ApiKeyManager.getApiKey('dashscope'));
         if (!key) {
-            throw new Error('DashScope API密钥未设置，请先运行命令"GCMP: 设置 DashScope API密钥"');
+            throw new Error('DashScope API密钥未设置，请先运行命令"CCMP: 设置 DashScope API密钥"');
         }
 
         let instance = DashscopeMCPWebSearchClient.clientCache.get(key);
@@ -169,7 +169,7 @@ export class DashscopeMCPWebSearchClient {
         try {
             this.client = new Client(
                 {
-                    name: 'GCMP-DashScope-WebSearch-Client',
+                    name: 'CCMP-DashScope-WebSearch-Client',
                     version: VersionManager.getVersion()
                 },
                 {
@@ -266,7 +266,7 @@ export class DashscopeMCPWebSearchClient {
 
     getStatus(): { name: string; version: string; enabled: boolean; connected: boolean } {
         return {
-            name: 'GCMP-DashScope-MCP-WebSearch-Client',
+            name: 'CCMP-DashScope-MCP-WebSearch-Client',
             version: VersionManager.getVersion(),
             enabled: true,
             connected: this.isConnected()

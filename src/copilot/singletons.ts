@@ -11,7 +11,7 @@ import { StatusBarManager } from '../status/statusBarManager';
 import { ConfigManager } from '../utils/configManager';
 
 /** 单例容器的类型定义 */
-interface GCMPSingletons {
+interface CCMPSingletons {
     CompletionLogger: typeof CompletionLogger;
     ApiKeyManager: typeof ApiKeyManager;
     StatusBarManager: typeof StatusBarManager;
@@ -20,7 +20,7 @@ interface GCMPSingletons {
 
 /** 扩展全局类型 */
 declare global {
-    var __gcmp_singletons: GCMPSingletons | undefined;
+    var __ccmp_singletons: CCMPSingletons | undefined;
 }
 
 /**
@@ -28,7 +28,7 @@ declare global {
  * 优先从 globalThis 获取（extension.js 初始化的实例），否则降级使用直接导入
  */
 export function getCompletionLogger(): typeof CompletionLogger {
-    return globalThis.__gcmp_singletons?.CompletionLogger || CompletionLogger;
+    return globalThis.__ccmp_singletons?.CompletionLogger || CompletionLogger;
 }
 
 /**
@@ -36,7 +36,7 @@ export function getCompletionLogger(): typeof CompletionLogger {
  * 优先从 globalThis 获取（extension.js 初始化的实例），否则降级使用直接导入
  */
 export function getApiKeyManager(): typeof ApiKeyManager {
-    return globalThis.__gcmp_singletons?.ApiKeyManager || ApiKeyManager;
+    return globalThis.__ccmp_singletons?.ApiKeyManager || ApiKeyManager;
 }
 
 /**
@@ -44,7 +44,7 @@ export function getApiKeyManager(): typeof ApiKeyManager {
  * 优先从 globalThis 获取（extension.js 初始化的实例），否则降级使用直接导入
  */
 export function getStatusBarManager(): typeof StatusBarManager {
-    return globalThis.__gcmp_singletons?.StatusBarManager || StatusBarManager;
+    return globalThis.__ccmp_singletons?.StatusBarManager || StatusBarManager;
 }
 
 /**
@@ -52,14 +52,14 @@ export function getStatusBarManager(): typeof StatusBarManager {
  * 优先从 globalThis 获取（extension.js 初始化的实例），否则降级使用直接导入
  */
 export function getConfigManager(): typeof ConfigManager {
-    return globalThis.__gcmp_singletons?.ConfigManager || ConfigManager;
+    return globalThis.__ccmp_singletons?.ConfigManager || ConfigManager;
 }
 
 /**
  * 批量获取所有共享单例（可选）
  * 用于一次性获取多个实例
  */
-export function getAllSingletons(): GCMPSingletons {
+export function getAllSingletons(): CCMPSingletons {
     return {
         CompletionLogger: getCompletionLogger(),
         ApiKeyManager: getApiKeyManager(),

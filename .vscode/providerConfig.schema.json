@@ -1,9 +1,14 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://gcmp.dev/schemas/provider-config.schema.json",
-    "title": "GCMP Provider Configuration",
+    "$id": "https://ccmp.dev/schemas/provider-config.schema.json",
+    "title": "CCMP Provider Configuration",
     "type": "object",
-    "required": ["displayName", "baseUrl", "apiKeyTemplate", "models"],
+    "required": [
+        "displayName",
+        "baseUrl",
+        "apiKeyTemplate",
+        "models"
+    ],
     "additionalProperties": false,
     "properties": {
         "displayName": {
@@ -53,7 +58,10 @@
         "capabilities": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["toolCalling", "imageInput"],
+            "required": [
+                "toolCalling",
+                "imageInput"
+            ],
             "properties": {
                 "toolCalling": {
                     "type": "boolean",
@@ -68,7 +76,14 @@
         "model": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["id", "name", "tooltip", "maxInputTokens", "maxOutputTokens", "capabilities"],
+            "required": [
+                "id",
+                "name",
+                "tooltip",
+                "maxInputTokens",
+                "maxOutputTokens",
+                "capabilities"
+            ],
             "properties": {
                 "id": {
                     "type": "string",
@@ -110,7 +125,13 @@
                 },
                 "sdkMode": {
                     "type": "string",
-                    "enum": ["anthropic", "openai", "openai-sse", "openai-responses", "gemini-sse"],
+                    "enum": [
+                        "anthropic",
+                        "openai",
+                        "openai-sse",
+                        "openai-responses",
+                        "gemini-sse"
+                    ],
                     "default": "openai",
                     "description": "SDK模式选择：使用 OpenAI SDK 或 Anthropic SDK 处理请求。"
                 },
@@ -128,7 +149,12 @@
                     "type": "array",
                     "items": {
                         "type": "string",
-                        "enum": ["disabled", "enabled", "auto", "adaptive"],
+                        "enum": [
+                            "disabled",
+                            "enabled",
+                            "auto",
+                            "adaptive"
+                        ],
                         "enumDescriptions": [
                             "强制关闭深度思考能力，模型不输出思维链内容",
                             "强制开启深度思考能力，模型强制输出思维链内容",
@@ -140,7 +166,10 @@
                 },
                 "thinkingFormat": {
                     "type": "string",
-                    "enum": ["boolean", "object"],
+                    "enum": [
+                        "boolean",
+                        "object"
+                    ],
                     "enumDescriptions": [
                         "使用布尔值格式: { enable_thinking: true/false }",
                         "使用对象格式: { thinking: { type: 'enabled' | 'disabled' } }"
@@ -152,7 +181,15 @@
                     "type": "array",
                     "items": {
                         "type": "string",
-                        "enum": ["none", "minimal", "low", "medium", "high", "xhigh", "max"],
+                        "enum": [
+                            "none",
+                            "minimal",
+                            "low",
+                            "medium",
+                            "high",
+                            "xhigh",
+                            "max"
+                        ],
                         "enumDescriptions": [
                             "关闭思考，直接回答",
                             "关闭思考，直接回答",
@@ -200,7 +237,9 @@
                                 "const": "anthropic"
                             }
                         },
-                        "required": ["sdkMode"]
+                        "required": [
+                            "sdkMode"
+                        ]
                     },
                     "then": {
                         "properties": {
@@ -226,7 +265,9 @@
                                 "const": "openai-responses"
                             }
                         },
-                        "required": ["sdkMode"]
+                        "required": [
+                            "sdkMode"
+                        ]
                     },
                     "then": {
                         "properties": {
@@ -248,15 +289,33 @@
                 {
                     "if": {
                         "anyOf": [
-                            { "not": { "required": ["sdkMode"] } },
-                            { "properties": { "sdkMode": { "enum": ["openai", "openai-sse"] } } }
+                            {
+                                "not": {
+                                    "required": [
+                                        "sdkMode"
+                                    ]
+                                }
+                            },
+                            {
+                                "properties": {
+                                    "sdkMode": {
+                                        "enum": [
+                                            "openai",
+                                            "openai-sse"
+                                        ]
+                                    }
+                                }
+                            }
                         ]
                     },
                     "then": {
                         "properties": {
                             "thinkingFormat": {
                                 "type": "string",
-                                "enum": ["boolean", "object"],
+                                "enum": [
+                                    "boolean",
+                                    "object"
+                                ],
                                 "enumDescriptions": [
                                     "使用布尔值格式: { enable_thinking: true/false }",
                                     "使用对象格式: { thinking: { type: 'enabled' | 'disabled' } }"

@@ -38,7 +38,7 @@ export interface BaseStatusBarItemConfig {
     cacheKeyPrefix: string;
     /** 日志前缀 */
     logPrefix: string;
-    /** 状态栏图标，如 '$(gcmp-minimax)' */
+    /** 状态栏图标，如 '$(ccmp-minimax)' */
     icon: string;
 }
 

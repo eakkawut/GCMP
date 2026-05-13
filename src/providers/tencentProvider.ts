@@ -31,15 +31,15 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
         Logger.trace(`${providerConfig.displayName} 专用模型扩展已激活!`);
 
         const provider = new TencentProvider(context, providerKey, providerConfig);
-        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`gcmp.${providerKey}`, provider);
+        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`ccmp.${providerKey}`, provider);
 
-        const setApiKeyCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.setApiKey`, async () => {
+        const setApiKeyCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.setApiKey`, async () => {
             await TencentWizard.setApiKey(providerConfig.apiKeyTemplate);
             provider._onDidChangeLanguageModelChatInformation.fire();
         });
 
         const setCodingPlanApiKeyCommand = vscode.commands.registerCommand(
-            `gcmp.${providerKey}.setCodingPlanApiKey`,
+            `ccmp.${providerKey}.setCodingPlanApiKey`,
             async () => {
                 await TencentWizard.setCodingPlanApiKey(providerConfig.codingKeyTemplate);
                 provider._onDidChangeLanguageModelChatInformation.fire();
@@ -47,7 +47,7 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
         );
 
         const setTokenPlanApiKeyCommand = vscode.commands.registerCommand(
-            `gcmp.${providerKey}.setTokenPlanApiKey`,
+            `ccmp.${providerKey}.setTokenPlanApiKey`,
             async () => {
                 await TencentWizard.setTokenPlanApiKey(providerConfig.tokenKeyTemplate);
                 provider._onDidChangeLanguageModelChatInformation.fire();
@@ -55,7 +55,7 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
         );
 
         const setDeepSeekApiKeyCommand = vscode.commands.registerCommand(
-            `gcmp.${providerKey}.setDeepSeekApiKey`,
+            `ccmp.${providerKey}.setDeepSeekApiKey`,
             async () => {
                 await TencentWizard.setDeepSeekApiKey(providerConfig.apiKeyTemplate);
                 provider._onDidChangeLanguageModelChatInformation.fire();
@@ -63,14 +63,14 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
         );
 
         const setTokenHubApiKeyCommand = vscode.commands.registerCommand(
-            `gcmp.${providerKey}.setTokenHubApiKey`,
+            `ccmp.${providerKey}.setTokenHubApiKey`,
             async () => {
                 await TencentWizard.setTokenHubApiKey(providerConfig.apiKeyTemplate);
                 provider._onDidChangeLanguageModelChatInformation.fire();
             }
         );
 
-        const configWizardCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.configWizard`, async () => {
+        const configWizardCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.configWizard`, async () => {
             Logger.info(`启动 ${providerConfig.displayName} 配置向导`);
             await TencentWizard.startWizard(
                 providerConfig.displayName,

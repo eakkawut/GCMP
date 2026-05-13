@@ -50,7 +50,7 @@ export class ModelInfoCache {
     private readonly context: vscode.ExtensionContext;
     private readonly cacheVersion = '1';
     private readonly cacheExpiryMs = 24 * 60 * 60 * 1000; // 24 hours
-    private static readonly SELECTED_MODEL_KEY = 'gcmp_selected_model'; // 全局模型选择存储键
+    private static readonly SELECTED_MODEL_KEY = 'ccmp_selected_model'; // 全局模型选择存储键
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
@@ -87,11 +87,11 @@ export class ModelInfoCache {
             }
 
             // 检查 1: 版本匹配
-            const currentVersion = vscode.extensions.getExtension('vicanent.gcmp')?.packageJSON.version || '';
+            const currentVersion = vscode.extensions.getExtension('guokoko.ccmp')?.packageJSON.version || '';
             if (cached.extensionVersion !== currentVersion) {
                 Logger.trace(
                     `[ModelInfoCache] ${providerKey}: 版本不匹配 ` +
-                        `(缓存: ${cached.extensionVersion}, 当前: ${currentVersion})`
+                    `(缓存: ${cached.extensionVersion}, 当前: ${currentVersion})`
                 );
                 return null;
             }
@@ -113,7 +113,7 @@ export class ModelInfoCache {
 
             Logger.trace(
                 `[ModelInfoCache] ${providerKey}: 缓存命中 ` +
-                    `(${cached.models.length} 个模型, 存活 ${(ageMs / 1000).toFixed(1)}s)`
+                `(${cached.models.length} 个模型, 存活 ${(ageMs / 1000).toFixed(1)}s)`
             );
             return cached.models;
         } catch (err) {
@@ -137,7 +137,7 @@ export class ModelInfoCache {
      */
     async cacheModels(providerKey: string, models: LanguageModelChatInformation[], apiKeyHash: string): Promise<void> {
         try {
-            const currentVersion = vscode.extensions.getExtension('vicanent.gcmp')?.packageJSON.version || '';
+            const currentVersion = vscode.extensions.getExtension('guokoko.ccmp')?.packageJSON.version || '';
 
             const cacheData: CachedModelInfo = {
                 models,
@@ -227,11 +227,11 @@ export class ModelInfoCache {
     /**
      * 获取缓存的存储键
      *
-     * 格式: gcmp_modelinfo_cache_<version>_<providerKey>
+     * 格式: ccmp_modelinfo_cache_<version>_<providerKey>
      * 这样不同版本的缓存不会冲突
      */
     private getCacheKey(providerKey: string): string {
-        return `gcmp_modelinfo_cache_${this.cacheVersion}_${providerKey}`;
+        return `ccmp_modelinfo_cache_${this.cacheVersion}_${providerKey}`;
     }
 
     /**
@@ -274,7 +274,7 @@ export class ModelInfoCache {
             if (saved) {
                 Logger.trace(
                     `[ModelInfoCache] ${providerKey}: 跳过其他提供商的默认选择 (` +
-                        `已保存: ${saved.providerKey}/${saved.modelId})`
+                    `已保存: ${saved.providerKey}/${saved.modelId})`
                 );
             }
             return null;

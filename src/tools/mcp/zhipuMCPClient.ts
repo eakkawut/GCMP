@@ -149,7 +149,7 @@ export class ZhipuMCPWebSearchClient {
 
     private async disableMCPMode(): Promise<void> {
         try {
-            const config = vscode.workspace.getConfiguration('gcmp.zhipu.search');
+            const config = vscode.workspace.getConfiguration('ccmp.zhipu.search');
             await config.update('enableMCP', false, vscode.ConfigurationTarget.Global);
 
             Logger.info('✅ [Zhipu MCP] MCP模式已禁用，已切换到标准计费模式');
@@ -218,7 +218,7 @@ export class ZhipuMCPWebSearchClient {
 
             this.client = new Client(
                 {
-                    name: 'GCMP-Zhipu-WebSearch-Client',
+                    name: 'CCMP-Zhipu-WebSearch-Client',
                     version: VersionManager.getVersion()
                 },
                 {
@@ -309,7 +309,7 @@ export class ZhipuMCPWebSearchClient {
 
     getStatus(): { name: string; version: string; enabled: boolean; connected: boolean } {
         return {
-            name: 'GCMP-Zhipu-MCP-WebSearch-Client',
+            name: 'CCMP-Zhipu-MCP-WebSearch-Client',
             version: VersionManager.getVersion(),
             enabled: true,
             connected: this.isConnected()

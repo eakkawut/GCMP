@@ -371,7 +371,7 @@ export class CompatibleProvider extends GenericModelProvider {
         const disposables: vscode.Disposable[] = [];
         // 注册 manageModels 命令
         disposables.push(
-            vscode.commands.registerCommand('gcmp.compatible.manageModels', async () => {
+            vscode.commands.registerCommand('ccmp.compatible.manageModels', async () => {
                 try {
                     await CompatibleModelManager.configureModelOrUpdateAPIKey();
                 } catch (error) {
@@ -398,7 +398,7 @@ export class CompatibleProvider extends GenericModelProvider {
         // 创建提供商实例
         const provider = new CompatibleProvider(context);
         // 注册语言模型聊天提供商
-        const providerDisposable = vscode.lm.registerLanguageModelChatProvider('gcmp.compatible', provider);
+        const providerDisposable = vscode.lm.registerLanguageModelChatProvider('ccmp.compatible', provider);
         // 注册命令
         const commandDisposables = this.registerCommands(context);
         const disposables = [providerDisposable, ...commandDisposables];

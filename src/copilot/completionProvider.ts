@@ -135,19 +135,19 @@ export class InlineCompletionProvider implements vscode.InlineCompletionItemProv
                 isRunningInTest: false,
                 contextProviderMatch: async () => 0,
                 statusHandler: new (class implements ICompletionsStatusHandler {
-                    didChange(_: ICompletionsStatusChangedEvent) {}
+                    didChange(_: ICompletionsStatusChangedEvent) { }
                 })(),
                 documentManager: new DocumentManager(),
                 workspace: new MutableObservableWorkspace(),
                 urlOpener: new (class implements IURLOpener {
-                    async open(_url: string) {}
+                    async open(_url: string) { }
                 })(),
                 editorInfo: { name: 'vscode', version: vscode.version },
-                editorPluginInfo: { name: 'gcmp', version: VersionManager.getVersion() },
+                editorPluginInfo: { name: 'ccmp', version: VersionManager.getVersion() },
                 relatedPluginInfo: [],
                 editorSession: {
-                    sessionId: `gcmp-session-${Date.now()}`,
-                    machineId: `gcmp-machine-${Math.random().toString(36).substring(7)}`
+                    sessionId: `ccmp-session-${Date.now()}`,
+                    machineId: `ccmp-machine-${Math.random().toString(36).substring(7)}`
                 },
                 notificationSender: new (class implements INotificationSender {
                     async showWarningMessage(_message: string, ..._items: IActionItem[]) {

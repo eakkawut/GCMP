@@ -57,7 +57,7 @@ export class GeneratorService {
             results.push({
                 providerKey,
                 displayName: originalConfig.displayName || providerKey,
-                vendor: `gcmp.${providerKey}`
+                vendor: `ccmp.${providerKey}`
             });
         }
 
@@ -66,7 +66,7 @@ export class GeneratorService {
             results.push({
                 providerKey: 'compatible',
                 displayName: 'OpenAI / Anthropic Compatible',
-                vendor: 'gcmp.compatible'
+                vendor: 'ccmp.compatible'
             });
         }
 
@@ -172,9 +172,9 @@ export class GeneratorService {
         messages.push(
             vscode.LanguageModelChatMessage.User(
                 `${diffNoticeParts.join('\n')}` +
-                    `${blameContext ? '\nBlame analysis has also been provided in a previous message. Please use it as context.' : ''}` +
-                    `${commitConfig.format === 'auto' && repoHistory ? '\nRepository-wide recent commit history has also been provided in a previous message. Please use it to infer the style.' : ''}` +
-                    `\n\n${finalPrompt}`
+                `${blameContext ? '\nBlame analysis has also been provided in a previous message. Please use it as context.' : ''}` +
+                `${commitConfig.format === 'auto' && repoHistory ? '\nRepository-wide recent commit history has also been provided in a previous message. Please use it to infer the style.' : ''}` +
+                `\n\n${finalPrompt}`
             )
         );
 
@@ -252,7 +252,7 @@ export class GeneratorService {
             try {
                 const candidates = await vscode.lm.selectChatModels({
                     id: modelId,
-                    vendor: `gcmp.${provider}`
+                    vendor: `ccmp.${provider}`
                 });
                 return candidates?.[0] ?? null;
             } catch {
@@ -292,7 +292,7 @@ export class GeneratorService {
                     const queryId = autoPrefix ? `${matched.provider || 'compatible'}:::${modelId}` : modelId;
                     const candidates = await vscode.lm.selectChatModels({
                         id: queryId,
-                        vendor: 'gcmp.compatible'
+                        vendor: 'ccmp.compatible'
                     });
                     return candidates?.[0] ?? null;
                 }
@@ -304,7 +304,7 @@ export class GeneratorService {
                 const queryId = `${actualProvider}:::${modelId}`;
                 const candidates = await vscode.lm.selectChatModels({
                     id: queryId,
-                    vendor: `gcmp.${provider}`
+                    vendor: `ccmp.${provider}`
                 });
                 return candidates?.[0] ?? null;
             } catch {
@@ -331,7 +331,7 @@ export class GeneratorService {
 
         // 2) 未配置模型或配置无效：弹出模型选择向导，并在成功选择后重试
         const before = JSON.stringify(configuredSelection ?? {});
-        await vscode.commands.executeCommand('gcmp.commit.selectModel');
+        await vscode.commands.executeCommand('ccmp.commit.selectModel');
 
         const afterSelection = ConfigManager.getCommitConfig().model;
         const after = JSON.stringify(afterSelection ?? {});
@@ -351,7 +351,7 @@ export class GeneratorService {
         const modelId = (afterSelection?.model ?? configuredSelection?.model ?? '(未指定)').trim() || '(未指定)';
         throw new ModelNotFoundError(
             `配置的模型 "${providerKey}:${modelId}" 不可用或未启用。` +
-                '请运行“GCMP: 选择 Commit 模型”重新选择，或检查对应提供商模型是否已启用。'
+            '请运行“CCMP: 选择 Commit 模型”重新选择，或检查对应提供商模型是否已启用。'
         );
     }
 

@@ -49,15 +49,15 @@ interface MiniMaxStatusData {
 export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
     constructor() {
         const config: StatusBarItemConfig = {
-            id: 'gcmp.statusBar.minimax',
-            name: 'GCMP: MiniMax Coding Plan',
+            id: 'ccmp.statusBar.minimax',
+            name: 'CCMP: MiniMax Coding Plan',
             alignment: vscode.StatusBarAlignment.Right,
             priority: 98,
-            refreshCommand: 'gcmp.refreshMiniMaxUsage',
+            refreshCommand: 'ccmp.refreshMiniMaxUsage',
             apiKeyProvider: 'minimax-coding',
             cacheKeyPrefix: 'minimax',
             logPrefix: 'MiniMax状态栏',
-            icon: '$(gcmp-minimax)'
+            icon: '$(ccmp-minimax)'
         };
         super(config);
     }

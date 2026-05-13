@@ -66,7 +66,7 @@ export class GenericModelProvider implements LanguageModelChatProvider {
         // 监听配置变更
         this.configListener = vscode.workspace.onDidChangeConfiguration(e => {
             // 检查是否是 providerOverrides 的变更
-            if (e.affectsConfiguration('gcmp.providerOverrides') && providerKey !== 'compatible') {
+            if (e.affectsConfiguration('ccmp.providerOverrides') && providerKey !== 'compatible') {
                 // 重新计算配置
                 this.cachedProviderConfig = ConfigManager.applyProviderOverrides(
                     this.providerKey,
@@ -80,7 +80,7 @@ export class GenericModelProvider implements LanguageModelChatProvider {
                 this._onDidChangeLanguageModelChatInformation.fire();
             }
             // 检查是否是 autoPrefixModelId 的变更
-            if (e.affectsConfiguration('gcmp.autoPrefixModelId')) {
+            if (e.affectsConfiguration('ccmp.autoPrefixModelId')) {
                 Logger.trace(`[${this.providerKey}] autoPrefixModelId 配置已更新，刷新模型列表`);
                 this._onDidChangeLanguageModelChatInformation.fire();
             }
@@ -130,9 +130,9 @@ export class GenericModelProvider implements LanguageModelChatProvider {
         // 创建提供商实例
         const provider = new GenericModelProvider(context, providerKey, providerConfig);
         // 注册语言模型聊天提供商
-        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`gcmp.${providerKey}`, provider);
+        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`ccmp.${providerKey}`, provider);
         // 注册设置API密钥命令
-        const setApiKeyCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.setApiKey`, async () => {
+        const setApiKeyCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.setApiKey`, async () => {
             await ApiKeyManager.promptAndSetApiKey(
                 providerKey,
                 providerConfig.displayName,
@@ -343,7 +343,7 @@ export class GenericModelProvider implements LanguageModelChatProvider {
             Logger.info(`[${this.providerKey}] 需要配置 API 密钥`);
 
             // 非静默模式下，直接触发API密钥设置
-            await vscode.commands.executeCommand(`gcmp.${this.providerKey}.setApiKey`);
+            await vscode.commands.executeCommand(`ccmp.${this.providerKey}.setApiKey`);
             // 重新检查API密钥
             const hasApiKeyAfterSet = await ApiKeyManager.hasValidApiKey(this.providerKey);
             if (!hasApiKeyAfterSet) {

@@ -1,15 +1,15 @@
 # 更新日志
 
-本文档记录了 GCMP (AI Chat Models) 扩展的最近主要更改。
+本文档记录了 CCMP (AI Chat Models) 扩展的最近主要更改。
 
 ## [0.22.11] - 2026-05-13
 
 ### 修复
 
-- **MiMo 多轮工具调用推理丢失**：重构思考内容回放策略，修复 MiMo 模型在多轮工具调用场景下 `reasoning_content` 未正确传回 API 导致请求失败的问题（[#171](https://github.com/VicBilibily/GCMP/issues/171)）
+- **MiMo 多轮工具调用推理丢失**：重构思考内容回放策略，修复 MiMo 模型在多轮工具调用场景下 `reasoning_content` 未正确传回 API 导致请求失败的问题（[#171](https://github.com/VicBilibily/CCMP/issues/171)）
     - 提取通用策略模块 `reasoningReplayPolicy`，替代原 DeepSeek-V4 硬编码逻辑
     - OpenAI 与 Anthropic 两条转换路径均已适配
-- **工具调用参数解析失败**：修复 `deduplicateToolArgs` 误删单字符标点导致工具调用参数解析失败的问题（[#173](https://github.com/VicBilibily/GCMP/pull/173)）
+- **工具调用参数解析失败**：修复 `deduplicateToolArgs` 误删单字符标点导致工具调用参数解析失败的问题（[#173](https://github.com/VicBilibily/CCMP/pull/173)）
 
 ### 优化
 
@@ -23,7 +23,7 @@
 
 ### 修复
 
-- **VS Code 1.120.0 模型不显示**：修复 VS Code 1.120.0 及以上版本无法识别第三方模型的问题，补齐 `isUserSelectable` 属性声明（[#159](https://github.com/VicBilibily/GCMP/issues/159)）
+- **VS Code 1.120.0 模型不显示**：修复 VS Code 1.120.0 及以上版本无法识别第三方模型的问题，补齐 `isUserSelectable` 属性声明（[#159](https://github.com/VicBilibily/CCMP/issues/159)）
 
 ## [0.22.9] - 2026-05-09
 
@@ -35,7 +35,7 @@
 
 ### 修复
 
-- **请求中止残留空消息**：修复用户取消请求后，VS Code 保留的空 assistant 消息（仅含空白文本与空代码块）导致后续请求随机缓存命中暴降的问题（[#157](https://github.com/VicBilibily/GCMP/issues/157)）
+- **请求中止残留空消息**：修复用户取消请求后，VS Code 保留的空 assistant 消息（仅含空白文本与空代码块）导致后续请求随机缓存命中暴降的问题（[#157](https://github.com/VicBilibily/CCMP/issues/157)）
 
 ## [0.22.8] - 2026-05-08
 
@@ -66,13 +66,13 @@
 
 ### 修复
 
-- **火山方舟 Seed 2.0 推理强度**：修复使用 Anthropic 接口的火山模型选择 `minimal` 推理强度时，错误地将 `minimal` 传递到请求体导致 API 报错的问题；`minimal` 现在正确映射为关闭思考模式（[#149](https://github.com/VicBilibily/GCMP/issues/149)）
+- **火山方舟 Seed 2.0 推理强度**：修复使用 Anthropic 接口的火山模型选择 `minimal` 推理强度时，错误地将 `minimal` 传递到请求体导致 API 报错的问题；`minimal` 现在正确映射为关闭思考模式（[#149](https://github.com/VicBilibily/CCMP/issues/149)）
 
 ## [0.22.5] - 2026-04-28
 
 ### 修复
 
-- **提交消息生成失败**：修复 DeepSeek-V4 等默认开启思考的模型在生成提交消息时报错 `thinking options type cannot be disabled when reasoning_effort is set` 的问题（[#148](https://github.com/VicBilibily/GCMP/issues/148)）
+- **提交消息生成失败**：修复 DeepSeek-V4 等默认开启思考的模型在生成提交消息时报错 `thinking options type cannot be disabled when reasoning_effort is set` 的问题（[#148](https://github.com/VicBilibily/CCMP/issues/148)）
     - Anthropic SDK：提交模式下禁用思考时同步移除 `output_config`，避免参数冲突
     - OpenAI SDK：提交模式下 `thinkingFormat=object` 时同步移除 `reasoning_effort`；`thinkingFormat=boolean` 时仅当关闭选项为首项配置才传递 `reasoning_effort` 关闭思考，其余由 `enable_thinking=false` 直接关闭
     - Responses API：提交模式下无条件设置 `thinking.type=disabled`，并显式补齐 `reasoning.effort` 关闭值（`none`/`minimal`），不再依赖请求中是否已有 reasoning 字段
@@ -94,14 +94,14 @@
 
 ### 修复
 
-- **扩展激活失败**：修复 usages 缓存文件损坏时可能导致扩展启动阶段 JSON 解析异常、进而无法激活的问题（[#143](https://github.com/VicBilibily/GCMP/issues/143)）
+- **扩展激活失败**：修复 usages 缓存文件损坏时可能导致扩展启动阶段 JSON 解析异常、进而无法激活的问题（[#143](https://github.com/VicBilibily/CCMP/issues/143)）
 - **用量缓存写入可靠性**：`usages/index.json` 与各日期 `stats.json` 改为串行化的原子写入，降低并发覆盖或中断写入导致缓存文件损坏的风险
 
 ## [0.22.1] - 2026-04-24
 
 ### 新增
 
-- **MiniMax**：[#122](https://github.com/VicBilibily/GCMP/pull/122) [#135](https://github.com/VicBilibily/GCMP/issues/135) Coding Plan 模型支持图片输入，通过对话图片桥接的独立模块实现，利用 Vision API 将图片自动转为文字描述
+- **MiniMax**：[#122](https://github.com/VicBilibily/CCMP/pull/122) [#135](https://github.com/VicBilibily/CCMP/issues/135) Coding Plan 模型支持图片输入，通过对话图片桥接的独立模块实现，利用 Vision API 将图片自动转为文字描述
 
 ## [0.22.0] - 2026-04-24
 
@@ -115,7 +115,7 @@
 
 ### 优化
 
-- **Commit 提示词**：为 commit 消息生成添加 System Role 消息（[#138](https://github.com/VicBilibily/GCMP/issues/138)）
+- **Commit 提示词**：为 commit 消息生成添加 System Role 消息（[#138](https://github.com/VicBilibily/CCMP/issues/138)）
 
 ## 历史版本（仅保留功能日志）
 
@@ -126,7 +126,7 @@
 - **Xiaomi MIMO**：新增 Token Plan 套餐接入与专用 API Key 配置
 - **联网搜索工具**：新增 `#kimiWebSearch`、`#bailianWebSearch` 联网搜索工具支持
 - **模型配置能力**：新增模型级 `thinking`、`reasoningEffort` 选项，允许手动调整模型思考模式及思考强度
-- **请求重试机制**：统一由通用 Provider 处理自动重试，新增 `gcmp.retry.maxAttempts` 配置项
+- **请求重试机制**：统一由通用 Provider 处理自动重试，新增 `ccmp.retry.maxAttempts` 配置项
 - **移除**：移除 Qwen Code CLI、iFlow CLI 认证提供商
 
 ### 0.20.0 - 0.20.11 (2026-03-05 - 2026-03-23)
@@ -135,7 +135,7 @@
 - **腾讯云**：新增提供商支持，包含混元模型、Coding Plan 编程套餐、DeepSeek 接入及多密钥管理
 - **Xiaomi MIMO**：新增提供商支持，包含 MiMo-V2 系列模型
 - **模型 Family 配置**：新增模型级别的 `family` 配置项
-- **临时兼容配置项**：新增 `gcmp.autoPrefixModelId` 配置项，适配 VS Code 1.111.0 模型选择器
+- **临时兼容配置项**：新增 `ccmp.autoPrefixModelId` 配置项，适配 VS Code 1.111.0 模型选择器
 
 ### 0.19.0 - 0.19.17 (2026-02-12 - 2026-02-28)
 

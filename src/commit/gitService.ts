@@ -50,10 +50,10 @@ export function checkGitAvailability(): vscode.Disposable {
     // 监听扩展的启用状态变化
     const onDidChangeGitExtensionEnablement = (enabled: boolean) => {
         if (enabled) {
-            vscode.commands.executeCommand('setContext', 'gcmp.gitAvailable', true);
+            vscode.commands.executeCommand('setContext', 'ccmp.gitAvailable', true);
             Logger.debug('[Git] vscode.git 扩展已启用，Commit 消息生成功能已启用');
         } else {
-            vscode.commands.executeCommand('setContext', 'gcmp.gitAvailable', false);
+            vscode.commands.executeCommand('setContext', 'ccmp.gitAvailable', false);
             Logger.warn('[Git] vscode.git 扩展已禁用，Commit 消息生成功能将被隐藏');
         }
     };
@@ -64,7 +64,7 @@ export function checkGitAvailability(): vscode.Disposable {
 
         if (!gitExtension) {
             // vscode.git 扩展不存在（可能被禁用或未安装）
-            vscode.commands.executeCommand('setContext', 'gcmp.gitAvailable', false);
+            vscode.commands.executeCommand('setContext', 'ccmp.gitAvailable', false);
             Logger.warn('[Git] vscode.git 扩展未找到，Commit 消息生成功能将被隐藏');
             return;
         }
@@ -80,7 +80,7 @@ export function checkGitAvailability(): vscode.Disposable {
             },
             (error: unknown) => {
                 // 发生错误，认为 Git 不可用
-                vscode.commands.executeCommand('setContext', 'gcmp.gitAvailable', false);
+                vscode.commands.executeCommand('setContext', 'ccmp.gitAvailable', false);
                 Logger.warn('[Git] 检查 Git 可用性时出错:', error);
             }
         );

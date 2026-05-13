@@ -114,15 +114,15 @@ function getWindowType(limitWindowSeconds: number): { type: string; label: strin
 export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
     constructor() {
         const config: StatusBarItemConfig = {
-            id: 'gcmp.statusBar.chatgpt',
-            name: 'GCMP: ChatGPT Usage',
+            id: 'ccmp.statusBar.chatgpt',
+            name: 'CCMP: ChatGPT Usage',
             alignment: vscode.StatusBarAlignment.Right,
             priority: 15,
-            refreshCommand: 'gcmp.chatgpt.refreshUsage',
+            refreshCommand: 'ccmp.chatgpt.refreshUsage',
             apiKeyProvider: 'codex',
             cacheKeyPrefix: 'chatgpt',
             logPrefix: 'ChatGPT状态栏',
-            icon: '$(gcmp-openai)'
+            icon: '$(ccmp-openai)'
         };
         super(config);
     }

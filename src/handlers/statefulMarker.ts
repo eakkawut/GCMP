@@ -12,8 +12,8 @@ export interface IStatefulMarkerContainer {
     value: StatefulMarkerWithModel;
 }
 
-const StatefulMarkerExtension = 'vicanent.gcmp';
-type StatefulMarkerExtension = 'vicanent.gcmp';
+const StatefulMarkerExtension = 'guokoko.ccmp';
+type StatefulMarkerExtension = 'guokoko.ccmp';
 export interface StatefulMarkerContainer {
     extension: StatefulMarkerExtension;
     provider: string;

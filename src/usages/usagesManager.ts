@@ -61,7 +61,7 @@ export class TokenUsagesManager {
         // 使用 setImmediate 确保在下一个事件循环中执行，不阻塞当前流程
         setImmediate(async () => {
             try {
-                const config = vscode.workspace.getConfiguration('gcmp.usages');
+                const config = vscode.workspace.getConfiguration('ccmp.usages');
                 const retentionDays = config.get<number>('retentionDays', 100);
                 if (retentionDays > 0) {
                     StatusLogger.trace(`[UsagesManager] 开始后台清理过期数据 (保留 ${retentionDays} 天)`);
@@ -186,8 +186,8 @@ export class TokenUsagesManager {
 
             StatusLogger.debug(
                 `[Usages] 更新实际 token: requestId=${params.requestId}, ` +
-                    `rawUsage=${params.rawUsage ? '已记录' : '未记录'}, ` +
-                    `status=${params.status}${durationInfo}`
+                `rawUsage=${params.rawUsage ? '已记录' : '未记录'}, ` +
+                `status=${params.status}${durationInfo}`
             );
         } catch (err) {
             StatusLogger.warn('[Usages] 更新实际 token 失败:', err);

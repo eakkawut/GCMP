@@ -14,7 +14,7 @@ export class Logger {
     /**
      * 初始化日志管理器
      */
-    static initialize(channelName = 'GCMP'): void {
+    static initialize(channelName = 'CCMP'): void {
         // 使用LogOutputChannel (VS Code 1.74+)，支持原生的日志级别和格式化
         this.outputChannel = vscode.window.createOutputChannel(channelName, { log: true });
     }
@@ -42,7 +42,7 @@ export class Logger {
             // 显示通知
             vscode.window
                 .showInformationMessage(
-                    `GCMP: 当前VS Code日志级别为 ${vscode.LogLevel[channelLevel]}`,
+                    `CCMP: 当前VS Code日志级别为 ${vscode.LogLevel[channelLevel]}`,
                     '设置日志级别',
                     '忽略'
                 )

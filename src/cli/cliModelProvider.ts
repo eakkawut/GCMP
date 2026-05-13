@@ -52,7 +52,7 @@ export class CliModelProvider extends GenericModelProvider {
             ]);
         } else {
             // 非静默模式下，直接触发用户交互确保有密钥
-            await vscode.commands.executeCommand(`gcmp.${this.providerKey}.configWizard`);
+            await vscode.commands.executeCommand(`ccmp.${this.providerKey}.configWizard`);
             hasApiKey = await ApiKeyManager.ensureApiKey(this.providerKey, this.providerConfig.displayName, false);
             options.silent = true; // 后续调用调整为静默模式
         }
@@ -67,7 +67,7 @@ export class CliModelProvider extends GenericModelProvider {
                     await ApiKeyManager.setApiKey(this.providerKey, credentials.access_token);
                     Logger.info(`[CliModelProvider] 已从 ${this.providerKey} CLI 加载认证凭证`);
                 } else {
-                    await vscode.commands.executeCommand(`gcmp.${this.providerKey}.configWizard`);
+                    await vscode.commands.executeCommand(`ccmp.${this.providerKey}.configWizard`);
                     // 无法获取凭证，返回空列表
                     Logger.warn(`[CliModelProvider] 无法从 ${this.providerKey} CLI 加载认证凭证`);
                     return [];
@@ -93,10 +93,10 @@ export class CliModelProvider extends GenericModelProvider {
         // 创建提供商实例
         const provider = new CliModelProvider(context, providerKey, providerConfig);
         // 注册语言模型聊天提供商
-        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`gcmp.${providerKey}`, provider);
+        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`ccmp.${providerKey}`, provider);
 
         // 注册设置API密钥命令
-        const setApiKeyCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.setApiKey`, async () => {
+        const setApiKeyCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.setApiKey`, async () => {
             await ApiKeyManager.promptAndSetApiKey(
                 providerKey,
                 providerConfig.displayName,
@@ -109,7 +109,7 @@ export class CliModelProvider extends GenericModelProvider {
         });
 
         // 注册配置向导命令
-        const configWizardCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.configWizard`, async () => {
+        const configWizardCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.configWizard`, async () => {
             await CliModelProvider.startConfigWizard(providerKey, providerConfig.displayName);
             // 配置变更后清除缓存
             await provider.modelInfoCache?.invalidateCache(providerKey);

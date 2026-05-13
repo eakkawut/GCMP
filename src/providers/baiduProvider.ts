@@ -37,9 +37,9 @@ export class BaiduProvider extends GenericModelProvider implements LanguageModel
         // 创建提供商实例
         const provider = new BaiduProvider(context, providerKey, providerConfig);
         // 注册语言模型聊天提供商
-        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`gcmp.${providerKey}`, provider);
+        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`ccmp.${providerKey}`, provider);
         // 注册设置普通 API 密钥命令
-        const setApiKeyCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.setApiKey`, async () => {
+        const setApiKeyCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.setApiKey`, async () => {
             await BaiduWizard.setNormalApiKey(providerConfig.displayName, providerConfig.apiKeyTemplate);
             // API 密钥变更后清除缓存
             await provider.modelInfoCache?.invalidateCache(providerKey);
@@ -48,7 +48,7 @@ export class BaiduProvider extends GenericModelProvider implements LanguageModel
         });
         // 注册设置 Coding Plan 专用密钥命令
         const setCodingKeyCommand = vscode.commands.registerCommand(
-            `gcmp.${providerKey}.setCodingPlanApiKey`,
+            `ccmp.${providerKey}.setCodingPlanApiKey`,
             async () => {
                 await BaiduWizard.setCodingPlanApiKey(providerConfig.displayName, providerConfig.codingKeyTemplate);
                 // API 密钥变更后清除缓存
@@ -58,7 +58,7 @@ export class BaiduProvider extends GenericModelProvider implements LanguageModel
             }
         );
         // 注册配置向导命令
-        const configWizardCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.configWizard`, async () => {
+        const configWizardCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.configWizard`, async () => {
             Logger.info(`启动 ${providerConfig.displayName} 配置向导`);
             await BaiduWizard.startWizard(
                 providerConfig.displayName,

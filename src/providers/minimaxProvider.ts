@@ -41,10 +41,10 @@ export class MiniMaxProvider extends GenericModelProvider implements LanguageMod
         // 创建提供商实例
         const provider = new MiniMaxProvider(context, providerKey, providerConfig);
         // 注册语言模型聊天提供商
-        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`gcmp.${providerKey}`, provider);
+        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`ccmp.${providerKey}`, provider);
 
         // 注册设置普通 API 密钥命令
-        const setApiKeyCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.setApiKey`, async () => {
+        const setApiKeyCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.setApiKey`, async () => {
             await MiniMaxWizard.setNormalApiKey(providerConfig.displayName, providerConfig.apiKeyTemplate);
             // API 密钥变更后清除缓存
             await provider.modelInfoCache?.invalidateCache(providerKey);
@@ -54,7 +54,7 @@ export class MiniMaxProvider extends GenericModelProvider implements LanguageMod
 
         // 注册设置 Coding Plan 专用密钥命令
         const setCodingKeyCommand = vscode.commands.registerCommand(
-            `gcmp.${providerKey}.setCodingPlanApiKey`,
+            `ccmp.${providerKey}.setCodingPlanApiKey`,
             async () => {
                 await MiniMaxWizard.setCodingPlanApiKey(providerConfig.displayName, providerConfig.codingKeyTemplate);
                 // API 密钥变更后清除缓存
@@ -66,7 +66,7 @@ export class MiniMaxProvider extends GenericModelProvider implements LanguageMod
 
         // 注册设置 Coding Plan 接入点命令
         const setCodingPlanEndpointCommand = vscode.commands.registerCommand(
-            `gcmp.${providerKey}.setCodingPlanEndpoint`,
+            `ccmp.${providerKey}.setCodingPlanEndpoint`,
             async () => {
                 Logger.info(`用户手动打开 ${providerConfig.displayName} Coding Plan 接入点选择`);
                 await MiniMaxWizard.setCodingPlanEndpoint(providerConfig.displayName);
@@ -74,7 +74,7 @@ export class MiniMaxProvider extends GenericModelProvider implements LanguageMod
         );
 
         // 注册配置向导命令
-        const configWizardCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.configWizard`, async () => {
+        const configWizardCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.configWizard`, async () => {
             Logger.info(`启动 ${providerConfig.displayName} 配置向导`);
             await MiniMaxWizard.startWizard(
                 providerConfig.displayName,

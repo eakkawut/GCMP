@@ -39,10 +39,10 @@ export class MoonshotProvider extends GenericModelProvider implements LanguageMo
         // 创建提供商实例
         const provider = new MoonshotProvider(context, providerKey, providerConfig);
         // 注册语言模型聊天提供商
-        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`gcmp.${providerKey}`, provider);
+        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`ccmp.${providerKey}`, provider);
 
         // 注册设置 Moonshot API 密钥命令
-        const setApiKeyCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.setApiKey`, async () => {
+        const setApiKeyCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.setApiKey`, async () => {
             await MoonshotWizard.setMoonshotApiKey(providerConfig.displayName, providerConfig.apiKeyTemplate);
             // API 密钥变更后清除缓存
             await provider.modelInfoCache?.invalidateCache(providerKey);
@@ -51,7 +51,7 @@ export class MoonshotProvider extends GenericModelProvider implements LanguageMo
         });
 
         // 注册设置 Kimi API 密钥命令
-        const setKimiApiKeyCommand = vscode.commands.registerCommand('gcmp.kimi.setApiKey', async () => {
+        const setKimiApiKeyCommand = vscode.commands.registerCommand('ccmp.kimi.setApiKey', async () => {
             await MoonshotWizard.setKimiApiKey(providerConfig.displayName, providerConfig.codingKeyTemplate);
             // API 密钥变更后清除缓存
             await provider.modelInfoCache?.invalidateCache('kimi');
@@ -60,7 +60,7 @@ export class MoonshotProvider extends GenericModelProvider implements LanguageMo
         });
 
         // 注册配置向导命令
-        const configWizardCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.configWizard`, async () => {
+        const configWizardCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.configWizard`, async () => {
             Logger.info(`启动 ${providerConfig.displayName} 配置向导`);
             await MoonshotWizard.startWizard(
                 providerConfig.displayName,

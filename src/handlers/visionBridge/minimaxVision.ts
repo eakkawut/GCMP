@@ -45,7 +45,7 @@ export class MiniMaxVisionTool {
     async understand(params: MiniMaxVisionRequest, abortSignal?: AbortSignal): Promise<MiniMaxVisionResponse> {
         const apiKey = await ApiKeyManager.getApiKey('minimax-coding');
         if (!apiKey) {
-            throw new Error('MiniMax Coding Plan API密钥未设置，请先运行命令"GCMP: 设置 MiniMax Coding Plan API密钥"');
+            throw new Error('MiniMax Coding Plan API密钥未设置，请先运行命令"CCMP: 设置 MiniMax Coding Plan API密钥"');
         }
 
         const requestData = JSON.stringify({

@@ -87,14 +87,14 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
 
     constructor() {
         const config: BaseStatusBarItemConfig = {
-            id: 'gcmp.statusBar.compatible',
-            name: 'GCMP: Compatible Balance',
+            id: 'ccmp.statusBar.compatible',
+            name: 'CCMP: Compatible Balance',
             alignment: vscode.StatusBarAlignment.Right,
             priority: 10, // 优先级取一个低值，靠右显示
-            refreshCommand: 'gcmp.compatible.refreshBalance',
+            refreshCommand: 'ccmp.compatible.refreshBalance',
             cacheKeyPrefix: 'compatible',
             logPrefix: 'Compatible状态栏',
-            icon: '$(gcmp-compatible)'
+            icon: '$(ccmp-compatible)'
         };
         super(config);
     }

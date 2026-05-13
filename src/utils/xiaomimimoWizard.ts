@@ -189,7 +189,7 @@ export class XiaomimimoWizard {
      */
     static async saveTokenPlanEndpoint(endpoint: XiaomimimoConfig['endpoint']): Promise<void> {
         try {
-            const config = vscode.workspace.getConfiguration('gcmp.xiaomimimo');
+            const config = vscode.workspace.getConfiguration('ccmp.xiaomimimo');
             await config.update('endpoint', endpoint, vscode.ConfigurationTarget.Global);
             Logger.info(`已保存 Token Plan 接入点: ${endpoint}`);
         } catch (error) {

@@ -16,7 +16,7 @@ export class VersionManager {
      */
     static getVersion(): string {
         if (this._version === null) {
-            const extension = vscode.extensions.getExtension('vicanent.gcmp');
+            const extension = vscode.extensions.getExtension('guokoko.ccmp');
             this._version = extension?.packageJSON?.version || '0.4.0';
         }
         return this._version!;
@@ -26,7 +26,7 @@ export class VersionManager {
      * 获取用户代理字符串
      */
     static getUserAgent(component: string): string {
-        return `GCMP-${component}/${this.getVersion()}`;
+        return `CCMP-${component}/${this.getVersion()}`;
     }
 
     /**
@@ -34,7 +34,7 @@ export class VersionManager {
      */
     static getClientInfo(): { name: string; version: string } {
         return {
-            name: 'GCMP',
+            name: 'CCMP',
             version: this.getVersion()
         };
     }

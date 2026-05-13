@@ -33,10 +33,10 @@ export class VolcengineProvider extends GenericModelProvider implements Language
         Logger.trace(`${providerConfig.displayName} 专用模型扩展已激活!`);
 
         const provider = new VolcengineProvider(context, providerKey, providerConfig);
-        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`gcmp.${providerKey}`, provider);
+        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`ccmp.${providerKey}`, provider);
 
         // Coding Plan API Key
-        const setApiKeyCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.setApiKey`, async () => {
+        const setApiKeyCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.setApiKey`, async () => {
             await VolcengineWizard.setCodingPlanApiKey(providerConfig.displayName, providerConfig.apiKeyTemplate);
             await provider.modelInfoCache?.invalidateCache(providerKey);
             provider._onDidChangeLanguageModelChatInformation.fire();
@@ -44,7 +44,7 @@ export class VolcengineProvider extends GenericModelProvider implements Language
 
         // Agent Plan 专用 API Key
         const setAgentPlanApiKeyCommand = vscode.commands.registerCommand(
-            `gcmp.${providerKey}.setAgentPlanApiKey`,
+            `ccmp.${providerKey}.setAgentPlanApiKey`,
             async () => {
                 await VolcengineWizard.setAgentPlanApiKey(
                     providerConfig.displayName,
@@ -55,7 +55,7 @@ export class VolcengineProvider extends GenericModelProvider implements Language
             }
         );
 
-        const configWizardCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.configWizard`, async () => {
+        const configWizardCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.configWizard`, async () => {
             Logger.info(`启动 ${providerConfig.displayName} 配置向导`);
             await VolcengineWizard.startWizard(
                 providerConfig.displayName,

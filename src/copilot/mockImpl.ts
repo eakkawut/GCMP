@@ -43,8 +43,8 @@ export class AuthenticationService extends Disposable implements IAuthentication
     readonly permissiveGitHubSession = undefined;
     readonly copilotToken = new CopilotToken(
         createTestExtendedTokenInfo({
-            token: `gcmp-token-${Math.ceil(Math.random() * 100)}`,
-            username: 'gcmpuser',
+            token: `ccmp-token-${Math.ceil(Math.random() * 100)}`,
+            username: 'ccmpuser',
             copilot_plan: 'individual'
         })
     );

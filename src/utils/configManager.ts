@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  配置管理器
- *  用于管理GCMP扩展的全局配置设置和提供商配置
+ *  用于管理CCMP扩展的全局配置设置和提供商配置
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -79,9 +79,9 @@ export interface CommitConfig {
 }
 
 /**
- * GCMP配置接口
+ * CCMP配置接口
  */
-export interface GCMPConfig {
+export interface CCMPConfig {
     /** 最大输出token数量 */
     maxTokens: number;
     /** 请求失败重试配置 */
@@ -106,11 +106,11 @@ export interface GCMPConfig {
 
 /**
  * 配置管理器类
- * 负责读取和管理 VS Code 设置中的 GCMP 配置以及package.json中的提供商配置
+ * 负责读取和管理 VS Code 设置中的 CCMP 配置以及package.json中的提供商配置
  */
 export class ConfigManager {
-    private static readonly CONFIG_SECTION = 'gcmp';
-    private static cache: GCMPConfig | null = null;
+    private static readonly CONFIG_SECTION = 'ccmp';
+    private static cache: CCMPConfig | null = null;
     private static configListener: vscode.Disposable | null = null;
 
     /**
@@ -127,7 +127,7 @@ export class ConfigManager {
         this.configListener = vscode.workspace.onDidChangeConfiguration(event => {
             if (event.affectsConfiguration(this.CONFIG_SECTION)) {
                 this.cache = null; // 清除缓存，强制重新读取
-                Logger.info('GCMP配置已更新，缓存已清除');
+                Logger.info('CCMP配置已更新，缓存已清除');
             }
         });
 
@@ -139,7 +139,7 @@ export class ConfigManager {
      * 获取当前配置
      * 使用缓存机制提高性能
      */
-    static getConfig(): GCMPConfig {
+    static getConfig(): CCMPConfig {
         if (this.cache) {
             return this.cache;
         }

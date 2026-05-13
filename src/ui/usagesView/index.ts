@@ -50,8 +50,8 @@ export class TokenUsagesView {
         // 获取今日日期作为标题
         const today = getTodayDateString();
         this.panel = vscode.window.createWebviewPanel(
-            'gcmpTokenStats',
-            `GCMP Token 消耗统计 - ${today}`,
+            'ccmpTokenStats',
+            `CCMP Token 消耗统计 - ${today}`,
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -261,7 +261,7 @@ export class TokenUsagesView {
 
             // 更新面板标题
             if (this.panel) {
-                this.panel.title = `GCMP Token 消耗统计 - ${date}`;
+                this.panel.title = `CCMP Token 消耗统计 - ${date}`;
             }
 
             // 发送消息给 WebView，让它更新详情区域
@@ -317,7 +317,7 @@ export class TokenUsagesView {
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>GCMP Token 消耗统计</title>
+	<title>CCMP Token 消耗统计</title>
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${cspSource}; script-src 'unsafe-inline' ${cspSource};" />
 </head>
 <body>

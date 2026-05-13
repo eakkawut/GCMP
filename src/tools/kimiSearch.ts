@@ -91,7 +91,7 @@ export class KimiSearchTool {
     async search(params: KimiSearchRequest): Promise<KimiSearchResponse> {
         const apiKey = await this.getApiKey();
         if (!apiKey) {
-            throw new Error('Kimi API 密钥未设置，请先运行命令"GCMP: 设置 Kimi For Coding API 密钥"');
+            throw new Error('Kimi API 密钥未设置，请先运行命令"CCMP: 设置 Kimi For Coding API 密钥"');
         }
 
         const limit = this.clampNumResults(params.limit);

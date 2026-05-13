@@ -32,13 +32,13 @@ export class TokenUsageStatusBar {
      */
     async initialize(): Promise<void> {
         this.statusBarItem = vscode.window.createStatusBarItem(
-            'gcmp.statusBar.tokenUsage',
+            'ccmp.statusBar.tokenUsage',
             vscode.StatusBarAlignment.Right,
             11 // 优先级设置在 contextUsage(12) 之前
         );
 
-        this.statusBarItem.name = 'GCMP: Token Usage';
-        this.statusBarItem.command = 'gcmp.tokenUsage.showDetails';
+        this.statusBarItem.name = 'CCMP: Token Usage';
+        this.statusBarItem.command = 'ccmp.tokenUsage.showDetails';
 
         // 初始更新显示
         this.updateDisplay().then(() => {
@@ -157,7 +157,7 @@ export class TokenUsageStatusBar {
         md.supportHtml = false;
         md.isTrusted = true;
 
-        md.appendMarkdown('**GCMP: 今日 Token 消耗统计**\n\n');
+        md.appendMarkdown('**CCMP: 今日 Token 消耗统计**\n\n');
         md.appendMarkdown('\n---\n');
 
         const providers = Object.values(stats.providers);
@@ -187,9 +187,9 @@ export class TokenUsageStatusBar {
             const avgLatency = this.calculateAverageFirstTokenLatency(providerStats.firstTokenLatency);
             md.appendMarkdown(
                 `| ${providerStats.providerName} | ${this.formatTokens(providerStats.actualInput)} | ` +
-                    `${this.formatTokens(providerStats.cacheTokens)} | ` +
-                    `${this.formatTokens(providerStats.outputTokens)} | ` +
-                    `**${this.formatTokens(providerTotal)}** | ${providerStats.requests} | ${avgLatency} | ${avgSpeed} |\n`
+                `${this.formatTokens(providerStats.cacheTokens)} | ` +
+                `${this.formatTokens(providerStats.outputTokens)} | ` +
+                `**${this.formatTokens(providerTotal)}** | ${providerStats.requests} | ${avgLatency} | ${avgSpeed} |\n`
             );
         }
         // 合计行（仅当有多个提供商时显示）
@@ -199,9 +199,9 @@ export class TokenUsageStatusBar {
             const avgLatencyTotal = this.calculateAverageFirstTokenLatency(stats.total.firstTokenLatency);
             md.appendMarkdown(
                 `| **合计** | **${this.formatTokens(stats.total.actualInput)}** | ` +
-                    `**${this.formatTokens(stats.total.cacheTokens)}** | ` +
-                    `**${this.formatTokens(stats.total.outputTokens)}** | ` +
-                    `**${this.formatTokens(total)}** | **${stats.total.requests}** | **${avgLatencyTotal}** | **${avgSpeedTotal}** |\n`
+                `**${this.formatTokens(stats.total.cacheTokens)}** | ` +
+                `**${this.formatTokens(stats.total.outputTokens)}** | ` +
+                `**${this.formatTokens(total)}** | **${stats.total.requests}** | **${avgLatencyTotal}** | **${avgSpeedTotal}** |\n`
             );
         }
 

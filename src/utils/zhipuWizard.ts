@@ -167,7 +167,7 @@ export class ZhipuWizard {
      */
     private static async setMCPConfig(enable: boolean): Promise<void> {
         try {
-            const config = vscode.workspace.getConfiguration('gcmp');
+            const config = vscode.workspace.getConfiguration('ccmp');
             await config.update('zhipu.search.enableMCP', enable, vscode.ConfigurationTarget.Global);
             Logger.info(`Zhipu MCP 搜索服务已${enable ? '启用' : '禁用'}`);
         } catch (error) {
@@ -208,7 +208,7 @@ export class ZhipuWizard {
         }
 
         try {
-            const config = vscode.workspace.getConfiguration('gcmp.zhipu');
+            const config = vscode.workspace.getConfiguration('ccmp.zhipu');
             await config.update('endpoint', choice.value, vscode.ConfigurationTarget.Global);
             Logger.info(`智谱AI接入站点已设置为 ${choice.value}`);
             vscode.window.showInformationMessage(

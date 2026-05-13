@@ -101,7 +101,7 @@ export class ZhipuSearchTool {
     async search(params: ZhipuSearchRequest): Promise<ZhipuSearchResponse> {
         const apiKey = await ApiKeyManager.getApiKey('zhipu');
         if (!apiKey) {
-            throw new Error('智谱AI API密钥未设置，请先运行命令"GCMP: 设置 智谱AI API密钥"');
+            throw new Error('智谱AI API密钥未设置，请先运行命令"CCMP: 设置 智谱AI API密钥"');
         }
 
         // 根据 endpoint 配置确定 baseURL

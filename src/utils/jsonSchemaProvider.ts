@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
  *  JSON Schema 提供者
- *  动态生成 GCMP 配置的 JSON Schema，为 settings.json 提供智能提示
+ *  动态生成 CCMP 配置的 JSON Schema，为 settings.json 提供智能提示
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -24,10 +24,10 @@ declare module 'json-schema' {
 
 /**
  * JSON Schema 提供者类
- * 动态生成 GCMP 配置的 JSON Schema，为 settings.json 提供智能提示
+ * 动态生成 CCMP 配置的 JSON Schema，为 settings.json 提供智能提示
  */
 export class JsonSchemaProvider {
-    private static readonly SCHEMA_URI = 'gcmp-settings://root/schema.json';
+    private static readonly SCHEMA_URI = 'ccmp-settings://root/schema.json';
     private static readonly SCHEMA_VSCODE_URI = vscode.Uri.parse(JsonSchemaProvider.SCHEMA_URI);
     private static fsProviderDisposable: vscode.Disposable | null = null;
     private static onDidChangeFileEmitter: vscode.EventEmitter<vscode.FileChangeEvent[]> | null = null;
@@ -38,10 +38,10 @@ export class JsonSchemaProvider {
     private static schemaMtime = Date.now();
 
     private static isSchemaUri(uri: vscode.Uri): boolean {
-        return uri.scheme === 'gcmp-settings' && uri.authority === 'root' && uri.path === '/schema.json';
+        return uri.scheme === 'ccmp-settings' && uri.authority === 'root' && uri.path === '/schema.json';
     }
     private static throwReadOnly(): never {
-        throw vscode.FileSystemError.NoPermissions('gcmp-settings is read-only');
+        throw vscode.FileSystemError.NoPermissions('ccmp-settings is read-only');
     }
 
     /**
@@ -84,7 +84,7 @@ export class JsonSchemaProvider {
             readDirectory: (uri: vscode.Uri) => {
                 // 仅支持 root 目录
                 if (
-                    uri.scheme !== 'gcmp-settings' ||
+                    uri.scheme !== 'ccmp-settings' ||
                     uri.authority !== 'root' ||
                     (uri.path !== '/' && uri.path !== '')
                 ) {
@@ -106,7 +106,7 @@ export class JsonSchemaProvider {
             rename: () => this.throwReadOnly()
         };
 
-        this.fsProviderDisposable = vscode.workspace.registerFileSystemProvider('gcmp-settings', provider, {
+        this.fsProviderDisposable = vscode.workspace.registerFileSystemProvider('ccmp-settings', provider, {
             isReadonly: true,
             isCaseSensitive: true
         });
@@ -114,7 +114,7 @@ export class JsonSchemaProvider {
         // 监听配置变化，及时更新 schema
         this.eventDisposables.push(
             vscode.workspace.onDidChangeConfiguration(e => {
-                if (e.affectsConfiguration('gcmp')) {
+                if (e.affectsConfiguration('ccmp')) {
                     this.invalidateCache();
                 }
             })
@@ -173,7 +173,7 @@ export class JsonSchemaProvider {
     }
 
     /**
-     * 获取 GCMP 配置的完整 JSON Schema
+     * 获取 CCMP 配置的完整 JSON Schema
      * 为 settings.json 提供智能提示和验证
      */
     static getSettingsSchema(): JSONSchema7 {
@@ -200,25 +200,25 @@ export class JsonSchemaProvider {
         return {
             $schema: 'http://json-schema.org/draft-07/schema#',
             $id: this.SCHEMA_URI,
-            title: 'GCMP Configuration Schema',
-            description: 'Schema for GCMP configuration with dynamic model ID suggestions',
+            title: 'CCMP Configuration Schema',
+            description: 'Schema for CCMP configuration with dynamic model ID suggestions',
             type: 'object',
             properties: {
-                'gcmp.retry.maxAttempts': {
+                'ccmp.retry.maxAttempts': {
                     type: 'number',
                     description: '请求失败后的最大自动重试次数，仅对可重试错误生效。默认 3 次，最大 5 次。',
                     default: 3,
                     minimum: 1,
                     maximum: 5
                 },
-                'gcmp.providerOverrides': {
+                'ccmp.providerOverrides': {
                     type: 'object',
                     description:
                         '提供商配置覆盖。允许覆盖提供商的baseUrl和模型配置，支持添加新模型或覆盖现有模型的参数。',
                     patternProperties,
                     propertyNames
                 },
-                'gcmp.fimCompletion.modelConfig': {
+                'ccmp.fimCompletion.modelConfig': {
                     type: 'object',
                     description: 'FIM (Fill-in-the-Middle) 补全模式配置',
                     properties: {
@@ -231,7 +231,7 @@ export class JsonSchemaProvider {
                     },
                     additionalProperties: true
                 },
-                'gcmp.nesCompletion.modelConfig': {
+                'ccmp.nesCompletion.modelConfig': {
                     type: 'object',
                     description: 'NES (Next Edit Suggestion) 补全模式配置',
                     properties: {
@@ -244,7 +244,7 @@ export class JsonSchemaProvider {
                     },
                     additionalProperties: true
                 },
-                'gcmp.compatibleModels': {
+                'ccmp.compatibleModels': {
                     type: 'array',
                     description: 'Compatible Provider 的自定义模型配置。',
                     default: [],
@@ -636,7 +636,7 @@ export class JsonSchemaProvider {
                     }
                 },
                 // Commit 模型选择：保存 provider + model
-                'gcmp.commit.model': commitSchema
+                'ccmp.commit.model': commitSchema
             },
             additionalProperties: true
         };
@@ -993,8 +993,8 @@ export class JsonSchemaProvider {
     }
 
     private static getCommitModelSchema(): JSONSchema7 {
-        // Commit 的 provider 为用户友好的 providerKey（不包含 gcmp. 前缀）。
-        // 在运行时根据该 providerKey 自动拼接为 VS Code Language Model vendor：gcmp.<providerKey>。
+        // Commit 的 provider 为用户友好的 providerKey（不包含 ccmp. 前缀）。
+        // 在运行时根据该 providerKey 自动拼接为 VS Code Language Model vendor：ccmp.<providerKey>。
         const commitProviderIds: string[] = [];
         const commitProviderDescriptions: string[] = [];
 

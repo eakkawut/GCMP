@@ -331,7 +331,7 @@ export class CommitMessage {
             await vscode.window.withProgress(
                 {
                     location: vscode.ProgressLocation.Notification,
-                    title: 'GCMP Commit',
+                    title: 'CCMP Commit',
                     cancellable: true
                 },
                 async (progress, token) => {

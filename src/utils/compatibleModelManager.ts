@@ -168,9 +168,9 @@ export class CompatibleModelManager {
         if (this.configListener) {
             this.configListener.dispose();
         }
-        // 监听 gcmp 配置变化
+        // 监听 ccmp 配置变化
         this.configListener = vscode.workspace.onDidChangeConfiguration(event => {
-            if (event.affectsConfiguration('gcmp.compatibleModels')) {
+            if (event.affectsConfiguration('ccmp.compatibleModels')) {
                 // 如果正在保存，忽略配置变化（避免重新加载覆盖内存中的数据）
                 if (this.isSaving) {
                     Logger.debug('正在保存配置，跳过重新加载');
@@ -188,7 +188,7 @@ export class CompatibleModelManager {
      */
     private static loadModels(): void {
         try {
-            const config = vscode.workspace.getConfiguration('gcmp');
+            const config = vscode.workspace.getConfiguration('ccmp');
             const modelsData = config.get<CompatibleModelConfig[]>('compatibleModels', []);
             this.models = (modelsData || []).filter(
                 model => model != null && typeof model === 'object' && model.id && model.name && model.provider
@@ -206,7 +206,7 @@ export class CompatibleModelManager {
     private static async saveModels(): Promise<void> {
         try {
             this.isSaving = true; // 设置保存标记
-            const config = vscode.workspace.getConfiguration('gcmp');
+            const config = vscode.workspace.getConfiguration('ccmp');
             // 保存时移除内部标记字段和值为 undefined 或 null 的字段
             const modelsToSave = this.models
                 .filter(model => model != null && typeof model === 'object')
@@ -261,7 +261,7 @@ export class CompatibleModelManager {
      */
     private static getRawModelFromConfig(modelId: string): CompatibleModelConfig | undefined {
         try {
-            const config = vscode.workspace.getConfiguration('gcmp');
+            const config = vscode.workspace.getConfiguration('ccmp');
             const modelsData = config.get<CompatibleModelConfig[]>('compatibleModels', []);
             const rawModel = modelsData.find(model => model && model.id === modelId);
 

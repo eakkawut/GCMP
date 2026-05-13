@@ -9,7 +9,7 @@ import { CliAuthFactory } from './auth/cliAuthFactory';
  * 注册 CLI 认证命令
  */
 export function registerCliAuthCommands(context: vscode.ExtensionContext): void {
-    const cliAuthCommand = vscode.commands.registerCommand('gcmp.cli.auth', async () => {
+    const cliAuthCommand = vscode.commands.registerCommand('ccmp.cli.auth', async () => {
         const cliTypes = CliAuthFactory.getSupportedCliTypes();
 
         const selected = await vscode.window.showQuickPick(

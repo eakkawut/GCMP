@@ -75,15 +75,15 @@ export interface KimiStatusData {
 export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
     constructor() {
         const config: StatusBarItemConfig = {
-            id: 'gcmp.statusBar.kimi',
-            name: 'GCMP: Kimi For Coding',
+            id: 'ccmp.statusBar.kimi',
+            name: 'CCMP: Kimi For Coding',
             alignment: vscode.StatusBarAlignment.Right,
             priority: 90,
-            refreshCommand: 'gcmp.kimi.refreshUsage',
+            refreshCommand: 'ccmp.kimi.refreshUsage',
             apiKeyProvider: 'kimi',
             cacheKeyPrefix: 'kimi',
             logPrefix: 'Kimi状态栏',
-            icon: '$(gcmp-kimi)'
+            icon: '$(ccmp-kimi)'
         };
         super(config);
     }

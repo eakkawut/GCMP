@@ -57,7 +57,7 @@ export class InlineCompletionShim implements vscode.InlineCompletionItemProvider
      * 检查 FIM 是否启用
      */
     private isFIMEnabled(): boolean {
-        const config = vscode.workspace.getConfiguration('gcmp.fimCompletion');
+        const config = vscode.workspace.getConfiguration('ccmp.fimCompletion');
         return config.get<boolean>('enabled', false);
     }
 
@@ -65,7 +65,7 @@ export class InlineCompletionShim implements vscode.InlineCompletionItemProvider
      * 检查 NES 是否启用
      */
     private isNESEnabled(): boolean {
-        const config = vscode.workspace.getConfiguration('gcmp.nesCompletion');
+        const config = vscode.workspace.getConfiguration('ccmp.nesCompletion');
         return config.get<boolean>('enabled', false);
     }
 
@@ -138,16 +138,16 @@ export class InlineCompletionShim implements vscode.InlineCompletionItemProvider
 
             // 注册命令（这些命令不依赖 chat-lib，直接在 shim 中处理）
             this.disposables.push(
-                vscode.commands.registerCommand('gcmp.nesCompletion.toggleManual', async () => {
+                vscode.commands.registerCommand('ccmp.nesCompletion.toggleManual', async () => {
                     const CompletionLogger = getCompletionLogger();
-                    const config = vscode.workspace.getConfiguration('gcmp.nesCompletion');
+                    const config = vscode.workspace.getConfiguration('ccmp.nesCompletion');
                     const currentState = config.get('manualOnly', false);
                     const newState = !currentState;
                     await vscode.workspace
-                        .getConfiguration('gcmp.nesCompletion')
+                        .getConfiguration('ccmp.nesCompletion')
                         .update('manualOnly', newState, vscode.ConfigurationTarget.Global);
                     vscode.window.showInformationMessage(
-                        `GCMP: 下一个代码编辑建议 触发模式：${newState ? '手动触发' : '自动触发'}`
+                        `CCMP: 下一个代码编辑建议 触发模式：${newState ? '手动触发' : '自动触发'}`
                     );
                     CompletionLogger.info(`[InlineCompletionShim] NES 手动触发模式 ${newState ? '已启用' : '已禁用'}`);
                 })

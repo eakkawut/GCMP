@@ -23,28 +23,28 @@ export function registerAllTools(context: vscode.ExtensionContext): void {
     try {
         // 注册智谱AI联网搜索工具
         zhipuSearchTool = new ZhipuSearchTool();
-        const zhipuToolDisposable = vscode.lm.registerTool('gcmp_zhipuWebSearch', {
+        const zhipuToolDisposable = vscode.lm.registerTool('ccmp_zhipuWebSearch', {
             invoke: zhipuSearchTool.invoke.bind(zhipuSearchTool)
         });
         context.subscriptions.push(zhipuToolDisposable);
 
         // 注册MiniMax网络搜索工具
         minimaxSearchTool = new MiniMaxSearchTool();
-        const minimaxToolDisposable = vscode.lm.registerTool('gcmp_minimaxWebSearch', {
+        const minimaxToolDisposable = vscode.lm.registerTool('ccmp_minimaxWebSearch', {
             invoke: minimaxSearchTool.invoke.bind(minimaxSearchTool)
         });
         context.subscriptions.push(minimaxToolDisposable);
 
         // 注册Kimi网络搜索工具
         kimiSearchTool = new KimiSearchTool();
-        const kimiToolDisposable = vscode.lm.registerTool('gcmp_kimiWebSearch', {
+        const kimiToolDisposable = vscode.lm.registerTool('ccmp_kimiWebSearch', {
             invoke: kimiSearchTool.invoke.bind(kimiSearchTool)
         });
         context.subscriptions.push(kimiToolDisposable);
 
         // 注册阿里云百炼联网搜索工具
         dashscopeSearchTool = new DashscopeSearchTool();
-        const dashscopeToolDisposable = vscode.lm.registerTool('gcmp_dashscopeWebSearch', {
+        const dashscopeToolDisposable = vscode.lm.registerTool('ccmp_dashscopeWebSearch', {
             invoke: dashscopeSearchTool.invoke.bind(dashscopeSearchTool)
         });
         context.subscriptions.push(dashscopeToolDisposable);
@@ -56,10 +56,10 @@ export function registerAllTools(context: vscode.ExtensionContext): void {
             }
         });
 
-        Logger.debug('智谱AI联网搜索工具已注册: gcmp_zhipuWebSearch');
-        Logger.debug('MiniMax网络搜索工具已注册: gcmp_minimaxWebSearch');
-        Logger.debug('Kimi网络搜索工具已注册: gcmp_kimiWebSearch');
-        Logger.debug('阿里云百炼联网搜索工具已注册: gcmp_dashscopeWebSearch');
+        Logger.debug('智谱AI联网搜索工具已注册: ccmp_zhipuWebSearch');
+        Logger.debug('MiniMax网络搜索工具已注册: ccmp_minimaxWebSearch');
+        Logger.debug('Kimi网络搜索工具已注册: ccmp_kimiWebSearch');
+        Logger.debug('阿里云百炼联网搜索工具已注册: ccmp_dashscopeWebSearch');
     } catch (error) {
         Logger.error('工具注册失败', error instanceof Error ? error : undefined);
         throw error;

@@ -14,7 +14,7 @@ description: JSON Schema 条件依赖/联动写法（if/then、allOf、oneOf 等
 - 组合约束：用 `oneOf`/`anyOf`（或 `dependencies` + `oneOf`）。
 - 枚举来自运行时数据：在代码里生成/覆盖 schema（动态 enum）。
 
-## GCMP 落点
+## CCMP 落点
 
 - 静态：`package.json` → `contributes.configuration.properties`。
 - 动态：`src/utils/jsonSchemaProvider.ts`（用于 `settings.json` 的增强提示/校验）。

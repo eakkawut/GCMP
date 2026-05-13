@@ -31,10 +31,10 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
         Logger.trace(`${providerConfig.displayName} 专用模型扩展已激活!`);
 
         const provider = new XiaomimimoProvider(context, providerKey, providerConfig);
-        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`gcmp.${providerKey}`, provider);
+        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`ccmp.${providerKey}`, provider);
 
         // 普通 API Key
-        const setApiKeyCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.setApiKey`, async () => {
+        const setApiKeyCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.setApiKey`, async () => {
             await XiaomimimoWizard.setNormalApiKey(providerConfig.displayName, providerConfig.apiKeyTemplate);
             await provider.modelInfoCache?.invalidateCache(providerKey);
             provider._onDidChangeLanguageModelChatInformation.fire();
@@ -42,7 +42,7 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
 
         // Token Plan 专用 API Key
         const setTokenPlanApiKeyCommand = vscode.commands.registerCommand(
-            `gcmp.${providerKey}.setTokenPlanApiKey`,
+            `ccmp.${providerKey}.setTokenPlanApiKey`,
             async () => {
                 await XiaomimimoWizard.setTokenPlanApiKey(providerConfig.displayName, providerConfig.tokenKeyTemplate);
                 await provider.modelInfoCache?.invalidateCache('xiaomimimo-token');
@@ -51,14 +51,14 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
         );
 
         const setTokenPlanEndpointCommand = vscode.commands.registerCommand(
-            `gcmp.${providerKey}.setTokenPlanEndpoint`,
+            `ccmp.${providerKey}.setTokenPlanEndpoint`,
             async () => {
                 Logger.info(`用户手动打开 ${providerConfig.displayName} Token Plan 接入点选择`);
                 await XiaomimimoWizard.setTokenPlanEndpoint(providerConfig.displayName);
             }
         );
 
-        const configWizardCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.configWizard`, async () => {
+        const configWizardCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.configWizard`, async () => {
             Logger.info(`启动 ${providerConfig.displayName} 配置向导`);
             await XiaomimimoWizard.startWizard(
                 providerConfig.displayName,

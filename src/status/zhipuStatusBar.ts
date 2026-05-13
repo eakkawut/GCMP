@@ -66,15 +66,15 @@ interface ZhipuStatusData {
 export class ZhipuStatusBar extends ProviderStatusBarItem<ZhipuStatusData> {
     constructor() {
         const config: StatusBarItemConfig = {
-            id: 'gcmp.statusBar.zhipu',
-            name: 'GCMP: GLM Coding Plan',
+            id: 'ccmp.statusBar.zhipu',
+            name: 'CCMP: GLM Coding Plan',
             alignment: vscode.StatusBarAlignment.Right,
             priority: 99,
-            refreshCommand: 'gcmp.refreshZhipuUsage',
+            refreshCommand: 'ccmp.refreshZhipuUsage',
             apiKeyProvider: 'zhipu',
             cacheKeyPrefix: 'zhipu',
             logPrefix: '智谱AI状态栏',
-            icon: '$(gcmp-zhipu)'
+            icon: '$(ccmp-zhipu)'
         };
         super(config);
     }

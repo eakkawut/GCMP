@@ -57,15 +57,15 @@ export interface MoonshotStatusData {
 export class MoonshotStatusBar extends ProviderStatusBarItem<MoonshotStatusData> {
     constructor() {
         const config: StatusBarItemConfig = {
-            id: 'gcmp.statusBar.moonshot',
-            name: 'GCMP: Moonshot Balance',
+            id: 'ccmp.statusBar.moonshot',
+            name: 'CCMP: Moonshot Balance',
             alignment: vscode.StatusBarAlignment.Right,
             priority: 89, // 优先级略低于 Kimi
-            refreshCommand: 'gcmp.moonshot.refreshBalance',
+            refreshCommand: 'ccmp.moonshot.refreshBalance',
             apiKeyProvider: 'moonshot',
             cacheKeyPrefix: 'moonshot',
             logPrefix: 'Moonshot状态栏',
-            icon: '$(gcmp-moonshot)'
+            icon: '$(ccmp-moonshot)'
         };
         super(config);
     }

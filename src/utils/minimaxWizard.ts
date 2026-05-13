@@ -190,9 +190,9 @@ export class MiniMaxWizard {
      */
     static async saveCodingPlanSite(site: MiniMaxConfig['endpoint']): Promise<void> {
         try {
-            const config = vscode.workspace.getConfiguration('gcmp.minimax');
+            const config = vscode.workspace.getConfiguration('ccmp.minimax');
 
-            // 保存到 gcmp.minimax.endpoint 配置
+            // 保存到 ccmp.minimax.endpoint 配置
             await config.update('endpoint', site, vscode.ConfigurationTarget.Global);
             Logger.info(`已保存 Coding Plan 接入点: ${site}`);
         } catch (error) {

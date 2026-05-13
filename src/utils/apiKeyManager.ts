@@ -122,7 +122,7 @@ export class ApiKeyManager {
         const builtinProviders = await this.getBuiltinProviders();
         if (builtinProviders.has(provider)) {
             // 内置提供商：触发对应的设置命令，让Provider处理具体配置
-            const commandId = `gcmp.${provider}.setApiKey`;
+            const commandId = `ccmp.${provider}.setApiKey`;
             await vscode.commands.executeCommand(commandId);
         } else {
             // 自定义提供商：直接提示输入API密钥

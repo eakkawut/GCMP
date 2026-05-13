@@ -31,10 +31,10 @@ export class DashscopeProvider extends GenericModelProvider implements LanguageM
         Logger.trace(`${providerConfig.displayName} 专用模型扩展已激活!`);
 
         const provider = new DashscopeProvider(context, providerKey, providerConfig);
-        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`gcmp.${providerKey}`, provider);
+        const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`ccmp.${providerKey}`, provider);
 
         // 普通 API Key
-        const setApiKeyCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.setApiKey`, async () => {
+        const setApiKeyCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.setApiKey`, async () => {
             await DashscopeWizard.setNormalApiKey(providerConfig.displayName, providerConfig.apiKeyTemplate);
             await provider.modelInfoCache?.invalidateCache(providerKey);
             provider._onDidChangeLanguageModelChatInformation.fire();
@@ -42,7 +42,7 @@ export class DashscopeProvider extends GenericModelProvider implements LanguageM
 
         // Coding Plan 专用 API Key
         const setCodingPlanApiKeyCommand = vscode.commands.registerCommand(
-            `gcmp.${providerKey}.setCodingPlanApiKey`,
+            `ccmp.${providerKey}.setCodingPlanApiKey`,
             async () => {
                 await DashscopeWizard.setCodingPlanApiKey(providerConfig.displayName, providerConfig.codingKeyTemplate);
                 await provider.modelInfoCache?.invalidateCache('dashscope-coding');
@@ -52,7 +52,7 @@ export class DashscopeProvider extends GenericModelProvider implements LanguageM
 
         // Token Plan 专用 API Key
         const setTokenPlanApiKeyCommand = vscode.commands.registerCommand(
-            `gcmp.${providerKey}.setTokenPlanApiKey`,
+            `ccmp.${providerKey}.setTokenPlanApiKey`,
             async () => {
                 await DashscopeWizard.setTokenPlanApiKey(providerConfig.displayName, providerConfig.tokenKeyTemplate);
                 await provider.modelInfoCache?.invalidateCache('dashscope-token');
@@ -60,7 +60,7 @@ export class DashscopeProvider extends GenericModelProvider implements LanguageM
             }
         );
 
-        const configWizardCommand = vscode.commands.registerCommand(`gcmp.${providerKey}.configWizard`, async () => {
+        const configWizardCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.configWizard`, async () => {
             Logger.info(`启动 ${providerConfig.displayName} 配置向导`);
             await DashscopeWizard.startWizard(
                 providerConfig.displayName,
@@ -93,8 +93,8 @@ export class DashscopeProvider extends GenericModelProvider implements LanguageM
         const isTokenPlan = providerKey === 'dashscope-token';
         const keyType =
             isCodingPlan ? 'Coding Plan 专用'
-            : isTokenPlan ? 'Token Plan 专用'
-            : '普通';
+                : isTokenPlan ? 'Token Plan 专用'
+                    : '普通';
 
         const hasApiKey = await ApiKeyManager.hasValidApiKey(providerKey);
         if (hasApiKey) {
@@ -190,15 +190,15 @@ export class DashscopeProvider extends GenericModelProvider implements LanguageM
         if (!apiKey) {
             const keyType =
                 providerKey === 'dashscope-coding' ? 'Coding Plan 专用'
-                : providerKey === 'dashscope-token' ? 'Token Plan 专用'
-                : '普通';
+                    : providerKey === 'dashscope-token' ? 'Token Plan 专用'
+                        : '普通';
             throw new Error(`${this.providerConfig.displayName}: 无效的 ${keyType} API 密钥`);
         }
 
         const keyLabel =
             providerKey === 'dashscope-coding' ? 'Coding Plan'
-            : providerKey === 'dashscope-token' ? 'Token Plan'
-            : '普通';
+                : providerKey === 'dashscope-token' ? 'Token Plan'
+                    : '普通';
         Logger.debug(
             `${this.providerConfig.displayName}: 即将处理请求，使用 ${keyLabel} 密钥 - 模型: ${modelConfig.name}`
         );

@@ -14,7 +14,7 @@ interface LeaderInfo {
  * 确保在多 VS Code 实例中只有一个主实例负责执行周期性任务
  */
 export class LeaderElectionService {
-    private static readonly LEADER_KEY = 'gcmp.leader.info';
+    private static readonly LEADER_KEY = 'ccmp.leader.info';
     private static readonly HEARTBEAT_INTERVAL = 5000; // 5秒心跳
     private static readonly LEADER_TIMEOUT = 15000; // 15秒超时
     private static readonly TASK_INTERVAL = 60 * 1000; // 默认任务执行间隔（1分钟）

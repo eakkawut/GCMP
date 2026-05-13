@@ -33,7 +33,7 @@ const ACTIVITY_THROTTLE_CONFIG: Record<ActivityType, number> = {
  * 支持多实例共享活跃状态
  */
 export class UserActivityService {
-    private static readonly USER_ACTIVITY_KEY = 'gcmp.user.activity'; // 用户活跃状态存储键
+    private static readonly USER_ACTIVITY_KEY = 'ccmp.user.activity'; // 用户活跃状态存储键
     private static readonly ACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30分钟活跃超时
     private static readonly ACTIVITY_COUNT_WINDOW = 5 * 60 * 1000; // 活跃次数统计窗口：5分钟
     private static readonly CACHE_VALIDITY = 5000; // 缓存有效期：5秒
@@ -295,7 +295,7 @@ export class UserActivityService {
 
         StatusLogger.trace(
             `[UserActivityService] 检查用户活跃状态: lastActive=${activityInfo.lastActiveTime}, ` +
-                `inactiveTime=${inactiveTime}ms, activityCount=${activityInfo.recentActivityCount}, isActive=${isActive}`
+            `inactiveTime=${inactiveTime}ms, activityCount=${activityInfo.recentActivityCount}, isActive=${isActive}`
         );
 
         return isActive;

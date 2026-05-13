@@ -57,15 +57,15 @@ export interface DeepSeekStatusData {
 export class DeepSeekStatusBar extends ProviderStatusBarItem<DeepSeekStatusData> {
     constructor() {
         const config: StatusBarItemConfig = {
-            id: 'gcmp.statusBar.deepseek',
-            name: 'GCMP: DeepSeek Balance',
+            id: 'ccmp.statusBar.deepseek',
+            name: 'CCMP: DeepSeek Balance',
             alignment: vscode.StatusBarAlignment.Right,
             priority: 80,
-            refreshCommand: 'gcmp.deepseek.refreshBalance',
+            refreshCommand: 'ccmp.deepseek.refreshBalance',
             apiKeyProvider: 'deepseek',
             cacheKeyPrefix: 'deepseek',
             logPrefix: 'DeepSeek状态栏',
-            icon: '$(gcmp-deepseek)'
+            icon: '$(ccmp-deepseek)'
         };
         super(config);
     }
