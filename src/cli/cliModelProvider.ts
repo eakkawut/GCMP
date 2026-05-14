@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
- *  CLI 认证专用 Provider
- *  继承 GenericModelProvider，支持 CLI 认证模式
- *  支持 qwen-code、gemini、codex 等 CLI 认证提供商
+ *  CLI Authentication Dedicated Provider
+ *  Inherits from GenericModelProvider, supports CLI authentication mode
+ *  Supports CLI authentication providers such as qwen-code, gemini, codex, etc.
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -21,9 +21,9 @@ import { CliAuthFactory } from './auth/cliAuthFactory';
 import { StatusBarManager } from '../status';
 
 /**
- * CLI 认证专用模型提供商类
- * 继承 GenericModelProvider，支持 CLI 认证模式
- * 适用于所有使用 CLI 认证的提供商（qwen-code、gemini、codex 等）
+ * CLI authentication dedicated model provider class
+ * Inherits from GenericModelProvider, supports CLI authentication mode
+ * Suitable for all providers using CLI authentication (qwen-code, gemini, codex, etc.)
  */
 export class CliModelProvider extends GenericModelProvider {
     constructor(context: vscode.ExtensionContext, providerKey: string, providerConfig: ProviderConfig) {
@@ -31,19 +31,19 @@ export class CliModelProvider extends GenericModelProvider {
     }
 
     /**
-     * 重写模型信息提供方法
-     * 当没有 API 密钥时，启动配置向导而不是要求输入 API 密钥
+     * Override model information provider method
+     * Starts configuration wizard instead of requiring API key when no API key is available
      */
     async provideLanguageModelChatInformation(
         options: PrepareLanguageModelChatModelOptions & { silent: boolean },
         token: vscode.CancellationToken
     ): Promise<vscode.LanguageModelChatInformation[]> {
         if (options.configuration) {
-            // 如果请求中包含 configuration，不返回模型列表
+            // If request contains configuration, return empty model list
             return [];
         }
 
-        // 检查是否有有效的 API 密钥
+        // Check if valid API key exists
         let hasApiKey: boolean;
         if (options.silent) {
             hasApiKey = await Promise.race([
@@ -51,13 +51,13 @@ export class CliModelProvider extends GenericModelProvider {
                 new Promise<boolean>(resolve => setTimeout(() => resolve(false), 500)) // 500ms timeout
             ]);
         } else {
-            // 非静默模式下，直接触发用户交互确保有密钥
+            // In non-silent mode, directly trigger user interaction to ensure key exists
             await vscode.commands.executeCommand(`ccmp.${this.providerKey}.configWizard`);
             hasApiKey = await ApiKeyManager.ensureApiKey(this.providerKey, this.providerConfig.displayName, false);
-            options.silent = true; // 后续调用调整为静默模式
+            options.silent = true; // Adjust subsequent calls to silent mode
         }
         if (!hasApiKey) {
-            // 如果是静默模式（如扩展启动时），不触发用户交互，直接返回空列表
+            // If in silent mode (e.g., during extension startup), do not trigger user interaction, return empty list directly
             if (options.silent) {
                 return [];
             }
@@ -65,55 +65,55 @@ export class CliModelProvider extends GenericModelProvider {
                 const credentials = await CliAuthFactory.ensureAuthenticated(this.providerKey);
                 if (credentials) {
                     await ApiKeyManager.setApiKey(this.providerKey, credentials.access_token);
-                    Logger.info(`[CliModelProvider] 已从 ${this.providerKey} CLI 加载认证凭证`);
+                    Logger.info(`[CliModelProvider] Loaded authentication credentials from ${this.providerKey} CLI`);
                 } else {
                     await vscode.commands.executeCommand(`ccmp.${this.providerKey}.configWizard`);
-                    // 无法获取凭证，返回空列表
-                    Logger.warn(`[CliModelProvider] 无法从 ${this.providerKey} CLI 加载认证凭证`);
+                    // Unable to get credentials, return empty list
+                    Logger.warn(`[CliModelProvider] Unable to load authentication credentials from ${this.providerKey} CLI`);
                     return [];
                 }
             } catch (error) {
-                Logger.warn(`[CliModelProvider] 从 ${this.providerKey} CLI 加载认证凭证失败:`, error);
+                Logger.warn(`[CliModelProvider] Failed to load authentication credentials from ${this.providerKey} CLI:`, error);
                 return [];
             }
         }
-        // 调用父类方法返回模型列表
+        // Call parent method to return model list
         return super.provideLanguageModelChatInformation(options, token);
     }
 
     /**
-     * 静态工厂方法 - 创建并激活 CLI 认证提供商
+     * Static factory method - Create and activate CLI authentication provider
      */
     static createAndActivate(
         context: vscode.ExtensionContext,
         providerKey: string,
         providerConfig: ProviderConfig
     ): { provider: CliModelProvider; disposables: vscode.Disposable[] } {
-        Logger.trace(`${providerConfig.displayName} CLI 认证模型扩展已激活!`);
-        // 创建提供商实例
+        Logger.trace(`${providerConfig.displayName} CLI authentication model extension activated!`);
+        // Create provider instance
         const provider = new CliModelProvider(context, providerKey, providerConfig);
-        // 注册语言模型聊天提供商
+        // Register language model chat provider
         const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`ccmp.${providerKey}`, provider);
 
-        // 注册设置API密钥命令
+        // Register set API key command
         const setApiKeyCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.setApiKey`, async () => {
             await ApiKeyManager.promptAndSetApiKey(
                 providerKey,
                 providerConfig.displayName,
                 providerConfig.apiKeyTemplate
             );
-            // API 密钥变更后清除缓存
+            // Clear cache after API key change
             await provider.modelInfoCache?.invalidateCache(providerKey);
-            // 触发模型信息变更事件
+            // Trigger model information change event
             provider._onDidChangeLanguageModelChatInformation.fire();
         });
 
-        // 注册配置向导命令
+        // Register configuration wizard command
         const configWizardCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.configWizard`, async () => {
             await CliModelProvider.startConfigWizard(providerKey, providerConfig.displayName);
-            // 配置变更后清除缓存
+            // Clear cache after configuration change
             await provider.modelInfoCache?.invalidateCache(providerKey);
-            // 触发模型信息变更事件
+            // Trigger model information change event
             provider._onDidChangeLanguageModelChatInformation.fire();
         });
 
@@ -123,26 +123,26 @@ export class CliModelProvider extends GenericModelProvider {
     }
 
     /**
-     * 根据提供商启动对应的配置向导
-     * @param providerKey 提供商标识
-     * @param displayName 显示名称
+     * Start the corresponding configuration wizard based on provider
+     * @param providerKey Provider identifier
+     * @param displayName Display name
      */
     private static async startConfigWizard(providerKey: string, displayName: string): Promise<void> {
-        // 获取支持的 CLI 类型列表
+        // Get supported CLI type list
         const supportedCliTypes = CliAuthFactory.getSupportedCliTypes();
         const supportedCliIds = supportedCliTypes.map(cli => cli.id);
-        // 检查是否是支持的 CLI 类型
+        // Check if it is a supported CLI type
         if (!supportedCliIds.includes(providerKey)) {
-            Logger.warn(`[CliProvider] 未知的 CLI 认证提供商: ${providerKey}`);
-            vscode.window.showWarningMessage(`未知的提供商: ${providerKey}`);
+            Logger.warn(`[CliProvider] Unknown CLI authentication provider: ${providerKey}`);
+            vscode.window.showWarningMessage(`Unknown provider: ${providerKey}`);
             return;
         }
-        // 使用统一的 CLI 向导
+        // Use unified CLI wizard
         await CliWizard.startWizard(providerKey, displayName);
     }
 
     /**
-     * 覆盖 provideChatResponse 以在请求完成后更新状态栏
+     * Override provideChatResponse to update status bar usage after request completion
      */
     override async provideLanguageModelChatResponse(
         model: LanguageModelChatInformation,
@@ -152,10 +152,10 @@ export class CliModelProvider extends GenericModelProvider {
         token: CancellationToken
     ): Promise<void> {
         try {
-            // 调用父类的实现
+            // Call parent implementation
             await super.provideLanguageModelChatResponse(model, messages, options, progress, token);
         } finally {
-            // 请求完成后，延时更新状态栏使用量
+            // After request completion, delay status bar usage update
             StatusBarManager.getStatusBar(this.providerKey)?.delayedUpdate(200);
         }
     }

@@ -6,3 +6,4 @@ node_modules
 *.vsix
 extension.js*
 /.claude
+/found_cn

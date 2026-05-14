@@ -1,12 +1,12 @@
 /*---------------------------------------------------------------------------------------------
- *  CLI 认证命令注册
+ *  CLI Authentication Command Registration
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
 import { CliAuthFactory } from './auth/cliAuthFactory';
 
 /**
- * 注册 CLI 认证命令
+ * Register CLI authentication commands
  */
 export function registerCliAuthCommands(context: vscode.ExtensionContext): void {
     const cliAuthCommand = vscode.commands.registerCommand('ccmp.cli.auth', async () => {
@@ -18,15 +18,15 @@ export function registerCliAuthCommands(context: vscode.ExtensionContext): void 
                 cliType: cli.id
             })),
             {
-                placeHolder: '选择要认证的 CLI 工具'
+                placeHolder: 'Select the CLI tool to authenticate'
             }
         );
         if (selected) {
             const credentials = await CliAuthFactory.ensureAuthenticated(selected.cliType);
             if (credentials) {
-                vscode.window.showInformationMessage(`${selected.label} 认证成功！`);
+                vscode.window.showInformationMessage(`${selected.label} authentication successful!`);
             } else {
-                vscode.window.showErrorMessage(`${selected.label} 认证失败，请先运行 CLI 登录`);
+                vscode.window.showErrorMessage(`${selected.label} authentication failed, please run CLI login first`);
             }
         }
     });

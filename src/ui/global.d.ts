@@ -1,12 +1,13 @@
 ﻿/**
- * VSCode WebView API 全局接口
+ * VSCode WebView API global interface
  */
+
 interface VsCodeApi {
-    postMessage(message: { command: string; [key: string]: unknown }): void;
+    postMessage(message: { command: string;[key: string]: unknown }): void;
 }
 
 /**
- * 扩展 Window 接口，添加 VSCode WebView API
+ * Extend Window interface, add VSCode WebView API
  */
 declare global {
     interface Window {
@@ -14,4 +15,4 @@ declare global {
     }
 }
 
-export {};
+export { };

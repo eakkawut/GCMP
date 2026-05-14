@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  CLI 认证工厂
- *  管理不同 CLI 提供商的认证实例
+ *  CLI Authentication Factory
+ *  Manages authentication instances for different CLI providers
  *--------------------------------------------------------------------------------------------*/
 
 import { BaseCliAuth } from './baseCliAuth';
@@ -10,21 +10,21 @@ import { Logger } from '../../utils/logger';
 import { OAuthCredentials } from '../type';
 
 /**
- * CLI 认证工厂
- * 单例模式，管理所有 CLI 提供商的认证实例
+ * CLI Authentication Factory
+ * Singleton pattern, manages authentication instances for all CLI providers
  */
 export class CliAuthFactory {
     private static instances = new Map<string, BaseCliAuth>();
 
     /**
-     * 获取指定 CLI 类型的认证实例
+     * Get Authentication Instance for Specified CLI Type
      */
     static getInstance(cliType: string): BaseCliAuth | null {
-        // 如果已存在实例，直接返回
+        // If instance already exists, return directly
         if (this.instances.has(cliType)) {
             return this.instances.get(cliType)!;
         }
-        // 创建新实例
+        // Create new instance
         let instance: BaseCliAuth | null = null;
         switch (cliType) {
             case 'gemini':
@@ -34,7 +34,7 @@ export class CliAuthFactory {
                 instance = new CodexCliAuth();
                 break;
             default:
-                Logger.warn(`[CliAuthFactory] 未知的 CLI 类型: ${cliType}`);
+                Logger.warn(`[CliAuthFactory] Unknown CLI type: ${cliType}`);
                 return null;
         }
         if (instance) {
@@ -44,7 +44,7 @@ export class CliAuthFactory {
     }
 
     /**
-     * 加载 CLI OAuth 凭证
+     * Load CLI OAuth Credentials
      */
     static async loadCredentials(cliType: string): Promise<OAuthCredentials | null> {
         const instance = this.getInstance(cliType);
@@ -55,7 +55,7 @@ export class CliAuthFactory {
     }
 
     /**
-     * 确保认证有效（自动刷新过期令牌）
+     * Ensure Authentication is Valid (Automatically refresh expired tokens)
      */
     static async ensureAuthenticated(cliType: string): Promise<OAuthCredentials | null> {
         const instance = this.getInstance(cliType);
@@ -66,7 +66,7 @@ export class CliAuthFactory {
     }
 
     /**
-     * 检查 CLI 是否已安装
+     * Check if CLI is Installed
      */
     static async isCliInstalled(cliType: string): Promise<boolean> {
         const instance = this.getInstance(cliType);
@@ -77,7 +77,7 @@ export class CliAuthFactory {
     }
 
     /**
-     * 获取凭证文件路径
+     * Get Credential File Path
      */
     static getCredentialPath(cliType: string): string | null {
         const instance = this.getInstance(cliType);
@@ -85,7 +85,7 @@ export class CliAuthFactory {
     }
 
     /**
-     * 获取支持的 CLI 类型列表
+     * Get List of Supported CLI Types
      */
     static getSupportedCliTypes(): Array<{ id: string; name: string }> {
         return [

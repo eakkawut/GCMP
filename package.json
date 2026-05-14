@@ -2,7 +2,7 @@
     "name": "ccmp",
     "publisher": "guokoko",
     "displayName": "AI Chat Models",
-    "description": "为 GitHub Copilot Chat 提供 智谱AI、MiniMax、MoonshotAI、DeepSeek、阿里云百炼、快手万擎、火山方舟、腾讯云、Xiaomi MiMo、百度千帆 模型支持的扩展，并提供 `OpenAI / Anthropic Compatible` 自定义模型支持。",
+    "description": "Provides ZhipuAI, MiniMax, MoonshotAI, DeepSeek, Alibaba Cloud Bailian, Kuaishou Wanqing, Volcengine Ark, Tencent Cloud, Xiaomi MiMo, Baidu Qianfan model support extension for GitHub Copilot Chat, and provides `OpenAI / Anthropic Compatible` custom model support.",
     "version": "0.22.11",
     "license": "MIT",
     "keywords": [
@@ -23,18 +23,18 @@
         "Xiaomi MiMo",
         "baidu",
         "qianfan",
-        "百度千帆",
+        "Baidu Qianfan",
         "OpenAI Compatible",
         "Anthropic Compatible",
-        "智谱AI",
-        "火山方舟",
-        "月之暗面",
-        "深度求索",
-        "快手万擎",
-        "阿里云百炼",
-        "腾讯云",
-        "百度千帆",
-        "Coding Plan 编程套餐"
+        "ZhipuAI",
+        "Volcengine Ark",
+        "MoonshotAI",
+        "DeepSeek",
+        "Kuaishou Wanqing",
+        "Alibaba Cloud Bailian",
+        "Tencent Cloud",
+        "Baidu Qianfan",
+        "Coding Plan Coding Plan"
     ],
     "repository": {
         "type": "git",
@@ -82,210 +82,210 @@
         "commands": [
             {
                 "command": "ccmp.zhipu.setApiKey",
-                "title": "设置 智谱AI API密钥",
+                "title": "Set ZhipuAI API Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.zhipu.configWizard",
-                "title": "智谱AI 配置向导（API密钥 & 搜索 MCP 模式）",
+                "title": "ZhipuAI Configuration Wizard（API Key & Search MCP Mode）",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.minimax.setApiKey",
-                "title": "设置 MiniMax API密钥",
+                "title": "Set MiniMax API Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.minimax.setCodingPlanApiKey",
-                "title": "设置 MiniMax Coding Plan 专用密钥",
+                "title": "Set MiniMax Coding Plan Dedicated Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.minimax.setCodingPlanEndpoint",
-                "title": "设置 MiniMax Coding Plan 接入点（国内/国际站）",
+                "title": "Set MiniMax Coding Plan Access point（Domestic/International）",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.minimax.configWizard",
-                "title": "启动 MiniMax 配置向导",
+                "title": "Launch MiniMax Configuration Wizard",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.kimi.setApiKey",
-                "title": "设置 Kimi API密钥",
+                "title": "Set Kimi API Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.moonshot.setApiKey",
-                "title": "设置 MoonshotAI API密钥",
+                "title": "Set MoonshotAI API Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.moonshot.configWizard",
-                "title": "启动 MoonshotAI 配置向导",
+                "title": "Launch MoonshotAI Configuration Wizard",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.deepseek.setApiKey",
-                "title": "设置 DeepSeek API密钥",
+                "title": "Set DeepSeek API Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.volcengine.setApiKey",
-                "title": "设置 火山方舟 API密钥",
+                "title": "Set Volcengine Ark API Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.volcengine.setAgentPlanApiKey",
-                "title": "设置 火山方舟 Agent Plan 专用密钥",
+                "title": "Set Volcengine Ark Agent Plan Dedicated Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.volcengine.configWizard",
-                "title": "火山方舟 配置向导",
+                "title": "Volcengine Ark Configuration Wizard",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.streamlake.setApiKey",
-                "title": "设置 快手万擎 API密钥",
+                "title": "Set Kuaishou Wanqing API Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.dashscope.setApiKey",
-                "title": "设置 阿里云百炼 API密钥",
+                "title": "Set Alibaba Cloud Bailian API Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.dashscope.setCodingPlanApiKey",
-                "title": "设置 阿里云百炼 Coding Plan 专用密钥",
+                "title": "Set Alibaba Cloud Bailian Coding Plan Dedicated Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.dashscope.setTokenPlanApiKey",
-                "title": "设置 阿里云百炼 Token Plan 专用密钥",
+                "title": "Set Alibaba Cloud Bailian Token Plan Dedicated Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.dashscope.configWizard",
-                "title": "启动 阿里云百炼 配置向导",
+                "title": "Launch Alibaba Cloud Bailian Configuration Wizard",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.tencent.setApiKey",
-                "title": "设置 腾讯云大模型 API密钥",
+                "title": "Set Tencent CloudLarge Model API Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.tencent.setCodingPlanApiKey",
-                "title": "设置 腾讯云 Coding Plan 专用密钥",
+                "title": "Set Tencent Cloud Coding Plan Dedicated Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.tencent.setTokenPlanApiKey",
-                "title": "设置 腾讯云 Token Plan 专用密钥",
+                "title": "Set Tencent Cloud Token Plan Dedicated Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.tencent.setDeepSeekApiKey",
-                "title": "设置 腾讯云 DeepSeek 专用密钥",
+                "title": "Set Tencent Cloud DeepSeek Dedicated Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.tencent.setTokenHubApiKey",
-                "title": "设置 腾讯云 TokenHub 密钥",
+                "title": "Set Tencent Cloud TokenHub Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.tencent.configWizard",
-                "title": "启动 腾讯云 配置向导",
+                "title": "Launch Tencent Cloud Configuration Wizard",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.xiaomimimo.setApiKey",
-                "title": "设置 Xiaomi MiMo API密钥",
+                "title": "Set Xiaomi MiMo API Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.xiaomimimo.setTokenPlanApiKey",
-                "title": "设置 Xiaomi MiMo Token Plan 专用密钥",
+                "title": "Set Xiaomi MiMo Token Plan Dedicated Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.xiaomimimo.setTokenPlanEndpoint",
-                "title": "设置 Xiaomi MiMo Token Plan 接入点",
+                "title": "Set Xiaomi MiMo Token Plan Access point",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.xiaomimimo.configWizard",
-                "title": "启动 Xiaomi MiMo 配置向导",
+                "title": "Launch Xiaomi MiMo Configuration Wizard",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.baidu.setApiKey",
-                "title": "设置 百度千帆 API密钥",
+                "title": "Set Baidu Qianfan API Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.baidu.setCodingPlanApiKey",
-                "title": "设置 百度千帆 Coding Plan 专用密钥",
+                "title": "Set Baidu Qianfan Coding Plan Dedicated Key",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.baidu.configWizard",
-                "title": "启动 百度千帆 配置向导",
+                "title": "Launch Baidu Qianfan Configuration Wizard",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.gemini.configWizard",
-                "title": "Gemini CLI 配置向导（CLI 认证）",
+                "title": "Gemini CLI Configuration Wizard（CLI Authentication）",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.codex.configWizard",
-                "title": "Codex CLI 配置向导（CLI 认证）",
+                "title": "Codex CLI Configuration Wizard（CLI Authentication）",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.compatible.manageModels",
-                "title": "Compatible Provider 设置",
+                "title": "Compatible Provider Set",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.nesCompletion.toggleManual",
-                "title": "切换 NES 手动触发模式",
+                "title": "Toggle NES Manual Trigger Mode",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.tokenUsage.showDetails",
-                "title": "查看今日 Token 消耗统计详情",
+                "title": "View Today Token Usage Statistics Details",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.cli.auth",
-                "title": "CLI 认证管理",
+                "title": "CLI Authentication Management",
                 "category": "CCMP"
             },
             {
                 "command": "ccmp.commit.generateMessage",
-                "title": "生成提交消息",
+                "title": "Generate Commit Message",
                 "category": "CCMP",
                 "icon": "$(ccmp-git-commit)"
             },
             {
                 "command": "ccmp.commit.generateMessageStaged",
-                "title": "生成提交消息 - 暂存的更改",
+                "title": "Generate Commit Message - Staged Changes",
                 "category": "CCMP",
                 "icon": "$(ccmp-git-commit)"
             },
             {
                 "command": "ccmp.commit.generateMessageWorkingTree",
-                "title": "生成提交消息 - 未暂存的更改",
+                "title": "Generate Commit Message - Unstaged Changes",
                 "category": "CCMP",
                 "icon": "$(ccmp-git-commit)"
             },
             {
                 "command": "ccmp.commit.selectModel",
-                "title": "选择 Commit 消息生成模型",
+                "title": "Select Commit MessageGeneration Model",
                 "category": "CCMP"
             }
         ],
@@ -297,7 +297,7 @@
                     "default": 16000,
                     "minimum": 32,
                     "maximum": 256000,
-                    "description": "控制AI模型输出的最大token数量。较大的值允许更长的响应。",
+                    "description": "ControlsAIModelmaximum output token count。Larger values allow longer responses。",
                     "scope": "application"
                 },
                 "ccmp.retry.maxAttempts": {
@@ -305,25 +305,25 @@
                     "default": 3,
                     "minimum": 1,
                     "maximum": 5,
-                    "description": "请求失败后的最大自动重试次数，仅对可重试错误生效。重试延迟按 1s、3s、6s、10s、15s 的累加序列递增。",
+                    "description": "Maximum automatic retry attempts after request failure，Only applies to retryable errors。Retry delay follows 1s、3s、6s、10s、15s increasing sequence。",
                     "scope": "application"
                 },
                 "ccmp.temperature": {
                     "type": "number",
-                    "deprecationMessage": "temperature 已被弃用，请改用模型的 extraBody 参数传递",
-                    "description": "模型采样温度（已弃用）",
+                    "deprecationMessage": "temperature Deprecated，Please use the model extraBody parameter instead",
+                    "description": "Model sampling temperature（Deprecated）",
                     "scope": "application"
                 },
                 "ccmp.topP": {
                     "type": "number",
-                    "deprecationMessage": "topP 已被弃用，请改用模型的 extraBody 参数传递",
-                    "description": "模型采样 top-p 参数（已弃用）",
+                    "deprecationMessage": "topP Deprecated，Please use the model extraBody parameter instead",
+                    "description": "Model sampling top-p parameter（Deprecated）",
                     "scope": "application"
                 },
                 "ccmp.rememberLastModel": {
                     "type": "boolean",
-                    "deprecationMessage": "rememberLastModel 已被弃用，此功能不再被支持",
-                    "description": "是否记住上次选择的模型（已弃用）",
+                    "deprecationMessage": "rememberLastModel Deprecated，This feature is no longer supported",
+                    "description": "Remember last selected model（Deprecated）",
                     "scope": "application"
                 },
                 "ccmp.editToolMode": {
@@ -334,25 +334,25 @@
                         "none"
                     ],
                     "enumDescriptions": [
-                        "使用 Claude 风格的编辑工具 (ReplaceString) - 高效精确的单次替换",
-                        "使用 GPT-5 风格的编辑工具 (ApplyPatch) - 批量差异应用，支持复杂重构",
-                        "不使用特定优化工具，直接文件编辑 - 效率较低，适合处理编辑异常情况"
+                        "Use Claude-style editing tool (ReplaceString) - Efficient precise single replacement",
+                        "Use GPT-5-style editing tool (ApplyPatch) - Batch diff application，Supports complex refactoring",
+                        "No specific optimization tool，Direct file editing - Lower efficiency，Suitable for handling edit exceptions"
                     ],
                     "default": "claude",
-                    "deprecationMessage": "editToolMode 已被弃用，请在模型配置中使用 family 字段代替。此配置将在未来版本中移除。",
-                    "description": "选择编辑工具模式。Claude 使用高效的ReplaceString，GPT-5 使用ApplyPatch进行批量编辑，None 直接使用基础文件编辑。",
+                    "deprecationMessage": "editToolMode Deprecated，Please use the family field in model configuration instead。This configuration will be removed in future versions。",
+                    "description": "Select editing tool mode。Claude Uses efficient ReplaceString，GPT-5 Uses ApplyPatch for batch editing，None Directly uses basic file editing。",
                     "scope": "application"
                 },
                 "ccmp.autoPrefixModelId": {
                     "type": "boolean",
                     "default": false,
-                    "description": "在模型列表中为模型ID自动添加提供商前缀（例如：zhipu:::glm-5）。启用此选项可缓解 VS Code 模型选择器显示模型不全的问题。",
+                    "description": "Automatically add provider prefix to model IDs in model list（e.g., zhipu:::glm-5）。Enabling this option can mitigate VS Code model selector incomplete model display issue。",
                     "scope": "application"
                 },
                 "ccmp.zhipu.search.enableMCP": {
                     "type": "boolean",
                     "default": true,
-                    "description": "启用智谱AI搜索的MCP SDK模式。使用标准 MCP 协议和官方 SDK 实现搜索功能，提供更稳定的连接和更好的错误处理。非订阅套餐请关闭此开关以使用标准计费接口（按次计费）。需要有效的智谱AI API密钥。",
+                    "description": "EnableZhipuAIsearch MCP SDK mode。Uses standard MCP protocol and official SDK for search functionality，Provides more stable connection and better error handling。Non-subscription plans turn off this switch to use standard billing interface（Pay-per-use）。Requires validZhipuAI API Key。",
                     "scope": "application"
                 },
                 "ccmp.zhipu.endpoint": {
@@ -362,7 +362,7 @@
                         "api.z.ai"
                     ],
                     "default": "open.bigmodel.cn",
-                    "description": "智谱AI接入站点。open.bigmodel.cn 为国内站（推荐），api.z.ai 为国际站。",
+                    "description": "ZhipuAIAccess site。open.bigmodel.cn is domestic site（Recommended），api.z.ai is international site。",
                     "scope": "application"
                 },
                 "ccmp.minimax.endpoint": {
@@ -372,7 +372,7 @@
                         "minimax.io"
                     ],
                     "default": "minimaxi.com",
-                    "description": "MiniMax Coding Plan 接入站点。minimaxi.com 为国内站（推荐），minimax.io 为国际站。",
+                    "description": "MiniMax Coding Plan Access site。minimaxi.com is domestic site（Recommended），minimax.io is international site。",
                     "scope": "application"
                 },
                 "ccmp.xiaomimimo.endpoint": {
@@ -383,7 +383,7 @@
                         "ams"
                     ],
                     "default": "cn",
-                    "description": "Xiaomi MiMo Token Plan 接入点。cn 为中国接入点（默认），sgp 为新加坡接入点，ams 为欧洲接入点。",
+                    "description": "Xiaomi MiMo Token Plan Access point。cn is China access point（Default），sgp is Singapore access point，ams is Europe access point。",
                     "scope": "application"
                 },
                 "ccmp.usages.retentionDays": {
@@ -391,13 +391,13 @@
                     "default": 100,
                     "minimum": 0,
                     "maximum": 365,
-                    "description": "Token消耗记录历史数据保留天数（按日期保存，0表示永久保留）。",
+                    "description": "Token usage record history data retention days（Saved by date，0means permanent retention）。",
                     "scope": "application"
                 },
                 "ccmp.fimCompletion.enabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "启用 FIM (Fill In the Middle) 建议功能。",
+                    "description": "Enable FIM (Fill In the Middle) Suggestion feature。",
                     "scope": "application"
                 },
                 "ccmp.fimCompletion.debounceMs": {
@@ -405,7 +405,7 @@
                     "default": 500,
                     "minimum": 50,
                     "maximum": 1000,
-                    "description": "FIM 补全的防抖延迟（毫秒）。",
+                    "description": "FIM completion debounce delay（ms）。",
                     "scope": "application"
                 },
                 "ccmp.fimCompletion.timeoutMs": {
@@ -413,7 +413,7 @@
                     "default": 5000,
                     "minimum": 1000,
                     "maximum": 30000,
-                    "description": "FIM 补全的请求超时时间（毫秒）。",
+                    "description": "FIM completion request timeout（ms）。",
                     "scope": "application"
                 },
                 "ccmp.fimCompletion.modelConfig": {
@@ -423,34 +423,34 @@
                         "baseUrl": "",
                         "model": ""
                     },
-                    "description": "FIM 补全使用的模型配置。",
+                    "description": "FIM completion model configuration。",
                     "scope": "application",
                     "properties": {
                         "provider": {
                             "type": "string",
-                            "description": "模型提供商标识符"
+                            "description": "Model provider identifier"
                         },
                         "baseUrl": {
                             "type": "string",
-                            "description": "API基础URL",
+                            "description": "API base URL",
                             "format": "uri"
                         },
                         "model": {
                             "type": "string",
-                            "description": "FIM 补全使用的模型名称"
+                            "description": "FIM Completion model name"
                         },
                         "maxTokens": {
                             "type": "number",
-                            "description": "FIM 补全返回的最大长度",
+                            "description": "FIM Maximum completion return length",
                             "default": 200,
                             "minimum": 50,
                             "maximum": 16000
                         },
                         "extraBody": {
                             "type": "object",
-                            "description": "额外的请求体参数，将在API请求中合并到请求体中",
+                            "description": "Additional request body parameters，Will be merged into request body in API request",
                             "additionalProperties": {
-                                "description": "额外的请求体参数值"
+                                "description": "Additional request body parametersValue"
                             }
                         }
                     },
@@ -463,7 +463,7 @@
                 "ccmp.nesCompletion.enabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "启用 NES (Next Edit Suggestions) 建议功能。",
+                    "description": "Enable NES (Next Edit Suggestions) Suggestion feature。",
                     "scope": "application"
                 },
                 "ccmp.nesCompletion.debounceMs": {
@@ -471,7 +471,7 @@
                     "default": 500,
                     "minimum": 50,
                     "maximum": 1000,
-                    "description": "NES 补全的防抖延迟（毫秒）。",
+                    "description": "NES completion debounce delay（ms）。",
                     "scope": "application"
                 },
                 "ccmp.nesCompletion.timeoutMs": {
@@ -479,13 +479,13 @@
                     "default": 5000,
                     "minimum": 1000,
                     "maximum": 30000,
-                    "description": "NES 补全的请求超时时间（毫秒）。",
+                    "description": "NES completion request timeout（ms）。",
                     "scope": "application"
                 },
                 "ccmp.nesCompletion.manualOnly": {
                     "type": "boolean",
                     "default": false,
-                    "description": "启用后，NES 补全仅响应手动触发（Alt+/），不会自动触发。",
+                    "description": "Enableafter，NES completion only responds to manual trigger（Alt+/），Will not trigger automatically。",
                     "scope": "application"
                 },
                 "ccmp.nesCompletion.modelConfig": {
@@ -495,34 +495,34 @@
                         "baseUrl": "",
                         "model": ""
                     },
-                    "description": "NES 补全使用的模型配置。",
+                    "description": "NES completion model configuration。",
                     "scope": "application",
                     "properties": {
                         "provider": {
                             "type": "string",
-                            "description": "模型提供商标识符"
+                            "description": "Model provider identifier"
                         },
                         "baseUrl": {
                             "type": "string",
-                            "description": "API基础URL",
+                            "description": "API base URL",
                             "format": "uri"
                         },
                         "model": {
                             "type": "string",
-                            "description": "NES 补全使用的模型名称"
+                            "description": "NES Completion model name"
                         },
                         "maxTokens": {
                             "type": "number",
-                            "description": "NES 补全返回的最大长度",
+                            "description": "NES Maximum completion return length",
                             "default": 200,
                             "minimum": 50,
                             "maximum": 16000
                         },
                         "extraBody": {
                             "type": "object",
-                            "description": "额外的请求体参数，将在API请求中合并到请求体中",
+                            "description": "Additional request body parameters，Will be merged into request body in API request",
                             "additionalProperties": {
-                                "description": "额外的请求体参数值"
+                                "description": "Additional request body parametersValue"
                             }
                         }
                     },
@@ -539,11 +539,11 @@
                         "english"
                     ],
                     "enumDescriptions": [
-                        "Chinese - 默认/回退语言（auto 模式下历史语言不明确时使用中文）",
+                        "Chinese - Default/Fallback language（auto when history language is unclear in auto mode, uses Chinese）",
                         "English - Default/fallback language (used when auto mode language is unclear)"
                     ],
                     "default": "chinese",
-                    "description": "生成提交消息使用的语言。auto 模式会优先从仓库最近提交历史推断语言；当历史语言不明确时回退为此配置。支持在工作区和全局配置中设置，工作区配置优先级更高。",
+                    "description": "Language used for generating commit messages。auto Auto mode prioritizes inferring language from recent repository commit history；Falls back to this configuration when history language is unclear。Supports setting in workspace and global configuration，Workspace configuration has higher priority。",
                     "scope": "window"
                 },
                 "ccmp.commit.format": {
@@ -562,26 +562,26 @@
                         "atom"
                     ],
                     "enumDescriptions": [
-                        "Auto - 根据历史提交记录推断提交规范；无法推断则回退为 Plain",
-                        "Plain - 简洁的一句话提交描述（示例：修复配置回退逻辑）",
-                        "Custom - 使用自定义指令生成提交消息（示例：PROJ-123: 修复登录跳转）",
-                        "Conventional Commits - 约定式提交格式（示例：feat(auth): 添加登录）",
-                        "Angular - Angular 项目风格（示例：fix(core): 处理空配置）",
-                        "Karma - Karma 测试框架风格（示例：feat(ui): 增加提交向导）",
-                        "Semantic - 语义化版本风格（示例：fix: 修复无效格式回退）",
-                        "Emoji - 表情符号风格（示例：🐛 修复配置回退）",
-                        "EmojiKarma - 表情符号 + Karma 风格（示例：✨ feat(auth): 添加登录）",
-                        "Google - Google 项目风格（示例：Fix: 修复无效格式回退）",
-                        "Atom - Atom 编辑器风格（示例：:bug: 修复配置回退）"
+                        "Auto - Infer commit spec from historical commit records；Falls back to if cannot infer Plain",
+                        "Plain - Concise one-line commit description（e.g., fix config fallback logic）",
+                        "Custom - Uses custom instructions to generate commit messages（e.g., PROJ-123: fix login redirect）",
+                        "Conventional Commits - Conventional commit format（e.g., feat(auth): add login）",
+                        "Angular - Angular project style（e.g., fix(core): handle empty config）",
+                        "Karma - Karma testing framework style（e.g., feat(ui): add commit wizard）",
+                        "Semantic - Semantic version style（e.g., fix: fix invalid format fallback）",
+                        "Emoji - Emoji style（e.g., 🐛 fix config fallback）",
+                        "EmojiKarma - Emoji + Karma style（e.g., ✨ feat(auth): add login）",
+                        "Google - Google project style（e.g., Fix: fix invalid format fallback）",
+                        "Atom - Atom editor style（e.g., :bug: fix config fallback）"
                     ],
                     "default": "auto",
-                    "description": "生成提交消息使用的格式。auto 会根据历史提交记录推断提交规范；无法推断则回退为 plain。支持在工作区和全局配置中设置，工作区配置优先级更高。",
+                    "description": "Format used for generating commit messages。auto Will infer commit spec from historical commit records；Falls back to if cannot infer plain。Supports setting in workspace and global configuration，Workspace configuration has higher priority。",
                     "scope": "window"
                 },
                 "ccmp.commit.customInstructions": {
                     "type": "string",
                     "default": "",
-                    "description": "自定义的提交消息生成指令（当 commitFormat=custom 时生效）。",
+                    "description": "Custom commit message generation instructions（When commitFormat=custom takes effect）。",
                     "scope": "window"
                 },
                 "ccmp.commit.model": {
@@ -590,16 +590,16 @@
                         "provider": "",
                         "model": ""
                     },
-                    "description": "指定用于生成提交消息的模型（provider + model）。留空则会提示选择模型。",
+                    "description": "Specify model used for generating commit messages（provider + model）。Leaving empty will prompt to select a model。",
                     "scope": "window",
                     "properties": {
                         "provider": {
                             "type": "string",
-                            "description": "语言模型提供商（providerKey），例如 zhipu / compatible"
+                            "description": "Language model provider（providerKey），e.g., zhipu / compatible"
                         },
                         "model": {
                             "type": "string",
-                            "description": "模型 ID（对应 Language Model API 的 model.id）"
+                            "description": "Model ID（Corresponds to Language Model API model.id）"
                         }
                     },
                     "required": [
@@ -610,13 +610,13 @@
                 "ccmp.providerOverrides": {
                     "type": "object",
                     "default": {},
-                    "description": "提供商配置覆盖。允许覆盖提供商的baseUrl和模型配置，支持添加新模型或覆盖现有模型的参数。",
+                    "description": "Provider configuration override。Allows overriding provider baseUrl and model configuration，Supports adding new models or overriding existing model parameters。",
                     "scope": "application"
                 },
                 "ccmp.compatibleModels": {
                     "type": "array",
                     "default": [],
-                    "description": "Compatible Provider 的自定义模型配置。完全由用户配置的 OpenAI / Anthropic 兼容模型列表。",
+                    "description": "Compatible Provider custom model configuration。Fully configured by users OpenAI / Anthropic compatible model list。",
                     "scope": "application"
                 }
             }
@@ -697,16 +697,16 @@
         "languageModelTools": [
             {
                 "name": "ccmp_zhipuWebSearch",
-                "displayName": "智谱AI联网搜索",
+                "displayName": "ZhipuAIWeb Search",
                 "toolReferenceName": "zhipuWebSearch",
-                "modelDescription": "使用智谱AI提供的联网搜索功能获取实时信息。支持多种搜索引擎：search_std（标准搜索，¥0.01）、search_pro（高级搜索，¥0.03）、search_pro_sogou（搜狗搜索，¥0.05）、search_pro_quark（夸克搜索，¥0.05）。注意：Pro+ 套餐可通过 MCP SSE 调用，非订阅套餐使用标准计费接口。",
-                "userDescription": "通过智谱AI联网搜索获取最新信息",
+                "modelDescription": "Uses ZhipuAI-provided Web Search functionality to get real-time information. Supports multiple search engines: search_std (Standard search, ¥0.01), search_pro (Advanced search, ¥0.03), search_pro_sogou (Sogou search, ¥0.05), search_pro_quark (Quark search, ¥0.05). Note: Pro+ plans can be called through MCP SSE, non-subscription plans use standard billing interface.",
+                "userDescription": "Get latest information through ZhipuAI Web Search",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
                         "search_query": {
                             "type": "string",
-                            "description": "搜索查询字符串"
+                            "description": "Search query string"
                         },
                         "search_engine": {
                             "type": "string",
@@ -716,24 +716,24 @@
                                 "search_pro_sogou",
                                 "search_pro_quark"
                             ],
-                            "description": "搜索引擎类型：search_std（标准，¥0.01）、search_pro（高级，¥0.03）、search_pro_sogou（搜狗，¥0.05）、search_pro_quark（夸克，¥0.05）",
+                            "description": "Search engine type：search_std（Standard，¥0.01）、search_pro（Advanced，¥0.03）、search_pro_sogou（Sogou，¥0.05）、search_pro_quark（Quark，¥0.05）",
                             "default": "search_std"
                         },
                         "search_intent": {
                             "type": "boolean",
-                            "description": "是否进行搜索意图分析",
+                            "description": "Whether to perform search intent analysis",
                             "default": false
                         },
                         "count": {
                             "type": "integer",
-                            "description": "返回搜索结果数量",
+                            "description": "Number of search results to return",
                             "minimum": 1,
                             "maximum": 20,
                             "default": 10
                         },
                         "search_domain_filter": {
                             "type": "string",
-                            "description": "域名过滤器，限制搜索特定网站"
+                            "description": "Domain filter，Restrict search to specific websites"
                         },
                         "search_recency_filter": {
                             "type": "string",
@@ -744,7 +744,7 @@
                                 "month",
                                 "year"
                             ],
-                            "description": "时间过滤器：noLimit（无限制）、day（一天内）、week（一周内）、month（一月内）、year（一年内）",
+                            "description": "Time filter：noLimit（No limit）、day（Within one day）、week（Within one week）、month（Within one month）、year（Within one year）",
                             "default": "noLimit"
                         },
                         "content_size": {
@@ -754,7 +754,7 @@
                                 "medium",
                                 "high"
                             ],
-                            "description": "内容详细程度：low（低）、medium（中）、high（高）",
+                            "description": "Content detail level：low（Low）、medium（Medium）、high（High）",
                             "default": "medium"
                         }
                     },
@@ -766,16 +766,16 @@
             },
             {
                 "name": "ccmp_minimaxWebSearch",
-                "displayName": "MiniMax网络搜索",
+                "displayName": "MiniMaxWeb Search",
                 "toolReferenceName": "minimaxWebSearch",
-                "modelDescription": "使用 MiniMax Coding Plan 提供的网络搜索功能获取实时信息。需要订阅 MiniMax Coding Plan 套餐并设置专用API密钥。",
-                "userDescription": "通过MiniMax网络搜索获取最新信息",
+                "modelDescription": "Uses MiniMax Coding Plan provides network search functionality to get real-time information。Requires subscription to MiniMax Coding Plan plan and set dedicated API key。",
+                "userDescription": "ThroughMiniMaxWeb Searchget latest information",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
                         "q": {
                             "type": "string",
-                            "description": "搜索查询字符串"
+                            "description": "Search query string"
                         }
                     },
                     "required": [
@@ -786,27 +786,27 @@
             },
             {
                 "name": "ccmp_kimiWebSearch",
-                "displayName": "Kimi网络搜索",
+                "displayName": "KimiWeb Search",
                 "toolReferenceName": "kimiWebSearch",
-                "modelDescription": "使用 Kimi Code 提供的网络搜索功能获取实时信息。需要使用 Kimi For Coding 专用 API 密钥或 Moonshot API 密钥。",
-                "userDescription": "通过Kimi网络搜索获取最新信息",
+                "modelDescription": "Uses Kimi Code provides network search functionality to get real-time information。Requires using Kimi For Coding dedicated API key or Moonshot API Key。",
+                "userDescription": "ThroughKimiWeb Searchget latest information",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
                         "query": {
                             "type": "string",
-                            "description": "搜索查询字符串"
+                            "description": "Search query string"
                         },
                         "limit": {
                             "type": "integer",
-                            "description": "返回搜索结果数量",
+                            "description": "Number of search results to return",
                             "minimum": 1,
                             "maximum": 50,
                             "default": 10
                         },
                         "includeContent": {
                             "type": "boolean",
-                            "description": "是否抓取并返回页面完整内容",
+                            "description": "Whether to fetch and return full page content",
                             "default": false
                         }
                     },
@@ -818,20 +818,20 @@
             },
             {
                 "name": "ccmp_dashscopeWebSearch",
-                "displayName": "阿里云百炼联网搜索",
+                "displayName": "Alibaba Cloud BailianWeb Search",
                 "toolReferenceName": "bailianWebSearch",
-                "modelDescription": "使用阿里云百炼提供的联网搜索MCP服务获取实时信息。需要订阅百炼Coding Plan并开通联网搜索MCP服务（限时免费，每月2000次免费额度），使用百炼通用API密钥（sk-xxx格式）进行鉴权。",
-                "userDescription": "通过阿里云百炼联网搜索获取最新信息",
+                "modelDescription": "Uses Alibaba Cloud Bailian web search MCP service to get real-time information. Requires subscribing to Bailian Coding Plan and enabling web search MCP service (Limited time free, 2000 free quota per month), Uses Bailian general API key (sk-xxx format) for authentication.",
+                "userDescription": "Get latest information through Alibaba Cloud Bailian web search",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
                         "query": {
                             "type": "string",
-                            "description": "搜索查询字符串"
+                            "description": "Search query string"
                         },
                         "count": {
                             "type": "integer",
-                            "description": "返回搜索结果数量",
+                            "description": "Number of search results to return",
                             "minimum": 1,
                             "maximum": 20,
                             "default": 10

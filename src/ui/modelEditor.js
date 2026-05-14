@@ -1,43 +1,43 @@
 ﻿/**
- * 模型编辑器 - 客户端脚本
- * 负责 DOM 创建、事件绑定和与 VSCode 通信
+ * Model Editor - Client Script
+ * Responsible for DOM creation, event binding, and VSCode communication
  */
 
 // VSCode API
 const vscode = acquireVsCodeApi();
 
-// 类型定义
+// Type Definitions
 /**
  * @typedef {Object} Provider
- * @property {string} id - 提供商ID
- * @property {string} name - 提供商名称
+ * @property {string} id - Provider ID
+ * @property {string} name - Provider Name
  */
 
 /**
  * @typedef {Object} ModelCapabilities
- * @property {boolean} toolCalling - 是否支持工具调用
- * @property {boolean} imageInput - 是否支持图像输入
+ * @property {boolean} toolCalling - Whether tool calling is supported
+ * @property {boolean} imageInput - Whether image input is supported
  */
 
 /**
  * @typedef {Object} ModelData
- * @property {string} id - 模型ID
- * @property {string} name - 显示名称
- * @property {string} [tooltip] - 描述（可选）
- * @property {string} provider - 提供商标识符
- * @property {string} [baseUrl] - API基础URL（可选）
- * @property {string} [model] - 请求模型ID（可选）
- * @property {'openai'|'openai-sse'|'openai-responses'|'anthropic'|'gemini-sse'} sdkMode - SDK兼容模式
- * @property {number} maxInputTokens - 最大输入Token
- * @property {number} maxOutputTokens - 最大输出Token
- * @property {ModelCapabilities} capabilities - 能力配置
- * @property {boolean} useInstructions - 是否使用 instructions 参数（仅 openai-responses 有效）
- * @property {boolean} webSearchTool - 是否启用 Anthropic 原生 web_search 工具（仅 anthropic 有效）
- * @property {Object} [customHeader] - 自定义HTTP头部（可选）
- * @property {Object} [extraBody] - 额外请求体参数（可选）
+ * @property {string} id - Model ID
+ * @property {string} name - Display name
+ * @property {string} [tooltip] - Description (optional)
+ * @property {string} provider - Provider identifier
+ * @property {string} [baseUrl] - API base URL (optional)
+ * @property {string} [model] - Request model ID (optional)
+ * @property {'openai'|'openai-sse'|'openai-responses'|'anthropic'|'gemini-sse'} sdkMode - SDK compatibility mode
+ * @property {number} maxInputTokens - Maximum input tokens
+ * @property {number} maxOutputTokens - Maximum output tokens
+ * @property {ModelCapabilities} capabilities - Capability configuration
+ * @property {boolean} useInstructions - Whether to use instructions parameter (only valid for openai-responses)
+ * @property {boolean} webSearchTool - Whether to enable Anthropic native web_search tool (only valid for anthropic)
+ * @property {Object} [customHeader] - Custom HTTP headers (optional)
+ * @property {Object} [extraBody] - Extra request body parameters (optional)
  */
 
-// 全局变量
+// Global Variables
 /** @type {Provider[]} */
 let allProviders = [];
 /** @type {string[]} */
@@ -49,145 +49,145 @@ let isCreateMode = false;
 /** @type {boolean} */
 let isLoadingModels = false;
 
-/** CLI 专用的提供商 ID，禁止在通用配置中使用 */
+/** Provider IDs reserved for CLI, prohibited in general configuration */
 const CLI_RESERVED_PROVIDERS = ['codex', 'gemini'];
 
 /**
- * 初始化编辑器
- * @param {ModelData} data - 模型数据
- * @param {boolean} createMode - 是否为创建模式
+ * Initialize Editor
+ * @param {ModelData} data - Model data
+ * @param {boolean} createMode - Whether in create mode
  * @returns {void}
  */
 function initializeEditor(data, createMode) {
     modelData = data;
     isCreateMode = createMode;
 
-    // 创建 DOM
+    // Create DOM
     createDOM();
 
-    // 绑定事件
+    // Bind events
     bindEvents();
 
-    // 请求提供商列表
+    // Request provider list
     vscode.postMessage({ command: 'getProviders' });
 
-    // 初始化 JSON 验证
+    // Initialize JSON validation
     validateJSON_UI('customHeader');
     validateJSON_UI('extraBody');
 }
 
 /**
- * 创建 DOM 结构
+ * Create DOM structure
  * @returns {void}
  */
 function createDOM() {
     const container = document.getElementById('app');
 
-    // 创建基本信息部分
-    const basicSection = createSection('基本信息', [
+    // Create Basic Information Section
+    const basicSection = createSection('Basic Information', [
         createFormGroup(
             'modelId',
-            `模型ID${isCreateMode ? ' *' : ''}`,
+            `Model ID${isCreateMode ? ' *' : ''}`,
             'id',
             'input',
             {
                 type: 'text',
-                placeholder: '例如: zhipu:glm-4.6',
+                placeholder: 'e.g., zhipu:glm-4.6',
                 value: modelData.id,
                 readonly: !isCreateMode
             },
-            isCreateMode ? '模型唯一标识符，创建后不可更改' : '模型唯一标识符，不支持更改，若需修改请直接编辑配置文件。'
+            isCreateMode ? 'Unique model identifier, cannot be changed after creation' : 'Unique model identifier, cannot be modified. Please edit the configuration file directly if changes are needed.'
         ),
-        createFormGroup('modelName', '显示名称 *', 'name', 'input', {
+        createFormGroup('modelName', 'Display Name *', 'name', 'input', {
             type: 'text',
-            placeholder: '例如: GLM-4.6 (智谱AI)',
+            placeholder: 'e.g., GLM-4.6 (Zhipu AI)',
             value: modelData.name
-        }, '在模型选择器中显示的名称'),
-        createFormGroup('modelTooltip', '描述', 'tooltip', 'textarea', {
+        }, 'Name displayed in the model selector'),
+        createFormGroup('modelTooltip', 'Description', 'tooltip', 'textarea', {
             rows: 2,
-            placeholder: '模型的详细描述（可选）',
+            placeholder: 'Detailed model description (optional)',
             value: modelData.tooltip
-        }, '悬停时显示的工具提示')
+        }, 'Tooltip displayed on hover')
     ]);
 
-    // 创建 API 配置部分
-    const apiSection = createSection('API配置', [
+    // Create API Configuration Section
+    const apiSection = createSection('API Configuration', [
         createProviderFormGroup(),
-        createFormGroup('sdkMode', 'SDK模式', 'sdkMode', 'select', {
+        createFormGroup('sdkMode', 'SDK Mode', 'sdkMode', 'select', {
             options: [
-                { value: 'openai', label: 'OpenAI SDK (使用官方SDK进行流式传输数据处理)', selected: modelData.sdkMode === 'openai' },
-                { value: 'openai-sse', label: 'OpenAI SSE (使用内置兼容解析进行流式传输数据处理)', selected: modelData.sdkMode === 'openai-sse' },
-                { value: 'openai-responses', label: 'OpenAI Responses (实验性支持，使用 Responses API 进行请求响应处理)', selected: modelData.sdkMode === 'openai-responses' },
-                { value: 'anthropic', label: 'Anthropic SDK (使用官方SDK进行流式传输数据处理)', selected: modelData.sdkMode === 'anthropic' },
-                { value: 'gemini-sse', label: 'Gemini HTTP SSE (实验性支持，使用内置兼容解析进行流式传输数据处理，兼容第三方网关)', selected: modelData.sdkMode === 'gemini-sse' }
+                { value: 'openai', label: 'OpenAI SDK (Stream data processing using official SDK)', selected: modelData.sdkMode === 'openai' },
+                { value: 'openai-sse', label: 'OpenAI SSE (Stream data processing using built-in compatibility parser)', selected: modelData.sdkMode === 'openai-sse' },
+                { value: 'openai-responses', label: 'OpenAI Responses (Experimental support, request response handling using Responses API)', selected: modelData.sdkMode === 'openai-responses' },
+                { value: 'anthropic', label: 'Anthropic SDK (Stream data processing using official SDK)', selected: modelData.sdkMode === 'anthropic' },
+                { value: 'gemini-sse', label: 'Gemini HTTP SSE (Experimental support, stream data processing using built-in compatibility parser, compatible with third-party gateways)', selected: modelData.sdkMode === 'gemini-sse' }
             ]
-        }, '模型通讯使用的兼容模式'),
+        }, 'Compatibility mode used for model communication'),
         createFormGroup('baseUrl', 'BASE URL *', 'baseUrl', 'input', {
             type: 'url',
-            placeholder: '例如：https://api.openai.com/v1 或 https://api.anthropic.com',
+            placeholder: 'e.g., https://api.openai.com/v1 or https://api.anthropic.com',
             value: modelData.baseUrl
-        }, 'API请求的 baseUrl 地址，必须以 http:// 或 https:// 开头\r\n例如：https://api.openai.com/v1 或 https://api.anthropic.com'),
-        createFormGroup('apiKey', 'API 密钥', 'apiKey', 'input', {
+        }, 'Base URL for API requests, must start with http:// or https://\ne.g., https://api.openai.com/v1 or https://api.anthropic.com'),
+        createFormGroup('apiKey', 'API Key', 'apiKey', 'input', {
             type: 'password',
-            placeholder: '留空则保持已保存的密钥不变',
+            placeholder: 'Leave empty to keep the saved key unchanged',
             value: modelData.apiKey
-        }, 'API 密钥（可选）。在此设置会自动更新密钥。'),
+        }, 'API key (optional). Setting here will automatically update the key.'),
         createModelComboboxFormGroup()
     ]);
 
-    // 创建性能设置部分
-    const perfSection = createSection('模型性能', [
-        createFormGroup('maxInputTokens', '最大请求输入Token', 'maxInputTokens', 'input', {
+    // Create Performance Settings Section
+    const perfSection = createSection('Model Performance', [
+        createFormGroup('maxInputTokens', 'Maximum Request Input Tokens', 'maxInputTokens', 'input', {
             type: 'number',
             min: 128,
             value: modelData.maxInputTokens
-        }, '模型支持的最大输入上下文限制'),
-        createFormGroup('maxOutputTokens', '最大响应输出Token', 'maxOutputTokens', 'input', {
+        }, 'Maximum input context limit supported by the model'),
+        createFormGroup('maxOutputTokens', 'Maximum Response Output Tokens', 'maxOutputTokens', 'input', {
             type: 'number',
             min: 8,
             value: modelData.maxOutputTokens
-        }, '模型支持的最大输出Token限制')
+        }, 'Maximum output token limit supported by the model')
     ]);
 
-    // 创建能力配置部分
-    const capSection = createSection('模型能力', [
-        createCheckboxFormGroup('toolCalling', '支持工具调用', 'capabilities.toolCalling', modelData.toolCalling),
-        createCheckboxFormGroup('imageInput', '支持图像输入', 'capabilities.imageInput', modelData.imageInput)
+    // Create Capability Configuration Section
+    const capSection = createSection('Model Capabilities', [
+        createCheckboxFormGroup('toolCalling', 'Support Tool Calling', 'capabilities.toolCalling', modelData.toolCalling),
+        createCheckboxFormGroup('imageInput', 'Support Image Input', 'capabilities.imageInput', modelData.imageInput)
     ]);
 
-    // 创建高级设置部分
-    const advSection = createSection('高级设置', [
+    // Create Advanced Settings Section
+    const advSection = createSection('Advanced Settings', [
         createCheckboxFormGroup(
             'useInstructions',
-            '使用 instructions 参数（仅 openai-responses 有效）',
+            'Use instructions parameter (only valid for openai-responses)',
             'useInstructions',
             modelData.useInstructions,
-            '当 SDK 模式为 openai-responses 时，使用 instructions 参数传递系统消息（默认使用用户消息传递）。'
+            'When SDK mode is openai-responses, use instructions parameter to pass system messages (by default, user messages are used).'
         ),
         createCheckboxFormGroup(
             'webSearchTool',
-            '启用 Anthropic 原生 web_search 工具（仅 anthropic 有效）',
+            'Enable Anthropic native web_search tool (only valid for anthropic)',
             'webSearchTool',
             modelData.webSearchTool,
-            '当接口兼容 Anthropic 原生 web_search 工具时启用。启用后会自动向模型暴露 web_search。'
+            'Enable when the interface is compatible with Anthropic native web_search tool. Once enabled, web_search will be automatically exposed to the model.'
         ),
-        createJSONFormGroup('customHeader', '自定义HTTP头部（JSON格式）', 'customHeader', modelData.customHeader,
+        createJSONFormGroup('customHeader', 'Custom HTTP Headers (JSON format)', 'customHeader', modelData.customHeader,
             '{"Authorization": "Bearer ${APIKEY}", "X-Custom-Header": "value"}',
-            '可选的自定义HTTP头部配置。支持 ${APIKEY} 占位符自动替换为实际的API密钥。'
+            'Optional custom HTTP headers configuration. Supports ${APIKEY} placeholder for automatic replacement with actual API key.'
         ),
-        createJSONFormGroup('extraBody', '额外请求体参数（JSON格式）', 'extraBody', modelData.extraBody,
+        createJSONFormGroup('extraBody', 'Extra Request Body Parameters (JSON format)', 'extraBody', modelData.extraBody,
             '{"temperature": 1, "top_p": null}',
-            '额外的请求体参数，将在API请求中合并到请求体中。若模型不支持某些参数，可设置为 null 以移除对应值。'
+            'Extra request body parameters that will be merged into the request body during API requests. If the model does not support certain parameters, set them to null to remove the corresponding values.'
         )
     ]);
 
-    // 创建按钮组
+    // Create button group
     const buttonGroup = createButtonGroup();
 
-    // 创建全局错误提示条
+    // Create global error banner
     const errorBanner = createErrorBanner();
 
-    // 添加到容器（错误提示在最顶部）
+    // Add to container (error banner at the top)
     container.appendChild(errorBanner);
     container.appendChild(basicSection);
     container.appendChild(apiSection);
@@ -198,10 +198,10 @@ function createDOM() {
 }
 
 /**
- * 创建 section 元素
- * @param {string} title - 章节标题
- * @param {Array<HTMLElement>} formGroups - 表单组元素数组
- * @returns {HTMLElement} 创建的章节元素
+ * Create section element
+ * @param {string} title - Section title
+ * @param {Array<HTMLElement>} formGroups - Array of form group elements
+ * @returns {HTMLElement} Created section element
  */
 function createSection(title, formGroups) {
     const section = document.createElement('div');
@@ -217,14 +217,14 @@ function createSection(title, formGroups) {
 }
 
 /**
- * 创建表单组
- * @param {string} id - 表单元素的ID
- * @param {string} labelText - 标签显示文本
- * @param {string} fieldName - 字段名称（在括号中显示）
- * @param {string} elementType - 元素类型：'input'、'textarea' 或 'select'
- * @param {Object} attrs - 元素属性对象
- * @param {string} [helpText] - 帮助文本（可选）
- * @returns {HTMLElement} 创建的表单组元素
+ * Create form group
+ * @param {string} id - Form element ID
+ * @param {string} labelText - Label display text
+ * @param {string} fieldName - Field name (displayed in parentheses)
+ * @param {string} elementType - Element type: 'input', 'textarea', or 'select'
+ * @param {Object} attrs - Element attribute object
+ * @param {string} [helpText] - Help text (optional)
+ * @returns {HTMLElement} Created form group element
  */
 function createFormGroup(id, labelText, fieldName, elementType, attrs, helpText) {
     const group = document.createElement('div');
@@ -280,13 +280,13 @@ function createFormGroup(id, labelText, fieldName, elementType, attrs, helpText)
 }
 
 /**
- * 创建复选框表单组
- * @param {string} id - 复选框元素的ID
- * @param {string} labelText - 标签显示文本
- * @param {string} fieldName - 字段名称（在括号中显示）
- * @param {boolean} checked - 复选框是否选中
- * @param {string} [detailedHelp] - 详细的帮助文本（可选）
- * @returns {HTMLElement} 创建的复选框表单组元素
+ * Create checkbox form group
+ * @param {string} id - Checkbox element ID
+ * @param {string} labelText - Label display text
+ * @param {string} fieldName - Field name (displayed in parentheses)
+ * @param {boolean} checked - Whether checkbox is checked
+ * @param {string} [detailedHelp] - Detailed help text (optional)
+ * @returns {HTMLElement} Created checkbox form group element
  */
 function createCheckboxFormGroup(id, labelText, fieldName, checked, detailedHelp) {
     const group = document.createElement('div');
@@ -323,8 +323,8 @@ function createCheckboxFormGroup(id, labelText, fieldName, checked, detailedHelp
 
 
 /**
- * 创建提供商表单组
- * @returns {HTMLElement} 创建的提供商表单组元素
+ * Create provider form group
+ * @returns {HTMLElement} Created provider form group element
  */
 function createProviderFormGroup() {
     const group = document.createElement('div');
@@ -332,7 +332,7 @@ function createProviderFormGroup() {
 
     const label = document.createElement('label');
     label.htmlFor = 'provider';
-    label.innerHTML = '提供商 * <span class="field-name">(provider)</span>';
+    label.innerHTML = 'Provider * <span class="field-name">(provider)</span>';
     group.appendChild(label);
 
     const dropdown = document.createElement('div');
@@ -343,7 +343,7 @@ function createProviderFormGroup() {
     input.id = 'provider';
     input.className = 'provider-input';
     input.value = modelData.provider;
-    input.placeholder = '例如: zhipu';
+    input.placeholder = 'e.g., zhipu';
     input.autocomplete = 'off';
 
     const list = document.createElement('div');
@@ -356,15 +356,15 @@ function createProviderFormGroup() {
 
     const help = document.createElement('div');
     help.className = 'help-text';
-    help.textContent = '模型提供商标识符（可选择内置/已知提供商或自定义输入）';
+    help.textContent = 'Model provider identifier (can select built-in/know providers or custom input)';
     group.appendChild(help);
 
     return group;
 }
 
 /**
- * 创建请求模型ID的 combobox 表单组
- * @returns {HTMLElement} 创建的表单组元素
+ * Create request model ID combobox form group
+ * @returns {HTMLElement} Created form group element
  */
 function createModelComboboxFormGroup() {
     const group = document.createElement('div');
@@ -372,7 +372,7 @@ function createModelComboboxFormGroup() {
 
     const label = document.createElement('label');
     label.htmlFor = 'requestModel';
-    label.innerHTML = '请求模型ID <span class="field-name">(model)</span>';
+    label.innerHTML = 'Request Model ID <span class="field-name">(model)</span>';
     group.appendChild(label);
 
     const dropdown = document.createElement('div');
@@ -386,7 +386,7 @@ function createModelComboboxFormGroup() {
     input.id = 'requestModel';
     input.className = 'model-input';
     input.value = modelData.model || '';
-    input.placeholder = '例如: gpt-4';
+    input.placeholder = 'e.g., gpt-4';
     input.autocomplete = 'off';
 
     const fetchButton = document.createElement('button');
@@ -394,8 +394,8 @@ function createModelComboboxFormGroup() {
     fetchButton.className = 'fetch-models-button';
     fetchButton.id = 'fetchModelsButton';
     fetchButton.onclick = fetchModelsFromAPI;
-    fetchButton.textContent = '获取模型';
-    fetchButton.title = '从 BASE URL 获取可用模型列表';
+    fetchButton.textContent = 'Fetch Models';
+    fetchButton.title = 'Fetch available model list from BASE URL';
 
     const spinner = document.createElement('span');
     spinner.className = 'fetch-spinner';
@@ -415,7 +415,7 @@ function createModelComboboxFormGroup() {
 
     const help = document.createElement('div');
     help.className = 'help-text detailed';
-    help.textContent = '发起请求时使用的模型ID（可选），若不填写则使用 模型ID (id) 的值。\r\n点击"获取模型"按钮从 BASE URL 自动获取可用模型列表（可能部分提供商不支持）。';
+    help.textContent = 'Model ID used when making requests (optional). If not filled, the Model ID (id) value will be used.\r\nClick the "Fetch Models" button to automatically fetch available model list from BASE URL (may not be supported by some providers).';
     group.appendChild(help);
 
     const statusDiv = document.createElement('div');
@@ -428,14 +428,14 @@ function createModelComboboxFormGroup() {
 }
 
 /**
- * 创建 JSON 表单组
- * @param {string} id - 表单元素的ID
- * @param {string} labelText - 标签显示文本
- * @param {string} fieldName - 字段名称（在括号中显示）
- * @param {string} value - JSON 字符串值
- * @param {string} placeholder - 占位符文本
- * @param {string} helpText - 帮助文本
- * @returns {HTMLElement} 创建的 JSON 表单组元素
+ * Create JSON form group
+ * @param {string} id - Form element ID
+ * @param {string} labelText - Label display text
+ * @param {string} fieldName - Field name (displayed in parentheses)
+ * @param {string} value - JSON string value
+ * @param {string} placeholder - Placeholder text
+ * @param {string} helpText - Help text
+ * @returns {HTMLElement} Created JSON form group element
  */
 function createJSONFormGroup(id, labelText, fieldName, value, placeholder, helpText) {
     const group = document.createElement('div');
@@ -455,7 +455,7 @@ function createJSONFormGroup(id, labelText, fieldName, value, placeholder, helpT
     const formatBtn = document.createElement('button');
     formatBtn.type = 'button';
     formatBtn.className = 'json-button';
-    formatBtn.textContent = '格式化';
+    formatBtn.textContent = 'Format';
     formatBtn.onclick = (e) => {
         e.preventDefault();
         formatJSON(id);
@@ -464,7 +464,7 @@ function createJSONFormGroup(id, labelText, fieldName, value, placeholder, helpT
     const clearBtn = document.createElement('button');
     clearBtn.type = 'button';
     clearBtn.className = 'json-button';
-    clearBtn.textContent = '清空';
+    clearBtn.textContent = 'Clear';
     clearBtn.onclick = (e) => {
         e.preventDefault();
         clearJSON(id);
@@ -479,7 +479,7 @@ function createJSONFormGroup(id, labelText, fieldName, value, placeholder, helpT
 
     const statusText = document.createElement('span');
     statusText.id = `${id}StatusText`;
-    statusText.textContent = '无内容';
+    statusText.textContent = 'No content';
 
     status.appendChild(indicator);
     status.appendChild(statusText);
@@ -513,8 +513,8 @@ function createJSONFormGroup(id, labelText, fieldName, value, placeholder, helpT
 }
 
 /**
- * 创建全局错误提示区域
- * @returns {HTMLElement} 创建的错误提示元素
+ * Create global error message area
+ * @returns {HTMLElement} Created error message element
  */
 function createErrorBanner() {
     const banner = document.createElement('div');
@@ -537,44 +537,44 @@ function createErrorBanner() {
 }
 
 /**
- * 创建按钮组
- * @returns {HTMLElement} 创建的按钮组元素
+ * Create button group
+ * @returns {HTMLElement} Created button group element
  */
 function createButtonGroup() {
     const group = document.createElement('div');
     group.className = 'button-group';
 
-    // 创建内部容器以实现居中对齐
+    // Create inner container for center alignment
     const inner = document.createElement('div');
     inner.className = 'button-group-inner';
 
-    // 左侧按钮容器（删除按钮）
+    // Left button container (delete button)
     const leftButtons = document.createElement('div');
     leftButtons.style.display = 'flex';
     leftButtons.style.gap = '10px';
 
-    // 右侧按钮容器（保存和取消按钮）
+    // Right button container (save and cancel buttons)
     const rightButtons = document.createElement('div');
     rightButtons.style.display = 'flex';
     rightButtons.style.gap = '10px';
 
-    // 如果是编辑模式，添加删除按钮到左侧
+    // If in edit mode, add delete button to the left
     if (!isCreateMode) {
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-button';
-        deleteBtn.textContent = '删除';
+        deleteBtn.textContent = 'Delete';
         deleteBtn.onclick = deleteModel;
         leftButtons.appendChild(deleteBtn);
     }
 
     const saveBtn = document.createElement('button');
     saveBtn.className = 'primary-button';
-    saveBtn.textContent = isCreateMode ? '创建' : '更新';
+    saveBtn.textContent = isCreateMode ? 'Create' : 'Update';
     saveBtn.onclick = saveModel;
 
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'secondary-button';
-    cancelBtn.textContent = '取消';
+    cancelBtn.textContent = 'Cancel';
     cancelBtn.onclick = cancelEdit;
 
     rightButtons.appendChild(saveBtn);
@@ -588,45 +588,45 @@ function createButtonGroup() {
 }
 
 /**
- * 自动调整单个 textarea 的高度以适应内容
- * @param {HTMLTextAreaElement} textarea - textarea 元素
+ * Automatically adjust the height of a single textarea to fit its content
+ * @param {HTMLTextAreaElement} textarea - textarea element
  * @returns {void}
  */
 function autoResizeTextarea(textarea) {
     if (!textarea) return;
 
-    // 重置高度以获取正确的 scrollHeight
+    // Reset height to get correct scrollHeight
     textarea.style.height = 'auto';
 
-    // 设置新高度(scrollHeight + 边框)
+    // Set new height (scrollHeight + border)
     const newHeight = textarea.scrollHeight;
     textarea.style.height = newHeight + 'px';
 }
 
 /**
- * 为所有 textarea 元素添加自动扩展高度的功能
+ * Add auto-expand height functionality for all textarea elements
  * @returns {void}
  */
 function autoResizeAllTextareas() {
     const textareas = document.querySelectorAll('textarea');
 
     textareas.forEach(textarea => {
-        // 初始化时调整一次高度
+        // Adjust height once on initialization
         autoResizeTextarea(textarea);
 
-        // 监听输入事件,实时调整高度
+        // Listen to input event to adjust height in real-time
         textarea.addEventListener('input', function () {
             autoResizeTextarea(this);
         });
 
-        // 监听 change 事件(例如粘贴后)
+        // Listen to change event (e.g., after paste)
         textarea.addEventListener('change', function () {
             autoResizeTextarea(this);
         });
 
-        // 监听 paste 事件
+        // Listen to paste event
         textarea.addEventListener('paste', function () {
-            // 使用 setTimeout 确保内容已经粘贴
+            // Use setTimeout to ensure content has been pasted
             setTimeout(() => {
                 autoResizeTextarea(this);
             }, 0);
@@ -635,8 +635,8 @@ function autoResizeAllTextareas() {
 }
 
 /**
- * 通用输入验证 - 非空验证
- * @param {HTMLElement} element - 要验证的输入元素
+ * Generic input validation - non-empty validation
+ * @param {HTMLElement} element - Input element to validate
  * @returns {void}
  */
 function addSimpleValidation(element) {
@@ -650,8 +650,8 @@ function addSimpleValidation(element) {
 }
 
 /**
- * 通用数字验证 - 必须为正整数
- * @param {HTMLElement} element - 要验证的输入元素
+ * Generic number validation - must be a positive integer
+ * @param {HTMLElement} element - Input element to validate
  * @returns {void}
  */
 function addNumberValidation(element) {
@@ -666,23 +666,23 @@ function addNumberValidation(element) {
 }
 
 /**
- * 检查是否为有效的 JSON 对象（非数组、非 null、非基本类型）
- * @param {*} parsed - 已解析的 JSON 数据
- * @returns {boolean} 是否为有效的 JSON 对象
+ * Check if it is a valid JSON object (not an array, not null, not a primitive type)
+ * @param {*} parsed - Parsed JSON data
+ * @returns {boolean} Whether it is a valid JSON object
  */
 function isValidJSONObject(parsed) {
     return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed);
 }
 
 /**
- * 绑定事件
+ * Bind events
  */
 /**
- * 绑定事件监听器
+ * Bind event listeners
  * @returns {void}
  */
 function bindEvents() {
-    // 必填字段实时验证
+    // Real-time validation for required fields
     const modelId = document.getElementById('modelId');
     const modelName = document.getElementById('modelName');
     const provider = document.getElementById('provider');
@@ -690,21 +690,21 @@ function bindEvents() {
     const maxInputTokens = document.getElementById('maxInputTokens');
     const maxOutputTokens = document.getElementById('maxOutputTokens');
 
-    // 为所有 textarea 添加自动扩展高度的功能
+    // Add auto-expand height functionality for all textareas
     autoResizeAllTextareas();
 
-    // 模型ID验证
+    // Model ID validation
     if (modelId && !modelId.readOnly) {
         addSimpleValidation(modelId);
     }
 
-    // 显示名称验证
+    // Display name validation
     addSimpleValidation(modelName);
 
-    // 提供商验证
+    // Provider validation
     addSimpleValidation(provider);
 
-    // baseUrl验证（必填 + URL格式）
+    // Base URL validation (required + URL format)
     baseUrl.addEventListener('input', function () {
         const value = this.value.trim();
         if (!value) {
@@ -723,11 +723,11 @@ function bindEvents() {
         }
     });
 
-    // Token数量验证
+    // Token count validation
     addNumberValidation(maxInputTokens);
     addNumberValidation(maxOutputTokens);
 
-    // JSON 验证事件
+    // JSON validation events
     const customHeader = document.getElementById('customHeader');
     const extraBody = document.getElementById('extraBody');
 
@@ -737,17 +737,17 @@ function bindEvents() {
     extraBody.addEventListener('input', () => validateJSON_UI('extraBody'));
     extraBody.addEventListener('change', () => validateJSON_UI('extraBody'));
 
-    // 提供商输入事件
+    // Provider input event
     const providerInput = document.getElementById('provider');
     const providerList = document.getElementById('providerList');
 
     providerInput.addEventListener('input', function () {
         const searchText = this.value.toLowerCase();
 
-        // 检查是否输入了 CLI 专用的 provider ID
+        // Check if CLI reserved provider ID is entered
         if (CLI_RESERVED_PROVIDERS.some(reserved => reserved.toLowerCase() === searchText)) {
             this.classList.add('invalid');
-            showGlobalError(`提供商 "${this.value}" 为 CLI 专用，不可在自定义模型中使用`);
+            showGlobalError(`Provider "${this.value}" is reserved for CLI and cannot be used in custom models`);
         } else if (searchText) {
             this.classList.remove('invalid');
             hideGlobalError();
@@ -776,7 +776,7 @@ function bindEvents() {
         }
     });
 
-    // VSCode 消息事件
+    // VSCode message event
     window.addEventListener('message', function (event) {
         const message = event.data;
         if (message.command === 'setProviders') {
@@ -790,7 +790,7 @@ function bindEvents() {
         }
     });
 
-    // SDK 模式切换事件 - 控制特定选项的显示
+    // SDK mode switch event - control visibility of specific options
     const sdkModeSelect = document.getElementById('sdkMode');
     const useInstructionsContainer = document.getElementById('useInstructions')?.closest('.form-group');
     const webSearchToolContainer = document.getElementById('webSearchTool')?.closest('.form-group');
@@ -812,11 +812,11 @@ function bindEvents() {
         updateSdkSpecificOptionsVisibility();
     }
 
-    // 请求模型ID输入事件
+    // Request model ID input event
     const requestModelInput = document.getElementById('requestModel');
     const modelList = document.getElementById('modelList');
     const fetchModelsButton = document.getElementById('fetchModelsButton');
-    // 输入框焦点时同步按钮样式
+    // Sync button style when input field is focused
     requestModelInput.addEventListener('focus', function () {
         fetchModelsButton.classList.add('input-focused');
     });
@@ -862,17 +862,17 @@ function bindEvents() {
 }
 
 /**
- * JSON 验证
+ * JSON validation
  */
 /**
- * 验证 JSON 字符串格式
- * @param {string} jsonString - 要验证的 JSON 字符串
- * @returns {boolean} JSON 是否有效
+ * Validate JSON string format
+ * @param {string} jsonString - JSON string to validate
+ * @returns {boolean} Whether JSON is valid
  */
 /**
- * 验证 JSON 字符串格式
- * @param {string} jsonString - 要验证的 JSON 字符串
- * @returns {boolean} JSON 是否有效
+ * Validate JSON string format
+ * @param {string} jsonString - JSON string to validate
+ * @returns {boolean} Whether JSON is valid
  */
 function validateJSON(jsonString) {
     if (!jsonString || jsonString.trim() === '') {
@@ -880,7 +880,7 @@ function validateJSON(jsonString) {
     }
     try {
         const parsed = JSON.parse(jsonString);
-        // 必须是对象类型，不能是数组、字符串、数字等
+        // Must be an object type, not an array, string, number, etc.
         return isValidJSONObject(parsed);
     } catch (e) {
         return false;
@@ -888,14 +888,14 @@ function validateJSON(jsonString) {
 }
 
 /**
- * 解析 JSON 字符串
- * @param {string} jsonString - 要解析的 JSON 字符串
- * @returns {Object|undefined} 解析后的对象，如果解析失败则返回 undefined
+ * Parse JSON string
+ * @param {string} jsonString - JSON string to parse
+ * @returns {Object|undefined} Parsed object, or undefined if parsing fails
  */
 /**
- * 解析 JSON 字符串
- * @param {string} jsonString - 要解析的 JSON 字符串
- * @returns {Object|undefined} 解析后的对象，如果解析失败或不是对象则返回 undefined
+ * Parse JSON string
+ * @param {string} jsonString - JSON string to parse
+ * @returns {Object|undefined} Parsed object, or undefined if parsing fails or it's not an object
  */
 function parseJSON(jsonString) {
     if (!jsonString || jsonString.trim() === '') {
@@ -903,7 +903,7 @@ function parseJSON(jsonString) {
     }
     try {
         const parsed = JSON.parse(jsonString);
-        // 必须是对象类型，不能是数组、字符串、数字等
+        // Must be an object type, not an array, string, number, etc.
         if (isValidJSONObject(parsed)) {
             return parsed;
         }
@@ -914,9 +914,9 @@ function parseJSON(jsonString) {
 }
 
 /**
- * 验证 JSON 并更新 UI 状态（仅视觉反馈，不获取焦点）
- * @param {string} fieldId - 表单字段的 ID
- * @returns {boolean} JSON 是否有效
+ * Validate JSON and update UI state (visual feedback only, no focus)
+ * @param {string} fieldId - Form field ID
+ * @returns {boolean} Whether JSON is valid
  */
 function validateJSON_UI(fieldId) {
     const textarea = document.getElementById(fieldId);
@@ -934,39 +934,39 @@ function validateJSON_UI(fieldId) {
     if (!content) {
         const indicator = statusDiv.querySelector('.json-status-indicator');
         indicator.className = 'json-status-indicator';
-        statusText.textContent = '无内容';
+        statusText.textContent = 'No content';
         return true;
     }
 
     try {
         const parsed = JSON.parse(content);
-        // 必须是对象类型,不能是数组、字符串、数字等
+        // Must be an object type, not an array, string, number, etc.
         if (isValidJSONObject(parsed)) {
-            // 验证通过 - 恢复默认状态（不添加绿色样式）
+            // Validation passed - restore default state (no green style added)
             const indicator = statusDiv.querySelector('.json-status-indicator');
             indicator.className = 'json-status-indicator';
-            statusText.textContent = '有效 ✓';
+            statusText.textContent = 'Valid ✓';
             return true;
         } else {
-            // 不是对象类型 - 显示红色错误状态
+            // Not an object type - show red error state
             textarea.classList.add('json-invalid');
             const indicator = statusDiv.querySelector('.json-status-indicator');
             indicator.className = 'json-status-indicator invalid';
-            statusText.textContent = '无效 ✗';
+            statusText.textContent = 'Invalid ✗';
             if (errorDiv) {
-                errorDiv.textContent = '必须是对象类型（如 {"key": "value"}），不能是数组、数字或字符串';
+                errorDiv.textContent = 'Must be an object type (e.g., {"key": "value"}), not an array, number, or string';
                 errorDiv.classList.add('show');
             }
             return false;
         }
     } catch (e) {
-        // JSON 解析错误 - 显示红色错误状态
+        // JSON parsing error - show red error state
         textarea.classList.add('json-invalid');
         const indicator = statusDiv.querySelector('.json-status-indicator');
         indicator.className = 'json-status-indicator invalid';
-        statusText.textContent = '无效 ✗';
+        statusText.textContent = 'Invalid ✗';
         if (errorDiv) {
-            errorDiv.textContent = '错误: ' + e.message;
+            errorDiv.textContent = 'Error: ' + e.message;
             errorDiv.classList.add('show');
         }
         return false;
@@ -974,8 +974,8 @@ function validateJSON_UI(fieldId) {
 }
 
 /**
- * 格式化 JSON 字符串
- * @param {string} fieldId - 表单字段的 ID
+ * Format JSON string
+ * @param {string} fieldId - Form field ID
  * @returns {void}
  */
 function formatJSON(fieldId) {
@@ -983,53 +983,53 @@ function formatJSON(fieldId) {
     const content = textarea.value.trim();
 
     if (!content) {
-        showGlobalError('没有内容可以格式化');
+        showGlobalError('No content to format');
         return;
     }
 
     try {
         const parsed = JSON.parse(content);
-        // 必须是对象类型，与 validateJSON 逻辑保持一致
+        // Must be an object type, consistent with validateJSON logic
         if (!isValidJSONObject(parsed)) {
-            showGlobalError('JSON格式错误：必须是对象类型（如 {"key": "value"}），不能是数组、数字或字符串');
+            showGlobalError('JSON format error: must be an object type (e.g., {"key": "value"}), not an array, number, or string');
             return;
         }
         textarea.value = JSON.stringify(parsed, null, 2);
         validateJSON_UI(fieldId);
-        // 格式化后调整高度
+        // Adjust height after formatting
         autoResizeTextarea(textarea);
         textarea.style.opacity = '0.7';
         setTimeout(() => {
             textarea.style.opacity = '1';
         }, 200);
-        // 格式化成功时清除错误提示
+        // Clear error message on successful formatting
         hideGlobalError();
     } catch (e) {
-        showGlobalError('JSON格式错误，无法格式化：\n' + e.message);
+        showGlobalError('JSON format error, cannot format:\n' + e.message);
     }
 }
 
 /**
- * 清空 JSON 字段内容
- * @param {string} fieldId - 表单字段的 ID
+ * Clear JSON field content
+ * @param {string} fieldId - Form field ID
  * @returns {void}
  */
 function clearJSON(fieldId) {
     const textarea = document.getElementById(fieldId);
-    // 直接清空，无需确认（用户可以通过取消保存或 Ctrl+Z 恢复）
+    // Clear directly without confirmation (user can restore via cancel save or Ctrl+Z)
     textarea.value = '';
     validateJSON_UI(fieldId);
-    // 清空后调整高度
+    // Adjust height after clearing
     autoResizeTextarea(textarea);
 }
 
 /**
- * 提供商列表管理
- * @param {Provider[]} providers - 提供商列表
+ * Provider list management
+ * @param {Provider[]} providers - Provider list
  * @returns {void}
  */
 function updateProviderList(providers) {
-    // 过滤掉 CLI 专用的提供商
+    // Filter out CLI reserved providers
     allProviders = (providers || []).filter(
         p => !CLI_RESERVED_PROVIDERS.includes(p.id.toLowerCase())
     );
@@ -1037,8 +1037,8 @@ function updateProviderList(providers) {
 }
 
 /**
- * 渲染提供商列表
- * @param {Provider[]} providers - 提供商列表
+ * Render provider list
+ * @param {Provider[]} providers - Provider list
  * @returns {void}
  */
 function renderProviderList(providers) {
@@ -1050,7 +1050,7 @@ function renderProviderList(providers) {
     if (!providers || providers.length === 0) {
         const item = document.createElement('div');
         item.className = 'provider-list-item';
-        item.textContent = '无匹配的提供商';
+        item.textContent = 'No matching providers';
         item.style.pointerEvents = 'none';
         item.style.opacity = '0.5';
         providerListDiv.appendChild(item);
@@ -1067,7 +1067,7 @@ function renderProviderList(providers) {
         item.addEventListener('click', function () {
             const providerInput = document.getElementById('provider');
             providerInput.value = provider.id;
-            // 移除错误样式（如果有）
+            // Remove error style (if any)
             providerInput.classList.remove('invalid');
             providerListDiv.classList.remove('show');
         });
@@ -1076,11 +1076,11 @@ function renderProviderList(providers) {
 }
 
 /**
- * 表单验证
+ * Form validation
  */
 /**
- * 显示全局错误信息
- * @param {string} message - 错误消息
+ * Display global error message
+ * @param {string} message - Error message
  * @returns {void}
  */
 function showGlobalError(message) {
@@ -1090,13 +1090,13 @@ function showGlobalError(message) {
     if (banner && messageSpan) {
         messageSpan.textContent = message;
         banner.style.display = 'flex';
-        // 自动滚动到顶部以确保用户看到错误提示
+        // Auto scroll to top to ensure user sees error message
         banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
 
 /**
- * 隐藏全局错误信息
+ * Hide global error message
  * @returns {void}
  */
 function hideGlobalError() {
@@ -1107,8 +1107,8 @@ function hideGlobalError() {
 }
 
 /**
- * 验证表单数据
- * @returns {boolean} 表单是否有效
+ * Validate form data
+ * @returns {boolean} Whether form is valid
  */
 function validateForm() {
     const modelId = document.getElementById('modelId').value.trim();
@@ -1118,74 +1118,74 @@ function validateForm() {
     const maxInputTokens = document.getElementById('maxInputTokens').value.trim();
     const maxOutputTokens = document.getElementById('maxOutputTokens').value.trim();
 
-    // 验证必填字段
+    // Validate required fields
     if (!modelId) {
-        showGlobalError('请输入模型ID');
+        showGlobalError('Please enter Model ID');
         document.getElementById('modelId').focus();
         return false;
     }
     if (!modelName) {
-        showGlobalError('请输入显示名称');
+        showGlobalError('Please enter Display Name');
         document.getElementById('modelName').focus();
         return false;
     }
     if (!provider) {
-        showGlobalError('请输入提供商');
+        showGlobalError('Please enter Provider');
         document.getElementById('provider').focus();
         return false;
     }
 
-    // 验证 provider 不是 CLI 专用标识符
+    // Validate provider is not a CLI reserved identifier
     if (CLI_RESERVED_PROVIDERS.includes(provider.toLowerCase())) {
-        showGlobalError(`提供商 "${provider}" 为 CLI 专用，不可在自定义模型中使用`);
+        showGlobalError(`Provider "${provider}" is reserved for CLI and cannot be used in custom models`);
         document.getElementById('provider').focus();
         return false;
     }
     if (!baseUrl) {
-        showGlobalError('请输入 BASE URL');
+        showGlobalError('Please enter BASE URL');
         document.getElementById('baseUrl').focus();
         return false;
     }
 
-    // 验证 URL 格式
+    // Validate URL format
     if (baseUrl) {
         try {
             const urlObj = new URL(baseUrl);
             if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
-                showGlobalError('BASE URL 必须以 http:// 或 https:// 开头');
+                showGlobalError('BASE URL must start with http:// or https://');
                 document.getElementById('baseUrl').focus();
                 return false;
             }
         } catch (e) {
-            showGlobalError('BASE URL 格式不正确，请输入有效的 URL');
+            showGlobalError('BASE URL format is incorrect, please enter a valid URL');
             document.getElementById('baseUrl').focus();
             return false;
         }
     }
 
-    // 验证 Token 数量
+    // Validate Token count
     if (!maxInputTokens || isNaN(parseInt(maxInputTokens)) || parseInt(maxInputTokens) <= 0) {
-        showGlobalError('最大输入Token必须是大于0的数字');
+        showGlobalError('Maximum Input Tokens must be a number greater than 0');
         document.getElementById('maxInputTokens').focus();
         return false;
     }
     if (!maxOutputTokens || isNaN(parseInt(maxOutputTokens)) || parseInt(maxOutputTokens) <= 0) {
-        showGlobalError('最大输出Token必须是大于0的数字');
+        showGlobalError('Maximum Output Tokens must be a number greater than 0');
         document.getElementById('maxOutputTokens').focus();
         return false;
     }
 
-    // 验证 JSON 格式
+    // Validate JSON format
     const customHeaderJson = document.getElementById('customHeader').value.trim();
     if (customHeaderJson && !validateJSON(customHeaderJson)) {
-        showGlobalError('自定义HTTP头部的JSON格式不正确，必须是对象类型');
+        showGlobalError('JSON format for Custom HTTP Headers is incorrect, must be an object type');
         document.getElementById('customHeader').focus();
         return false;
     }
 
     const extraBodyJson = document.getElementById('extraBody').value.trim();
     if (extraBodyJson && !validateJSON(extraBodyJson)) {
-        showGlobalError('额外请求体参数的JSON格式不正确，必须是对象类型');
+        showGlobalError('JSON format for Extra Request Body Parameters is incorrect, must be an object type');
         document.getElementById('extraBody').focus();
         return false;
     }
@@ -1194,14 +1194,14 @@ function validateForm() {
 }
 
 /**
- * 保存模型
+ * Save model
  */
 /**
- * 保存模型配置
+ * Save model configuration
  * @returns {void}
  */
 function saveModel() {
-    // 先清除之前的错误提示
+    // Clear previous error messages first
     hideGlobalError();
 
     if (!validateForm()) {
@@ -1213,7 +1213,7 @@ function saveModel() {
     const provider = document.getElementById('provider').value.trim();
 
     if (!modelId || !modelName || !provider) {
-        showGlobalError('请填写所有必需字段');
+        showGlobalError('Please fill in all required fields');
         return;
     }
 
@@ -1230,14 +1230,14 @@ function saveModel() {
 
     model.id = modelId;
     model.name = modelName;
-    // tooltip: 使用 null 表示清空（undefined 会在 JSON 序列化时被忽略）
+    // tooltip: Use null to clear (undefined will be ignored during JSON serialization)
     model.tooltip = tooltipText || null;
     model.provider = provider;
-    // baseUrl: 使用 null 表示清空
+    // baseUrl: Use null to clear
     model.baseUrl = baseUrlText || null;
-    // apiKey: 使用 null 表示清空
+    // apiKey: Use null to clear
     model.apiKey = apiKeyText || null;
-    // model: 使用 null 表示清空
+    // model: Use null to clear
     model.model = requestModelText || null;
     model.sdkMode = sdkMode;
     model.maxInputTokens = parseInt(document.getElementById('maxInputTokens').value) || 12800;
@@ -1248,34 +1248,34 @@ function saveModel() {
         imageInput: document.getElementById('imageInput').checked
     };
 
-    // 仅当 sdkMode 为 openai-responses 时才更新 useInstructions 字段。
-    // 若旧值为 true，则在切换到其它 sdkMode 时保留，避免用户切回 openai-responses 后丢失原有配置。
+    // Only update useInstructions field when sdkMode is openai-responses.
+    // If the old value is true, retain it when switching to other sdkModes to prevent loss of original configuration when switching back to openai-responses.
     if (sdkMode === 'openai-responses') {
         model.useInstructions = document.getElementById('useInstructions')?.checked || false;
     } else if (!model.useInstructions) {
-        model.useInstructions = null; // 明确设置为 null 以表示未使用
+        model.useInstructions = null; // Explicitly set to null to indicate not used
     }
 
-    // 仅当 sdkMode 为 anthropic 时才更新 webSearchTool 字段。
-    // 若旧值为 true，则在切换到其它 sdkMode 时保留，避免用户切回 anthropic 后丢失原有配置。
+    // Only update webSearchTool field when sdkMode is anthropic.
+    // If the old value is true, retain it when switching to other sdkModes to prevent loss of original configuration when switching back to anthropic.
     if (sdkMode === 'anthropic') {
         model.webSearchTool = document.getElementById('webSearchTool')?.checked || false;
     } else if (!model.webSearchTool) {
-        model.webSearchTool = null; // 明确设置为 null 以表示未使用
+        model.webSearchTool = null; // Explicitly set to null to indicate not used
     }
 
     const customHeaderText = document.getElementById('customHeader').value.trim();
     const customHeader = parseJSON(customHeaderText);
-    // 明确设置 customHeader，使用 null 表示清空（undefined 会在 JSON 序列化时被忽略）
+    // Explicitly set customHeader, use null to clear (undefined will be ignored during JSON serialization)
     model.customHeader = customHeader || null;
 
     const extraBodyText = document.getElementById('extraBody').value.trim();
     const extraBody = parseJSON(extraBodyText);
-    // 明确设置 extraBody，使用 null 表示清空
+    // Explicitly set extraBody, use null to clear
     model.extraBody = extraBody || null;
 
     if (!model.id || !model.name || !model.provider) {
-        showGlobalError('模型配置不完整，请重试');
+        showGlobalError('Model configuration is incomplete, please try again');
         return;
     }
 
@@ -1286,7 +1286,7 @@ function saveModel() {
 }
 
 /**
- * 取消编辑
+ * Cancel editing
  * @returns {void}
  */
 function cancelEdit() {
@@ -1296,11 +1296,11 @@ function cancelEdit() {
 }
 
 /**
- * 删除模型
+ * Delete model
  * @returns {void}
  */
 function deleteModel() {
-    // 发送删除请求到 VSCode 端，由 VSCode 显示确认对话框
+    // Send delete request to VSCode side, VSCode will display confirmation dialog
     vscode.postMessage({
         command: 'delete',
         modelId: document.getElementById('modelId').value.trim(),
@@ -1309,7 +1309,7 @@ function deleteModel() {
 }
 
 /**
- * 从 API 获取模型列表
+ * Fetch model list from API
  * @returns {void}
  */
 function fetchModelsFromAPI() {
@@ -1318,23 +1318,23 @@ function fetchModelsFromAPI() {
     const provider = document.getElementById('provider').value.trim();
 
     if (!baseUrl) {
-        showGlobalError('请先输入 BASE URL');
+        showGlobalError('Please enter BASE URL first');
         return;
     }
 
-    // 验证 URL 格式
+    // Validate URL format
     try {
         const urlObj = new URL(baseUrl);
         if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
-            showGlobalError('BASE URL 必须以 http:// 或 https:// 开头');
+            showGlobalError('BASE URL must start with http:// or https://');
             return;
         }
     } catch (e) {
-        showGlobalError('BASE URL 格式不正确，请输入有效的 URL');
+        showGlobalError('BASE URL format is incorrect, please enter a valid URL');
         return;
     }
 
-    // 发送请求到后端
+    // Send request to backend
     vscode.postMessage({
         command: 'fetchModels',
         baseUrl: baseUrl,
@@ -1344,7 +1344,7 @@ function fetchModelsFromAPI() {
 }
 
 /**
- * 处理模型加载中状态
+ * Handle model loading state
  * @returns {void}
  */
 function handleModelsLoading() {
@@ -1357,7 +1357,7 @@ function handleModelsLoading() {
     button.classList.add('loading');
     spinner.style.display = 'inline-block';
 
-    statusDiv.textContent = '正在获取模型列表...';
+    statusDiv.textContent = 'Fetching model list...';
     statusDiv.className = 'model-fetch-status loading';
     statusDiv.style.display = 'block';
 
@@ -1365,8 +1365,8 @@ function handleModelsLoading() {
 }
 
 /**
- * 处理模型加载成功
- * @param {string[]} models - 模型列表
+ * Handle model loading success
+ * @param {string[]} models - Model list
  * @returns {void}
  */
 function handleModelsLoaded(models) {
@@ -1382,21 +1382,21 @@ function handleModelsLoaded(models) {
 
     if (models && models.length > 0) {
         availableModels = models;
-        statusDiv.textContent = `成功获取 ${models.length} 个模型`;
+        statusDiv.textContent = `Successfully fetched ${models.length} models`;
         statusDiv.className = 'model-fetch-status success';
         statusDiv.style.display = 'block';
 
-        // 自动显示模型列表
+        // Automatically display model list
         renderModelList(availableModels);
         modelList.classList.add('show');
 
-        // 3秒后隐藏状态提示
+        // Hide status prompt after 3 seconds
         setTimeout(() => {
             statusDiv.style.display = 'none';
         }, 3000);
     } else {
         availableModels = [];
-        statusDiv.textContent = '未找到可用模型';
+        statusDiv.textContent = 'No available models found';
         statusDiv.className = 'model-fetch-status warning';
         statusDiv.style.display = 'block';
 
@@ -1407,8 +1407,8 @@ function handleModelsLoaded(models) {
 }
 
 /**
- * 处理模型加载错误
- * @param {string} error - 错误信息
+ * Handle model loading error
+ * @param {string} error - Error message
  * @returns {void}
  */
 function handleModelsError(error) {
@@ -1421,19 +1421,19 @@ function handleModelsError(error) {
     button.classList.remove('loading');
     spinner.style.display = 'none';
 
-    statusDiv.textContent = error || '获取模型列表失败';
+    statusDiv.textContent = error || 'Failed to fetch model list';
     statusDiv.className = 'model-fetch-status error';
     statusDiv.style.display = 'block';
 
-    // 5秒后隐藏错误提示
+    // Hide error message after 5 seconds
     setTimeout(() => {
         statusDiv.style.display = 'none';
     }, 5000);
 }
 
 /**
- * 渲染模型列表
- * @param {string[]} models - 模型列表
+ * Render model list
+ * @param {string[]} models - Model list
  * @returns {void}
  */
 function renderModelList(models) {
@@ -1445,7 +1445,7 @@ function renderModelList(models) {
     if (!models || models.length === 0) {
         const item = document.createElement('div');
         item.className = 'model-list-item';
-        item.textContent = '无可用模型';
+        item.textContent = 'No available models';
         item.style.pointerEvents = 'none';
         item.style.opacity = '0.5';
         modelListDiv.appendChild(item);

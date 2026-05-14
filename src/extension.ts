@@ -24,38 +24,38 @@ import { registerCommitCommands, checkGitAvailability } from './commit';
 import { clearRegisteredProviders, registerProvider, registeredProviders } from './utils/providerRegistry';
 
 /**
- * 全局变量 - 存储已注册的提供商实例，用于扩展卸载时的清理
+ * Global variable - stores registered provider instances for cleanup when the extension is deactivated
  */
 const registeredDisposables: vscode.Disposable[] = [];
 
-// 内联补全提供商实例（使用轻量级 Shim，延迟加载真正的补全引擎）
+// Inline completion provider instance (uses lightweight Shim, lazy-loads the actual completion engine)
 let inlineCompletionProvider: InlineCompletionShim | undefined;
 
 /**
- * 激活提供商 - 基于配置文件动态注册（并行优化版本）
+ * Activate providers - dynamically registers based on configuration files (parallel optimization version)
  */
 async function activateProviders(context: vscode.ExtensionContext): Promise<void> {
     const startTime = Date.now();
     const configProvider = ConfigManager.getConfigProvider();
 
     if (!configProvider) {
-        Logger.warn('未找到提供商配置，跳过提供商注册');
+        Logger.warn('Provider configuration not found, skipping provider registration');
         return;
     }
 
-    // 设置扩展路径（用于 tokenizer 初始化）
+    // Set extension path (for tokenizer initialization)
     TokenCounter.setExtensionPath(context.extensionPath);
 
-    Logger.debug(`⏱️ 开始并行注册 ${Object.keys(configProvider).length} 个提供商...`);
+    Logger.debug(`⏱️ Starting parallel registration of ${Object.keys(configProvider).length} providers...`);
 
-    // CLI 认证提供商列表（从 CliAuthFactory 获取）
+    // CLI authentication provider list (from CliAuthFactory)
     const supportedCliTypes = CliAuthFactory.getSupportedCliTypes();
     const cliAuthProviders = supportedCliTypes.map(cli => cli.id);
 
-    // 并行注册所有提供商以提升性能
+    // Register all providers in parallel for performance
     const registrationPromises = Object.entries(configProvider).map(async ([providerKey, providerConfig]) => {
         try {
-            Logger.trace(`正在注册提供商: ${providerConfig.displayName} (${providerKey})`);
+            Logger.trace(`Registering provider: ${providerConfig.displayName} (${providerKey})`);
             const providerStartTime = Date.now();
 
             let provider:
@@ -72,70 +72,70 @@ async function activateProviders(context: vscode.ExtensionContext): Promise<void
             let disposables: vscode.Disposable[];
 
             if (providerKey === 'zhipu') {
-                // 对 zhipu 使用专门的 provider（配置向导功能）
+                // Use dedicated provider for zhipu (configuration wizard functionality)
                 const result = ZhipuProvider.createAndActivate(context, providerKey, providerConfig);
                 provider = result.provider;
                 disposables = result.disposables;
             } else if (providerKey === 'moonshot') {
-                // 对 moonshot 使用专门的 provider（多密钥管理和配置向导）
+                // Use dedicated provider for moonshot (multi-key management and configuration wizard)
                 const result = MoonshotProvider.createAndActivate(context, providerKey, providerConfig);
                 provider = result.provider;
                 disposables = result.disposables;
             } else if (providerKey === 'minimax') {
-                // 对 minimax 使用专门的 provider（多密钥管理和配置向导）
+                // Use dedicated provider for minimax (multi-key management and configuration wizard)
                 const result = MiniMaxProvider.createAndActivate(context, providerKey, providerConfig);
                 provider = result.provider;
                 disposables = result.disposables;
             } else if (providerKey === 'dashscope') {
-                // 对 dashscope 使用专门的 provider（多密钥管理和配置向导）
+                // Use dedicated provider for dashscope (multi-key management and configuration wizard)
                 const result = DashscopeProvider.createAndActivate(context, providerKey, providerConfig);
                 provider = result.provider;
                 disposables = result.disposables;
             } else if (providerKey === 'tencent') {
-                // 对 tencent 使用专门的 provider（四类密钥和协议切换）
+                // Use dedicated provider for tencent (four types of keys and protocol switching)
                 const result = TencentProvider.createAndActivate(context, providerKey, providerConfig);
                 provider = result.provider;
                 disposables = result.disposables;
             } else if (providerKey === 'xiaomimimo') {
-                // 对 xiaomimimo 使用专门的 provider（多密钥管理和配置向导）
+                // Use dedicated provider for xiaomimimo (multi-key management and configuration wizard)
                 const result = XiaomimimoProvider.createAndActivate(context, providerKey, providerConfig);
                 provider = result.provider;
                 disposables = result.disposables;
             } else if (providerKey === 'baidu') {
-                // 对百度千帆使用专门的 provider（多密钥管理和配置向导）
+                // Use dedicated provider for Baidu Qianfan (multi-key management and configuration wizard)
                 const result = BaiduProvider.createAndActivate(context, providerKey, providerConfig);
                 provider = result.provider;
                 disposables = result.disposables;
             } else if (providerKey === 'volcengine') {
-                // 对火山方舟使用专门的 provider（Coding Plan / Agent Plan 多密钥管理和配置向导）
+                // Use dedicated provider for Volcengine (Coding Plan / Agent Plan multi-key management and configuration wizard)
                 const result = VolcengineProvider.createAndActivate(context, providerKey, providerConfig);
                 provider = result.provider;
                 disposables = result.disposables;
             } else if (cliAuthProviders.includes(providerKey)) {
-                // 对 CLI 认证提供商使用通用的 CLI provider
+                // Use generic CLI provider for CLI authentication providers
                 const result = CliModelProvider.createAndActivate(context, providerKey, providerConfig);
                 provider = result.provider;
                 disposables = result.disposables;
             } else {
-                // 其他提供商使用通用 provider（支持基于 sdkMode 的自动选择）
+                // Use generic provider for other providers (supports automatic selection based on sdkMode)
                 const result = GenericModelProvider.createAndActivate(context, providerKey, providerConfig);
                 provider = result.provider;
                 disposables = result.disposables;
             }
 
             const providerTime = Date.now() - providerStartTime;
-            Logger.debug(`✅ ${providerConfig.displayName} 提供商注册成功 (耗时: ${providerTime}ms)`);
+            Logger.debug(`✅ ${providerConfig.displayName} provider registered successfully (took: ${providerTime}ms)`);
             return { providerKey, provider, disposables };
         } catch (error) {
-            Logger.error(`❌ 注册提供商 ${providerKey} 失败:`, error);
+            Logger.error(`❌ Failed to register provider ${providerKey}:`, error);
             return null;
         }
     });
 
-    // 等待所有提供商注册完成
+    // Wait for all providers to be registered
     const results = await Promise.all(registrationPromises);
 
-    // 收集成功注册的提供商
+    // Collect successfully registered providers
     for (const result of results) {
         if (result) {
             registerProvider(result.providerKey, result.provider);
@@ -146,58 +146,58 @@ async function activateProviders(context: vscode.ExtensionContext): Promise<void
     const totalTime = Date.now() - startTime;
     const successCount = results.filter(r => r !== null).length;
     Logger.debug(
-        `⏱️ 提供商注册完成: ${successCount}/${Object.keys(configProvider).length} 个成功 (总耗时: ${totalTime}ms)`
+        `⏱️ Provider registration completed: ${successCount}/${Object.keys(configProvider).length} successful (total time: ${totalTime}ms)`
     );
 }
 
 /**
- * 激活兼容提供商
+ * Activate compatible provider
  */
 async function activateCompatibleProvider(context: vscode.ExtensionContext): Promise<void> {
     try {
-        Logger.trace('正在注册兼容提供商...');
+        Logger.trace('Registering compatible provider...');
         const providerStartTime = Date.now();
 
-        // 创建并激活兼容提供商
+        // Create and activate compatible provider
         const result = CompatibleProvider.createAndActivate(context);
         const provider = result.provider;
         const disposables = result.disposables;
 
-        // 存储注册的提供商和 disposables
+        // Store registered provider and disposables
         registerProvider('compatible', provider);
         registeredDisposables.push(...disposables);
 
         const providerTime = Date.now() - providerStartTime;
-        Logger.debug(`✅ Compatible Provider 提供商注册成功 (耗时: ${providerTime}ms)`);
+        Logger.debug(`✅ Compatible Provider registered successfully (took: ${providerTime}ms)`);
     } catch (error) {
-        Logger.error('❌ 注册兼容提供商失败:', error);
+        Logger.error('❌ Failed to register compatible provider:', error);
     }
 }
 
 /**
- * 激活内联补全提供商（轻量级 Shim，延迟加载真正的补全引擎）
+ * Activate inline completion provider (lightweight Shim, lazy-loads the actual completion engine)
  */
 async function activateInlineCompletionProvider(context: vscode.ExtensionContext): Promise<void> {
     try {
-        Logger.trace('正在注册内联补全提供商 (Shim 模式)...');
+        Logger.trace('Registering inline completion provider (Shim mode)...');
         const providerStartTime = Date.now();
 
-        // 创建并激活轻量级 Shim（不包含 @vscode/chat-lib 依赖）
+        // Create and activate lightweight Shim (without @vscode/chat-lib dependency)
         const result = InlineCompletionShim.createAndActivate(context);
         inlineCompletionProvider = result.provider;
         registeredDisposables.push(...result.disposables);
 
         const providerTime = Date.now() - providerStartTime;
-        Logger.debug(`✅ 内联补全提供商注册成功 - Shim 模式 (耗时: ${providerTime}ms)`);
+        Logger.debug(`✅ Inline completion provider registered successfully - Shim mode (took: ${providerTime}ms)`);
     } catch (error) {
-        Logger.error('❌ 注册内联补全提供商失败:', error);
+        Logger.error('❌ Failed to register inline completion provider:', error);
     }
 }
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
-    // 将单例实例存储到 globalThis，供 copilot.bundle.js 中的模块使用
+    // Store singleton instances to globalThis for use by modules in copilot.bundle.js
     globalThis.__ccmp_singletons = {
         CompletionLogger,
         ApiKeyManager,
@@ -208,75 +208,75 @@ export async function activate(context: vscode.ExtensionContext) {
     const activationStartTime = Date.now();
 
     try {
-        Logger.initialize('GitHub Copilot Models Provider (CCMP)'); // 初始化日志管理器
-        StatusLogger.initialize('GitHub Copilot Models Provider Status'); // 初始化高频状态日志管理器
-        CompletionLogger.initialize('GitHub Copilot Inline Completion via CCMP'); // 初始化高频内联补全日志管理器
+        Logger.initialize('GitHub Copilot Models Provider (CCMP)'); // Initialize logger manager
+        StatusLogger.initialize('GitHub Copilot Models Provider Status'); // Initialize high-frequency status logger
+        CompletionLogger.initialize('GitHub Copilot Inline Completion via CCMP'); // Initialize high-frequency inline completion logger
 
         const isDevelopment = context.extensionMode === vscode.ExtensionMode.Development;
-        Logger.debug(`🔧 CCMP 扩展模式: ${isDevelopment ? 'Development' : 'Production'}`);
-        // 检查和提示VS Code的日志级别设置
+        Logger.debug(`🔧 CCMP extension mode: ${isDevelopment ? 'Development' : 'Production'}`);
+        // Check and prompt VS Code log level settings
         if (isDevelopment) {
             Logger.checkAndPromptLogLevel();
         }
 
-        Logger.debug('⏱️ 开始激活 CCMP 扩展...');
+        Logger.debug('⏱️ Starting CCMP extension activation...');
 
-        // 步骤0: 初始化主实例竞选服务
+        // Step 0: Initialize leader election service
         let stepStartTime = Date.now();
         LeaderElectionService.initialize(context);
-        Logger.trace(`⏱️ 主实例竞选服务初始化完成 (耗时: ${Date.now() - stepStartTime}ms)`);
+        Logger.trace(`⏱️ Leader election service initialized (took: ${Date.now() - stepStartTime}ms)`);
 
-        // 步骤1: 初始化API密钥管理器
+        // Step 1: Initialize API key manager
         stepStartTime = Date.now();
         ApiKeyManager.initialize(context);
-        Logger.trace(`⏱️ API密钥管理器初始化完成 (耗时: ${Date.now() - stepStartTime}ms)`);
+        Logger.trace(`⏱️ API key manager initialized (took: ${Date.now() - stepStartTime}ms)`);
 
-        // 步骤2: 初始化配置管理器
+        // Step 2: Initialize configuration manager
         stepStartTime = Date.now();
         const configDisposable = ConfigManager.initialize();
         context.subscriptions.push(configDisposable);
-        Logger.trace(`⏱️ 配置管理器初始化完成 (耗时: ${Date.now() - stepStartTime}ms)`);
-        // 步骤2.1: 初始化 JSON Schema 提供者
+        Logger.trace(`⏱️ Configuration manager initialized (took: ${Date.now() - stepStartTime}ms)`);
+        // Step 2.1: Initialize JSON Schema provider
         stepStartTime = Date.now();
         JsonSchemaProvider.initialize();
         context.subscriptions.push({ dispose: () => JsonSchemaProvider.dispose() });
-        Logger.trace(`⏱️ JSON Schema 提供者初始化完成 (耗时: ${Date.now() - stepStartTime}ms)`);
-        // 步骤2.2: 初始化兼容模型管理器
+        Logger.trace(`⏱️ JSON Schema provider initialized (took: ${Date.now() - stepStartTime}ms)`);
+        // Step 2.2: Initialize compatible model manager
         stepStartTime = Date.now();
         CompatibleModelManager.initialize();
-        Logger.trace(`⏱️ 兼容模型管理器初始化完成 (耗时: ${Date.now() - stepStartTime}ms)`);
-        // 步骤2.3: 初始化Token统计管理器
+        Logger.trace(`⏱️ Compatible model manager initialized (took: ${Date.now() - stepStartTime}ms)`);
+        // Step 2.3: Initialize token usage manager
         stepStartTime = Date.now();
         await TokenUsagesManager.instance.initialize(context);
-        Logger.trace(`⏱️ Token统计管理器初始化完成 (耗时: ${Date.now() - stepStartTime}ms)`);
+        Logger.trace(`⏱️ Token usage manager initialized (took: ${Date.now() - stepStartTime}ms)`);
 
-        // 步骤3: 激活提供商（并行优化）
+        // Step 3: Activate providers (parallel optimization)
         stepStartTime = Date.now();
         await activateProviders(context);
-        Logger.trace(`⏱️ 模型提供者注册完成 (耗时: ${Date.now() - stepStartTime}ms)`);
-        // 步骤3.1: 激活兼容提供商
+        Logger.trace(`⏱️ Model provider registration completed (took: ${Date.now() - stepStartTime}ms)`);
+        // Step 3.1: Activate compatible provider
         stepStartTime = Date.now();
         await activateCompatibleProvider(context);
-        Logger.trace(`⏱️ 兼容提供商注册完成 (耗时: ${Date.now() - stepStartTime}ms)`);
+        Logger.trace(`⏱️ Compatible provider registration completed (took: ${Date.now() - stepStartTime}ms)`);
 
-        // 步骤3.2: 初始化所有状态栏（包含创建和注册）
+        // Step 3.2: Initialize all status bars (including creation and registration)
         stepStartTime = Date.now();
         await StatusBarManager.initializeAll(context);
-        Logger.trace(`⏱️ 所有状态栏初始化完成 (耗时: ${Date.now() - stepStartTime}ms)`);
+        Logger.trace(`⏱️ All status bars initialized (took: ${Date.now() - stepStartTime}ms)`);
 
-        // 步骤4: 注册工具
+        // Step 4: Register tools
         stepStartTime = Date.now();
         registerAllTools(context);
-        Logger.trace(`⏱️ 工具注册完成 (耗时: ${Date.now() - stepStartTime}ms)`);
+        Logger.trace(`⏱️ Tool registration completed (took: ${Date.now() - stepStartTime}ms)`);
 
-        // 步骤5: 注册内联补全提供商（轻量级 Shim，延迟加载真正的补全引擎）
+        // Step 5: Register inline completion provider (lightweight Shim, lazy-loads the actual completion engine)
         stepStartTime = Date.now();
         await activateInlineCompletionProvider(context);
-        Logger.trace(`⏱️ NES 内联补全提供商注册完成 (耗时: ${Date.now() - stepStartTime}ms)`);
+        Logger.trace(`⏱️ NES inline completion provider registration completed (took: ${Date.now() - stepStartTime}ms)`);
 
-        // 步骤6: 注册Token用量统计命令
+        // Step 6: Register token usage statistics command
         stepStartTime = Date.now();
-        // 查看今日用量统计详情命令（单例模式，同一窗口只允许打开一个统计页面）
+        // Command to view today's usage statistics details (singleton pattern, only one statistics page allowed per window)
         let tokenUsagesView: TokenUsagesView | undefined;
         const viewStatsCommand = vscode.commands.registerCommand('ccmp.tokenUsage.showDetails', () => {
             if (!tokenUsagesView) {
@@ -286,40 +286,40 @@ export async function activate(context: vscode.ExtensionContext) {
         });
         context.subscriptions.push(
             viewStatsCommand,
-            // 确保在扩展停用时清理视图实例
+            // Ensure view instance is cleaned up when extension is deactivated
             new vscode.Disposable(() => {
                 tokenUsagesView?.dispose();
                 tokenUsagesView = undefined;
             })
         );
-        Logger.trace(`⏱️ 查看Token消耗统计命令注册完成 (耗时: ${Date.now() - stepStartTime}ms)`);
+        Logger.trace(`⏱️ Token usage statistics command registration completed (took: ${Date.now() - stepStartTime}ms)`);
 
-        // 步骤7: 注册 CLI 认证命令
+        // Step 7: Register CLI authentication commands
         stepStartTime = Date.now();
         registerCliAuthCommands(context);
-        Logger.trace(`⏱️ CLI 认证命令注册完成 (耗时: ${Date.now() - stepStartTime}ms)`);
+        Logger.trace(`⏱️ CLI authentication command registration completed (took: ${Date.now() - stepStartTime}ms)`);
 
-        // 步骤8: 注册 Commit 消息生成命令
+        // Step 8: Register commit message generation command
         stepStartTime = Date.now();
         const commitDisposables = registerCommitCommands(context);
         commitDisposables.forEach(disposable => context.subscriptions.push(disposable));
-        Logger.trace(`⏱️ Commit 消息生成命令注册完成 (耗时: ${Date.now() - stepStartTime}ms)`);
+        Logger.trace(`⏱️ Commit message generation command registration completed (took: ${Date.now() - stepStartTime}ms)`);
 
-        // 步骤9: 检查 Git 可用性（不阻塞扩展激活）
-        // 默认设置为不可用，检查完成后更新
+        // Step 9: Check Git availability (does not block extension activation)
+        // Set to unavailable by default, update after check is complete
         vscode.commands.executeCommand('setContext', 'ccmp.gitAvailable', false);
         const gitDisposable = checkGitAvailability();
         context.subscriptions.push(gitDisposable);
 
         const totalActivationTime = Date.now() - activationStartTime;
-        Logger.info(`✅ CCMP 扩展激活完成 (总耗时: ${totalActivationTime}ms)`);
+        Logger.info(`✅ CCMP extension activation completed (total time: ${totalActivationTime}ms)`);
     } catch (error) {
-        const errorMessage = `CCMP 扩展激活失败: ${error instanceof Error ? error.message : '未知错误'}`;
+        const errorMessage = `CCMP extension activation failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
         Logger.error(errorMessage, error instanceof Error ? error : undefined);
 
-        // 尝试显示用户友好的错误消息
-        vscode.window.showErrorMessage('CCMP 扩展启动失败。请检查输出窗口获取详细信息。');
-        // 重新抛出错误，让VS Code知道扩展启动失败
+        // Try to display user-friendly error message
+        vscode.window.showErrorMessage('CCMP extension failed to start. Please check the output window for details.');
+        // Re-throw error to let VS Code know the extension failed to start
         throw error;
     }
 }
@@ -327,65 +327,65 @@ export async function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated
 export function deactivate() {
     try {
-        Logger.info('开始停用 CCMP 扩展...');
+        Logger.info('Starting CCMP extension deactivation...');
 
-        // 清理所有状态栏
+        // Clean up all status bars
         StatusBarManager.disposeAll();
-        Logger.trace('已清理所有状态栏');
+        Logger.trace('All status bars cleaned up');
 
-        // 停止主实例竞选服务
+        // Stop leader election service
         LeaderElectionService.stop();
-        Logger.trace('已停止主实例竞选服务');
+        Logger.trace('Leader election service stopped');
 
-        // 清理所有已注册提供商的资源
+        // Clean up resources for all registered providers
         for (const [providerKey, provider] of Object.entries(registeredProviders)) {
             try {
                 if (typeof provider.dispose === 'function') {
                     provider.dispose();
-                    Logger.trace(`已清理提供商 ${providerKey} 的资源`);
+                    Logger.trace(`Resources for provider ${providerKey} cleaned up`);
                 }
             } catch (error) {
-                Logger.warn(`清理提供商 ${providerKey} 资源时出错:`, error);
+                Logger.warn(`Error cleaning up resources for provider ${providerKey}:`, error);
             }
         }
 
-        // 清理内联补全提供商
+        // Clean up inline completion provider
         if (inlineCompletionProvider) {
             inlineCompletionProvider.dispose();
-            Logger.trace('已清理内联补全提供商');
+            Logger.trace('Inline completion provider cleaned up');
         }
 
-        // 清理所有已注册的 disposables
+        // Clean up all registered disposables
         for (const disposable of registeredDisposables) {
             try {
                 disposable.dispose();
             } catch (error) {
-                Logger.warn('清理 registered disposable 时出错:', error);
+                Logger.warn('Error cleaning up registered disposable:', error);
             }
         }
-        registeredDisposables.length = 0; // 清空数组
-        Logger.trace('已清理所有 registered disposables');
+        registeredDisposables.length = 0; // Clear array
+        Logger.trace('All registered disposables cleaned up');
 
         clearRegisteredProviders();
-        Logger.trace('已清理所有 registered providers');
+        Logger.trace('All registered providers cleaned up');
 
-        // 清理兼容模型管理器
+        // Clean up compatible model manager
         CompatibleModelManager.dispose();
-        Logger.trace('已清理兼容模型管理器');
+        Logger.trace('Compatible model manager cleaned up');
 
-        ConfigManager.dispose(); // 清理配置管理器
+        ConfigManager.dispose(); // Clean up configuration manager
 
-        // 清理 Token 用量管理器
+        // Clean up token usage manager
         TokenUsagesManager.instance.dispose().catch(error => {
-            Logger.warn('清理 Token 用量管理器失败:', error);
+            Logger.warn('Failed to clean up token usage manager:', error);
         });
-        Logger.trace('已清理 Token 用量管理器');
+        Logger.trace('Token usage manager cleaned up');
 
-        Logger.info('CCMP 扩展停用完成');
-        StatusLogger.dispose(); // 清理状态日志管理器
-        CompletionLogger.dispose(); // 清理内联补全日志管理器
-        Logger.dispose(); // 在扩展销毁时才 dispose Logger
+        Logger.info('CCMP extension deactivation completed');
+        StatusLogger.dispose(); // Clean up status logger
+        CompletionLogger.dispose(); // Clean up inline completion logger
+        Logger.dispose(); // Dispose Logger only when extension is destroyed
     } catch (error) {
-        Logger.error('CCMP 扩展停用时出错:', error);
+        Logger.error('Error during CCMP extension deactivation:', error);
     }
 }

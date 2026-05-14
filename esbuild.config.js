@@ -6,8 +6,8 @@ const isWatch = process.argv.includes('--watch');
 const isDev = process.argv.includes('--dev');
 
 
-//#region 复制 chat-lib 相关的资源文件
-// postinstall.ts 中的资源复制逻辑
+//#region Copy chat-lib related resource files
+// postinstall.ts resource copy logic
 const treeSitterGrammars = [
     'tree-sitter-c-sharp',
     'tree-sitter-cpp',
@@ -35,18 +35,18 @@ async function fileExists(filePath) {
 
 async function platformDir() {
     try {
-        // 查找 @vscode/chat-lib 中的 tokenizer 文件
+        // Find tokenizer file in @vscode/chat-lib
         const chatlibModulePath = require.resolve('@vscode/chat-lib');
-        // chat-lib 的根目录是 dist/src 的父目录
+        // chat-lib root directory is parent of dist/src
         const chatlibRoot = path.join(path.dirname(chatlibModulePath), '../..');
 
-        // 先尝试查找平台特定的路径
+        // First try to find platform-specific path
         const platformPath = path.join(chatlibRoot, 'dist/src/_internal/platform');
         if (await fileExists(platformPath)) {
             return path.relative(REPO_ROOT, platformPath);
         }
 
-        // 尝试查找 chat-lib 的直接 dist 目录
+        // Try to find chat-lib's direct dist directory
         const distPath = path.join(chatlibRoot, 'dist');
         if (await fileExists(distPath)) {
             return path.relative(REPO_ROOT, distPath);
@@ -77,7 +77,7 @@ async function copyStaticAssets(srcpaths, dst) {
         try {
             await fs.promises.mkdir(path.dirname(dest), { recursive: true });
             await fs.promises.copyFile(src, dest);
-            // 只输出目标文件相对于项目根目录的路径
+            // Only output target file path relative to project root
             const relativeDest = path.relative(REPO_ROOT, dest);
             console.log(`Copied: ${relativeDest}`);
         } catch {
@@ -93,7 +93,7 @@ async function copyBuildAssets() {
 
     const filesToCopy = [];
 
-    // 处理 tokenizer 文件
+    // Process tokenizer files
     if (platform) {
         const vendoredTiktokenFiles = [
             `${platform}/tokenizer/node/cl100k_base.tiktoken`,
@@ -103,7 +103,7 @@ async function copyBuildAssets() {
         filesToCopy.push(...vendoredTiktokenFiles);
     }
 
-    // 处理 tree-sitter 文件
+    // Process tree-sitter files
     if (wasm) {
         const treeSitterFiles = [
             ...treeSitterGrammars.map(grammar => `${wasm}/${grammar}.wasm`),
@@ -122,7 +122,7 @@ async function copyBuildAssets() {
 }
 //#endregion
 
-// 自定义插件处理 ?raw 导入（内嵌资源，不进行 minify）
+// Custom plugin to handle ?raw imports (inline resources, no minify)
 const rawPlugin = {
     name: 'raw-import',
     setup(build) {
@@ -148,7 +148,7 @@ const rawPlugin = {
 
 
 // ========================================================================
-// 公共构建选项
+// Common build options
 // ========================================================================
 const commonOptions = {
     bundle: true,
@@ -157,64 +157,64 @@ const commonOptions = {
     platform: 'node',
     sourcemap: isDev,
     minify: !isDev,
-    // 使用 mainFields 优先选择 ESM 模块格式
-    // 这解决了 jsonc-parser UMD 模块的相对路径问题
+    // Use mainFields to prefer ESM module format
+    // This resolves jsonc-parser UMD module relative path issue
     mainFields: ['module', 'main'],
-    // 确保正确解析模块（.ts 优先于 .tsx）
+    // Ensure correct module resolution (.ts preferred over .tsx)
     resolveExtensions: ['.ts', '.tsx', '.js', '.mjs', '.json'],
-    // 添加自定义插件
+    // Add custom plugins
     plugins: [rawPlugin],
-    // 日志级别
+    // Log level
     logLevel: 'info'
 };
 
 // ========================================================================
-// 主扩展构建选项
-// - 不包含 @vscode/chat-lib 相关的重型依赖
-// - 使用轻量级的 InlineCompletionShim 进行延迟加载
+// Main extension build options
+// - Does not include heavy @vscode/chat-lib dependencies
+// - Uses lightweight InlineCompletionShim for lazy loading
 // ========================================================================
 /** @type {import('esbuild').BuildOptions} */
 const extensionBuildOptions = {
     ...commonOptions,
     entryPoints: ['./src/extension.ts'],
     outfile: 'dist/extension.js',
-    // 排除 copilot.bundle 模块和 @vscode/chat-lib，避免重复打包
-    // 注意：ui/usagesView/index.ts 会被打包到 extension.js 中（后端逻辑）
-    // 只有 ui/usagesView/app.ts 会独立编译成 usagesView.js（前端逻辑）
+    // Exclude copilot.bundle module and @vscode/chat-lib to avoid duplicate bundling
+    // Note: ui/usagesView/index.ts will be bundled into extension.js (backend logic)
+    // Only ui/usagesView/app.ts will be independently compiled to usagesView.js (frontend logic)
     external: [...commonOptions.external, './copilot.bundle', '@vscode/chat-lib']
 };
 
 // ========================================================================
-// Copilot 模块构建选项
-// - 包含 @vscode/chat-lib 和相关重型依赖
-// - 在首次触发补全时延迟加载
+// Copilot module build options
+// - Includes @vscode/chat-lib and related heavy dependencies
+// - Lazy loaded on first completion trigger
 // ========================================================================
 /** @type {import('esbuild').BuildOptions} */
 const copilotBuildOptions = {
     ...commonOptions,
     entryPoints: ['./src/copilot/copilot.bundle.ts'],
     outfile: 'dist/copilot.bundle.js',
-    // 只排除 vscode 本身，保留 @vscode/chat-lib 及其依赖，确保被打包到 bundle 中
+    // Only exclude vscode itself, keep @vscode/chat-lib and its dependencies to ensure bundling
     external: ['vscode']
 };
 
 // ========================================================================
-// UI WebView 构建选项
+// UI WebView build options
 // ========================================================================
 /**
- * 构建 UI WebView 的编译配置
- * 扫描 ui 目录下所有包含 app.ts 的文件夹，生成对应的构建选项
- * @returns {import('esbuild').BuildOptions[]} 构建配置数组
+ * Build UI WebView compilation config
+ * Scan all folders in ui directory containing app.ts, generate corresponding build options
+ * @returns {import('esbuild').BuildOptions[]} Build configuration array
  */
 function buildUiConfigs() {
     const uiDir = path.join(REPO_ROOT, 'src/ui');
     const configs = [];
 
-    // 自定义插件处理 CSS 内联（处理 .less 文件）
+    // Custom plugin to handle CSS inline (process .less files)
     const inlineLessPlugin = {
         name: 'inline-less',
         setup(build) {
-            // 处理所有 .less 文件（自动内联）
+            // Process all .less files (auto inline)
             build.onResolve({ filter: /\.less$/ }, (args) => {
                 return {
                     path: args.path,
@@ -225,19 +225,19 @@ function buildUiConfigs() {
                 };
             });
 
-            // 处理 .less 文件
+            // Process .less files
             build.onLoad({ filter: /.*/, namespace: 'inline-less' }, async (args) => {
                 const filePath = path.join(args.pluginData.resolveDir, args.path);
                 const less = require('less');
                 const lessContent = await fs.promises.readFile(filePath, 'utf8');
                 const result = await less.render(lessContent, {
                     filename: filePath,
-                    paths: [path.dirname(filePath)], // 搜索路径，用于 @import
+                    paths: [path.dirname(filePath)], // Search paths for @import
                     javascriptEnabled: true,
-                    compress: !isDev // 生产模式下压缩 CSS
+                    compress: !isDev // Compress CSS in production mode
                 });
 
-                // 返回一个模块，导出 CSS 字符串并自动注入到页面
+                // Return a module exporting CSS string and auto inject into page
                 return {
                     contents: `
                     const css = ${JSON.stringify(result.css)};
@@ -254,7 +254,7 @@ function buildUiConfigs() {
         }
     };
 
-    // UI 构建选项（浏览器目标）
+    // UI build options (browser target)
     const uiBuildOptions = {
         bundle: true,
         format: 'iife',
@@ -285,7 +285,7 @@ function buildUiConfigs() {
                         outfile: `dist/ui/${folderName}.js`
                     });
                 }
-                // 递归扫描子目录
+                // Recursively scan subdirectories
                 scan(fullPath);
             }
         }
@@ -297,33 +297,33 @@ function buildUiConfigs() {
 
 
 // ========================================================================
-// 构建函数
+// Build function
 // ========================================================================
 async function build() {
     try {
-        // 基础构建配置
+        // Base build configuration
         const baseConfigs = [
             extensionBuildOptions,
             copilotBuildOptions
         ];
 
-        // 构建 UI WebView 的编译配置
+        // Build UI WebView compilation config
         const uiConfigs = buildUiConfigs();
 
         if (isWatch) {
-            // Watch 模式
+            // Watch mode
             console.log('Starting watch mode...');
 
             const contexts = [];
 
-            // 添加基础配置
+            // Add base configuration
             for (const config of baseConfigs) {
                 const ctx = await esbuild.context(config);
                 contexts.push(ctx);
                 await ctx.watch();
             }
 
-            // 添加 UI 配置
+            // Add UI configuration
             for (const config of uiConfigs) {
                 const ctx = await esbuild.context(config);
                 contexts.push(ctx);
@@ -334,7 +334,7 @@ async function build() {
             console.log(`Watching for changes in ${contexts.length} bundles...`);
             await Promise.all(contexts.map(ctx => ctx.watch()));
         } else {
-            // 构建前清理 dist 目录
+            // Clean dist directory before build
             console.log('Cleaning dist directory...');
             if (fs.existsSync('dist')) {
                 await fs.promises.rm('dist', { recursive: true, force: true });
@@ -343,7 +343,7 @@ async function build() {
                 console.log('No dist directory to clean.');
             }
 
-            // 并行构建所有配置
+            // Parallel build all configurations
             console.log(`Building ${baseConfigs.length + uiConfigs.length} bundles...`);
             const startTime = Date.now();
 
@@ -358,7 +358,7 @@ async function build() {
             const buildTime = Date.now() - startTime;
             console.log(`Build completed successfully in ${buildTime}ms.`);
 
-            // 输出构建产物列表
+            // Output build artifact list
             console.log('Built bundles:');
             console.log('  - dist/extension.js');
             console.log('  - dist/copilot.bundle.js');
@@ -366,7 +366,7 @@ async function build() {
                 console.log(`  - ${c.outfile}`);
             });
 
-            // 构建完成后复制资源文件
+            // Copy resource files after build completion
             await copyBuildAssets();
 
             console.log('Asset copying completed.');

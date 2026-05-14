@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
- *  OpenAI Codex CLI 认证实现
- *  基于 OpenAI Codex OAuth 2.0 流程（ChatGPT Plus/Pro 账号）
- *  登录/授权由用户在 Codex CLI 终端中完成，此处仅实现凭证读取与 refresh_token 刷新
+ *  OpenAI Codex CLI Authentication Implementation
+ *  Based on OpenAI Codex OAuth 2.0 flow (ChatGPT Plus/Pro account)
+ *  Login/authorization is completed by the user in the Codex CLI terminal; here only credential reading and refresh_token refresh are implemented
  *--------------------------------------------------------------------------------------------*/
 
 import * as fs from 'fs';
@@ -11,21 +11,21 @@ import { Logger } from '../../utils/logger';
 import type { CliAuthConfig, OAuthCredentials } from '../type';
 
 /**
- * Codex OAuth 凭证扩展接口
- * 包含 ChatGPT 账户 ID（用于 API 请求头 ChatGPT-Account-Id）
+ * Codex OAuth Credentials Extension Interface
+ * Contains ChatGPT account ID (used in API request header ChatGPT-Account-Id)
  */
 interface CodexOAuthCredentials extends OAuthCredentials {
-    /** ChatGPT 账户 ID */
+    /** ChatGPT account ID */
     account_id?: string;
 }
 
-/** OpenAI Codex OAuth 客户端 ID */
+/** OpenAI Codex OAuth Client ID */
 const OPENAI_CODEX_CLIENT_ID = 'app_EMoamEEZ73f0CkXaXp7hrann';
-/** OpenAI OAuth 令牌端点 */
+/** OpenAI OAuth Token Endpoint */
 const OPENAI_CODEX_TOKEN_URL = 'https://auth.openai.com/oauth/token';
 
 /**
- * OpenAI Codex CLI 认证类
+ * OpenAI Codex CLI Authentication Class
  */
 export class CodexCliAuth extends BaseCliAuth {
     constructor() {
@@ -40,7 +40,7 @@ export class CodexCliAuth extends BaseCliAuth {
     }
 
     /**
-     * 保存凭证到文件（保持 Codex CLI 官方嵌套格式）
+     * Save credentials to file (maintaining Codex CLI official nested format)
      */
     protected saveCredentials(credentials: {
         access_token?: string;
@@ -50,7 +50,7 @@ export class CodexCliAuth extends BaseCliAuth {
     }): void {
         const credentialPath = this.resolvePath(this.config.credentialPathPattern);
 
-        // 读取现有凭证文件
+        // Read existing credential file
         let existingData: {
             OPENAI_API_KEY?: string;
             tokens?: {
@@ -69,7 +69,7 @@ export class CodexCliAuth extends BaseCliAuth {
             }
         }
 
-        // 构建 tokens 对象
+        // Build tokens object
         const tokensUpdate: Record<string, unknown> = {};
         if (credentials.access_token) {
             tokensUpdate.access_token = credentials.access_token;
@@ -84,20 +84,20 @@ export class CodexCliAuth extends BaseCliAuth {
             tokensUpdate.account_id = credentials.account_id;
         }
 
-        // 合并 tokens（保留原有的其他字段）
+        // Merge tokens (preserve existing other fields)
         const mergedTokens = {
             ...existingData.tokens,
             ...tokensUpdate
         };
 
-        // 构建最终数据
+        // Build final data
         const mergedData = {
             ...existingData,
             tokens: mergedTokens,
             last_refresh: new Date().toISOString()
         };
 
-        // 确保目录存在
+        // Ensure directory exists
         const dir = path.dirname(credentialPath);
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
@@ -106,8 +106,8 @@ export class CodexCliAuth extends BaseCliAuth {
     }
 
     /**
-     * Codex access_token 有效期约 10 天。
-     * 提前 1 小时刷新，避免边界问题。
+     * Codex access_token validity is approximately 10 days.
+     * Refresh 1 hour in advance to avoid boundary issues.
      */
     async ensureAuthenticated(): Promise<OAuthCredentials | null> {
         let credentials = await this.loadCredentials();
@@ -115,7 +115,7 @@ export class CodexCliAuth extends BaseCliAuth {
             return null;
         }
 
-        // Codex: 提前 1 小时刷新，避免边界问题
+        // Codex: Refresh 1 hour in advance to avoid boundary issues
         const expiryBufferMs = 60 * 60 * 1000;
         const isExpired =
             typeof credentials.expiry_date === 'number' ? credentials.expiry_date < Date.now() + expiryBufferMs : false;
@@ -123,9 +123,9 @@ export class CodexCliAuth extends BaseCliAuth {
         if (isExpired && credentials.refresh_token) {
             try {
                 credentials = await this.refreshAccessToken(credentials);
-                Logger.info(`[${this.config.name}] 令牌已刷新`);
+                Logger.info(`[${this.config.name}] Token refreshed`);
             } catch (error) {
-                Logger.error(`[${this.config.name}] 令牌刷新失败:`, error);
+                Logger.error(`[${this.config.name}] Token refresh failed:`, error);
                 return null;
             }
         }
@@ -134,11 +134,11 @@ export class CodexCliAuth extends BaseCliAuth {
     }
 
     /**
-     * 刷新 Codex CLI 访问令牌（OAuth 2.0 refresh_token）
+     * Refresh Codex CLI Access Token (OAuth 2.0 refresh_token)
      */
     protected async refreshAccessToken(credentials: OAuthCredentials): Promise<OAuthCredentials> {
         if (!credentials.refresh_token) {
-            throw new Error('Codex CLI OAuth 凭证缺少 refresh_token，无法刷新令牌');
+            throw new Error('Codex CLI OAuth credentials missing refresh_token, unable to refresh token');
         }
 
         const body = new URLSearchParams({
@@ -153,10 +153,10 @@ export class CodexCliAuth extends BaseCliAuth {
             body
         });
 
-        // 无论成功或失败都先读取文本，便于打印更友好的错误信息
+        // Read text first for both success and failure to print more user-friendly error messages
         const rawText = await tokenRes.text();
 
-        /** OAuth 令牌响应 */
+        /** OAuth Token Response */
         interface TokenResponse {
             access_token?: string;
             expires_in?: number;
@@ -180,7 +180,7 @@ export class CodexCliAuth extends BaseCliAuth {
 
         if (!tokenRes.ok) {
             const errorMsg = responseData.error?.message || rawText || 'unknown error';
-            throw new Error(`Codex CLI 令牌刷新失败 (${tokenRes.status}): ${errorMsg}`);
+            throw new Error(`Codex CLI token refresh failed (${tokenRes.status}): ${errorMsg}`);
         }
 
         const accessToken = responseData.access_token || '';
@@ -188,10 +188,10 @@ export class CodexCliAuth extends BaseCliAuth {
         const refreshToken = responseData.refresh_token || credentials.refresh_token;
 
         if (!accessToken) {
-            throw new Error('Codex CLI OAuth 刷新响应缺少 access_token');
+            throw new Error('Codex CLI OAuth refresh response missing access_token');
         }
 
-        // 正常情况下 OpenAI 总会返回 expires_in；缺失时保留原 expiry_date（避免立即进入刷新循环）
+        // Under normal circumstances, OpenAI always returns expires_in; when missing, retain original expiry_date (to avoid immediate refresh loop)
         const expiryDate =
             expiresIn > 0 ? Date.now() + expiresIn * 1000 : credentials.expiry_date || Date.now() + 23 * 60 * 60 * 1000;
 
@@ -201,10 +201,10 @@ export class CodexCliAuth extends BaseCliAuth {
             expiry_date: expiryDate
         };
 
-        // 从 id_token 中提取 account_id（如果存在）
+        // Extract account_id from id_token (if exists)
         const accountId = this.extractAccountIdFromIdToken(responseData.id_token);
 
-        // 保存刷新后的凭证
+        // Save refreshed credentials
         this.saveCredentials({
             access_token: accessToken,
             refresh_token: refreshToken,
@@ -212,13 +212,13 @@ export class CodexCliAuth extends BaseCliAuth {
             account_id: accountId
         });
 
-        Logger.info('[Codex] 令牌刷新成功');
+        Logger.info('[Codex] Token refresh successful');
         return newCredentials;
     }
 
     /**
-     * 获取 ChatGPT 账户 ID
-     * 用于 API 请求头 ChatGPT-Account-Id
+     * Get ChatGPT Account ID
+     * Used in API request header ChatGPT-Account-Id
      */
     async getAccountId(): Promise<string | null> {
         const credentials = (await this.loadCredentials()) as CodexOAuthCredentials | null;
@@ -226,11 +226,11 @@ export class CodexCliAuth extends BaseCliAuth {
     }
 
     /**
-     * 加载凭证后的额外处理
-     * Codex CLI 的 auth.json 把令牌信息存在 tokens 对象中
+     * Additional processing after loading credentials
+     * Codex CLI's auth.json stores token information in the tokens object
      */
     protected async afterLoadCredentials(credentials: OAuthCredentials): Promise<OAuthCredentials> {
-        // 检查是否是 Codex CLI 的嵌套格式
+        // Check if it's Codex CLI's nested format
         const rawData = credentials as unknown as {
             tokens?: {
                 access_token?: string;
@@ -241,7 +241,7 @@ export class CodexCliAuth extends BaseCliAuth {
             last_refresh?: string;
         };
 
-        // 如果存在 tokens 对象，提取其中的字段
+        // If tokens object exists, extract fields from it
         if (rawData.tokens) {
             const tokens = rawData.tokens;
             const result: CodexOAuthCredentials = {
@@ -251,7 +251,7 @@ export class CodexCliAuth extends BaseCliAuth {
                 account_id: tokens.account_id
             };
 
-            // 尝试从 access_token (JWT) 中解析过期时间
+            // Try to parse expiry date from access_token (JWT)
             if (tokens.access_token) {
                 const expFromToken = this.extractExpFromIdToken(tokens.access_token);
                 if (expFromToken) {
@@ -259,16 +259,16 @@ export class CodexCliAuth extends BaseCliAuth {
                 }
             }
 
-            // 如果没有从 JWT 解析到过期时间，尝试从 last_refresh 推断
+            // If expiry date not parsed from JWT, try to infer from last_refresh
             if (!result.expiry_date && rawData.last_refresh) {
                 const lastRefresh = new Date(rawData.last_refresh).getTime();
                 if (!isNaN(lastRefresh)) {
-                    // Codex access_token 约 10 天有效，从 last_refresh 推算（预留1小时缓冲）
+                    // Codex access_token valid for approximately 10 days, infer from last_refresh (1 hour buffer)
                     result.expiry_date = lastRefresh + 23 * 60 * 60 * 1000;
                 }
             }
 
-            Logger.debug(`[${this.config.name}] 从 tokens 对象加载凭证，account_id: ${result.account_id}`);
+            Logger.debug(`[${this.config.name}] Loaded credentials from tokens object, account_id: ${result.account_id}`);
             return result;
         }
 
@@ -276,7 +276,7 @@ export class CodexCliAuth extends BaseCliAuth {
     }
 
     /**
-     * 从 id_token (JWT) 中提取过期时间
+     * Extract expiry date from id_token (JWT)
      */
     private extractExpFromIdToken(idToken: string): number | undefined {
         try {
@@ -286,7 +286,7 @@ export class CodexCliAuth extends BaseCliAuth {
             }
             const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8')) as { exp?: number };
             if (typeof payload.exp === 'number') {
-                return payload.exp * 1000; // 转换为毫秒
+                return payload.exp * 1000; // Convert to milliseconds
             }
         } catch {
             // ignore
@@ -295,7 +295,7 @@ export class CodexCliAuth extends BaseCliAuth {
     }
 
     /**
-     * 从 id_token (JWT) 中提取 ChatGPT account_id
+     * Extract ChatGPT account_id from id_token (JWT)
      */
     private extractAccountIdFromIdToken(idToken: unknown): string | undefined {
         if (typeof idToken !== 'string' || !idToken) {
@@ -306,7 +306,7 @@ export class CodexCliAuth extends BaseCliAuth {
             if (parts.length !== 3) {
                 return undefined;
             }
-            // 解码 JWT payload（第二部分）
+            // Decode JWT payload (second part)
             const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8')) as {
                 chatgpt_account_id?: string;
                 'https://api.openai.com/auth'?: {
@@ -315,12 +315,12 @@ export class CodexCliAuth extends BaseCliAuth {
                 };
                 organizations?: Array<{ id: string }>;
             };
-            // 优先使用 https://api.openai.com/auth 命名空间下的 chatgpt_account_id
+            // Prioritize chatgpt_account_id under https://api.openai.com/auth namespace
             const authData = payload['https://api.openai.com/auth'];
             if (typeof authData?.chatgpt_account_id === 'string' && authData.chatgpt_account_id) {
                 return authData.chatgpt_account_id;
             }
-            // 兼容直接放在顶层的 chatgpt_account_id
+            // Compatible with chatgpt_account_id directly at top level
             if (typeof payload.chatgpt_account_id === 'string' && payload.chatgpt_account_id) {
                 return payload.chatgpt_account_id;
             }
@@ -331,7 +331,7 @@ export class CodexCliAuth extends BaseCliAuth {
                 }
             }
         } catch {
-            Logger.debug('[Codex] 解析 id_token 失败');
+            Logger.debug('[Codex] Failed to parse id_token');
         }
         return undefined;
     }

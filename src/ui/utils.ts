@@ -1,9 +1,9 @@
 ﻿/**
- * UI 工具函数
+ * UI utility functions
  */
 
 /**
- * 创建 DOM 元素
+ * Create DOM element
  */
 export function createElement(
     tag: string,

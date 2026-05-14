@@ -1,10 +1,10 @@
 /*---------------------------------------------------------------------------------------------
- *  CLI 认证类型定义
- *  定义 CLI 认证相关的接口和类型
+ *  CLI Authentication Type Definitions
+ *  Defines interfaces and types for CLI authentication
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * OAuth 凭证接口
+ * OAuth credentials interface
  */
 export interface OAuthCredentials {
     access_token: string;
@@ -13,19 +13,19 @@ export interface OAuthCredentials {
 }
 
 /**
- * CLI 认证配置
+ * CLI authentication configuration
  */
 export interface CliAuthConfig {
-    /** 提供商名称 */
+    /** Provider name */
     name: string;
-    /** OAuth 客户端 ID */
+    /** OAuth client ID */
     clientId: string;
-    /** OAuth 客户端密钥（用于 refresh_token 刷新） */
+    /** OAuth client secret (used for refresh_token refresh) */
     clientSecret?: string;
-    /** OAuth 令牌端点 */
+    /** OAuth token endpoint */
     tokenUrl: string;
-    /** 凭证文件路径模式 */
+    /** Credential file path pattern */
     credentialPathPattern: string;
-    /** CLI 命令名称 */
+    /** CLI command name */
     cliCommand: string;
 }

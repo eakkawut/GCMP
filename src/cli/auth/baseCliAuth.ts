@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  CLI 认证基类
- *  提供通用的 CLI 认证功能
+ *  CLI Authentication Base Class
+ *  Provides common CLI authentication functionality
  *--------------------------------------------------------------------------------------------*/
 
 import * as fs from 'fs';
@@ -11,14 +11,14 @@ import { Logger } from '../../utils/logger';
 import { CliAuthConfig, OAuthCredentials } from '../type';
 
 /**
- * CLI 认证基类
- * 提供通用的认证功能，具体提供商实现继承此类
+ * CLI Authentication Base Class
+ * Provides common authentication functionality; specific provider implementations inherit from this class
  */
 export abstract class BaseCliAuth {
-    constructor(protected config: CliAuthConfig) {}
+    constructor(protected config: CliAuthConfig) { }
 
     /**
-     * 获取 API 访问令牌
+     * Get API Access Token
      */
     async getApiKey(forceRefresh = false): Promise<string | null> {
         const credentials = await this.ensureAuthenticated();
@@ -33,47 +33,47 @@ export abstract class BaseCliAuth {
     }
 
     /**
-     * 加载 CLI OAuth 凭证
+     * Load CLI OAuth Credentials
      */
     async loadCredentials(): Promise<OAuthCredentials | null> {
         const credentialPath = this.resolvePath(this.config.credentialPathPattern);
         try {
             if (!fs.existsSync(credentialPath)) {
-                Logger.debug(`[${this.config.name}] 凭证文件不存在: ${credentialPath}`);
+                Logger.debug(`[${this.config.name}] Credential file does not exist: ${credentialPath}`);
                 return null;
             }
 
             const content = fs.readFileSync(credentialPath, 'utf-8');
             const credentials = JSON.parse(content) as OAuthCredentials;
-            // 允许子类在加载凭证后进行额外处理
+            // Allow subclasses to perform additional processing after loading credentials
             const processedCredentials = await this.afterLoadCredentials(credentials);
-            Logger.info(`[${this.config.name}] 已加载凭证`);
+            Logger.info(`[${this.config.name}] Credentials loaded`);
             return processedCredentials;
         } catch (error) {
-            Logger.error(`[${this.config.name}] 加载凭证失败:`, error);
+            Logger.error(`[${this.config.name}] Failed to load credentials:`, error);
             return null;
         }
     }
 
     /**
-     * 确保认证有效（自动刷新过期令牌）
+     * Ensure Authentication is Valid (Automatically refresh expired tokens)
      */
     async ensureAuthenticated(): Promise<OAuthCredentials | null> {
         let credentials = await this.loadCredentials();
         if (!credentials) {
-            // Logger.info(`[${this.config.name}] 未认证，请先运行 CLI 登录`);
+            // Logger.info(`[${this.config.name}] Not authenticated, please run CLI login first`);
             return null;
         }
 
-        // 检查令牌是否过期（提前 1 小时刷新，避免临界点）
-        const expiryBuffer = 60 * 60 * 1000; // 1 小时缓冲
+        // Check if token is expired (refresh 1 hour in advance to avoid critical point)
+        const expiryBuffer = 60 * 60 * 1000; // 1 hour buffer
         const isExpired = credentials.expiry_date ? credentials.expiry_date < Date.now() + expiryBuffer : false;
         if (isExpired && credentials.refresh_token) {
             try {
                 credentials = await this.refreshAccessToken(credentials);
-                Logger.info(`[${this.config.name}] 令牌已刷新`);
+                Logger.info(`[${this.config.name}] Token refreshed`);
             } catch (error) {
-                Logger.error(`[${this.config.name}] 令牌刷新失败:`, error);
+                Logger.error(`[${this.config.name}] Token refresh failed:`, error);
                 return null;
             }
         }
@@ -81,19 +81,19 @@ export abstract class BaseCliAuth {
     }
 
     /**
-     * 刷新访问令牌（由子类实现）
+     * Refresh Access Token (Implemented by subclasses)
      */
     protected abstract refreshAccessToken(credentials: OAuthCredentials): Promise<OAuthCredentials>;
 
     /**
-     * 加载凭证后的额外处理（由子类可选实现）
+     * Additional Processing after Loading Credentials (Optionally implemented by subclasses)
      */
     protected async afterLoadCredentials(credentials: OAuthCredentials): Promise<OAuthCredentials> {
         return credentials;
     }
 
     /**
-     * 检查 CLI 是否已安装
+     * Check if CLI is Installed
      */
     async isCliInstalled(): Promise<boolean> {
         try {
@@ -105,14 +105,14 @@ export abstract class BaseCliAuth {
     }
 
     /**
-     * 获取凭证文件的完整路径
+     * Get Full Path of Credential File
      */
     getCredentialPath(): string {
         return this.resolvePath(this.config.credentialPathPattern);
     }
 
     /**
-     * 解析路径模式，支持 ~ 展开
+     * Parse Path Pattern, Support ~ Expansion
      */
     protected resolvePath(pattern: string): string {
         if (pattern.startsWith('~')) {
@@ -122,23 +122,23 @@ export abstract class BaseCliAuth {
     }
 
     /**
-     * 保存凭证到文件（差分更新，保留文件中已有的其他字段）
+     * Save Credentials to File (Differential Update, Preserve Existing Fields in File)
      */
     protected saveCredentials(credentials: Partial<OAuthCredentials>): void {
         const credentialPath = this.resolvePath(this.config.credentialPathPattern);
 
-        // 读取现有凭证文件，保留已有字段
+        // Read existing credential file, preserve existing fields
         let existingData: Record<string, unknown> = {};
         if (fs.existsSync(credentialPath)) {
             try {
                 const content = fs.readFileSync(credentialPath, 'utf-8');
                 existingData = JSON.parse(content);
             } catch (error) {
-                Logger.warn(`[${this.config.name}] 读取现有凭证文件失败，将覆盖:`, error);
+                Logger.warn(`[${this.config.name}] Failed to read existing credential file, will overwrite:`, error);
             }
         }
 
-        // 过滤掉 null/undefined 的值，只保留有效值
+        // Filter out null/undefined values, only keep valid values
         const validCredentials: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(credentials)) {
             if (value !== null && value !== undefined) {
@@ -146,9 +146,9 @@ export abstract class BaseCliAuth {
             }
         }
 
-        // 合并新凭证和现有数据
+        // Merge new credentials and existing data
         const mergedData = { ...existingData, ...validCredentials };
-        // 确保目录存在
+        // Ensure directory exists
         const dir = path.dirname(credentialPath);
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
