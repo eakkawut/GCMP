@@ -2,6 +2,9 @@ import type { ModelConfig } from '../types/sharedTypes';
 
 export type MissingReasoningFieldPolicy = 'never' | 'tool-calls-only' | 'always';
 
+/**
+ * Reasoning replay policy configuration
+ */
 export interface ReasoningReplayPolicy {
     restoreFromStatefulMarker: boolean;
     missingReasoningFieldPolicy: MissingReasoningFieldPolicy;
@@ -12,6 +15,9 @@ interface ReasoningReplayContext {
     modelConfig?: Partial<Pick<ModelConfig, 'baseUrl' | 'id' | 'model' | 'provider'>>;
 }
 
+/**
+ * Get reasoning replay policy based on provider and model configuration
+ */
 export function getReasoningReplayPolicy(context: ReasoningReplayContext): ReasoningReplayPolicy {
     const providerKey = `${context.modelConfig?.provider || context.providerKey || ''}`.toLowerCase();
     const modelId = `${context.modelConfig?.model || context.modelConfig?.id || ''}`.toLowerCase();
@@ -37,6 +43,13 @@ export function getReasoningReplayPolicy(context: ReasoningReplayContext): Reaso
     };
 }
 
+/**
+ * Determine whether to inject reasoning placeholder based on policy
+ * @param policy - The reasoning replay policy
+ * @param hasToolCalls - Whether current request has tool calls
+ * @param markerHasToolCalls - Whether marker indicates tool calls existed in history
+ * @returns True if reasoning placeholder should be injected
+ */
 export function shouldInjectReasoningPlaceholder(
     policy: ReasoningReplayPolicy,
     hasToolCalls: boolean,
@@ -53,6 +66,9 @@ export function shouldInjectReasoningPlaceholder(
     return false;
 }
 
+/**
+ * Check if the model is a MiMo reasoning model that requires reasoning replay
+ */
 function isMiMoReasoningModel(providerKey: string, modelId: string, baseUrl: string): boolean {
     return (
         providerKey === 'xiaomimimo' ||

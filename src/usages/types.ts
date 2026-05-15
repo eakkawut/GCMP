@@ -1,8 +1,8 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  使用统计 - 向上层暴露的类型定义
+ *  Usage Statistics - Types Exposed to Upper Layers
  *--------------------------------------------------------------------------------------------*/
 
-// 重新导出 fileLogger 的类型以便使用
+// Re-export fileLogger types for use
 export type {
     FileLoggerProviderStats,
     FileLoggerModelStats,
@@ -11,7 +11,7 @@ export type {
 } from './fileLogger/types';
 
 /**
- * 日期摘要
+ * Date Summary
  */
 export interface DateSummary {
     date: string;

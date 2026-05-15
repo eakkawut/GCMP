@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  智谱AI MCP WebSearch 客户端
- *  使用官方 @modelcontextprotocol/sdk 通过 StreamableHTTP 连接智谱 AI MCP
+ *  ZhipuAI MCP WebSearch Client
+ *  Uses official @modelcontextprotocol/sdk to connect to ZhipuAI MCP via StreamableHTTP
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -13,7 +13,7 @@ import { VersionManager } from '../../utils/versionManager';
 import { ZhipuSearchResult } from '../zhipuSearch';
 
 /**
- * 搜索请求参数
+ * Search request parameters
  */
 export interface ZhipuWebSearchRequest {
     search_query: string;
@@ -26,7 +26,7 @@ export interface ZhipuWebSearchRequest {
 }
 
 /**
- * 智谱AI MCP WebSearch 客户端
+ * ZhipuAI MCP WebSearch client
  */
 export class ZhipuMCPWebSearchClient {
     private static clientCache = new Map<string, ZhipuMCPWebSearchClient>();
@@ -45,18 +45,18 @@ export class ZhipuMCPWebSearchClient {
     static async getInstance(apiKey?: string): Promise<ZhipuMCPWebSearchClient> {
         const key = apiKey || (await ApiKeyManager.getApiKey('zhipu'));
         if (!key) {
-            throw new Error('智谱AI API密钥未设置');
+            throw new Error('ZhipuAI API key not set');
         }
 
         let instance = ZhipuMCPWebSearchClient.clientCache.get(key);
 
         if (!instance) {
-            Logger.debug(`📦 [Zhipu MCP] 创建新的客户端实例 (API key: ${key.substring(0, 8)}...)`);
+            Logger.debug(`📦 [Zhipu MCP] Creating new client instance (API key: ${key.substring(0, 8)}...)`);
             instance = new ZhipuMCPWebSearchClient();
             instance.currentApiKey = key;
             ZhipuMCPWebSearchClient.clientCache.set(key, instance);
         } else {
-            Logger.debug(`♻️ [Zhipu MCP] 复用已缓存的客户端实例 (API key: ${key.substring(0, 8)}...)`);
+            Logger.debug(`♻️ [Zhipu MCP] Reusing cached client instance (API key: ${key.substring(0, 8)}...)`);
         }
 
         await instance.ensureConnected();
@@ -70,15 +70,15 @@ export class ZhipuMCPWebSearchClient {
             if (instance) {
                 await instance.cleanup();
                 ZhipuMCPWebSearchClient.clientCache.delete(apiKey);
-                Logger.info(`🗑️ [Zhipu MCP] 已清除 API key ${apiKey.substring(0, 8)}... 的缓存`);
+                Logger.info(`🗑️ [Zhipu MCP] Cleared cache for API key ${apiKey.substring(0, 8)}...`);
             }
         } else {
             for (const [key, instance] of ZhipuMCPWebSearchClient.clientCache.entries()) {
                 await instance.cleanup();
-                Logger.info(`🗑️ [Zhipu MCP] 已清除 API key ${key.substring(0, 8)}... 的缓存`);
+                Logger.info(`🗑️ [Zhipu MCP] Cleared cache for API key ${key.substring(0, 8)}...`);
             }
             ZhipuMCPWebSearchClient.clientCache.clear();
-            Logger.info('🗑️ [Zhipu MCP] 已清除所有客户端缓存');
+            Logger.info('🗑️ [Zhipu MCP] Cleared all client caches');
         }
     }
 
@@ -102,28 +102,28 @@ export class ZhipuMCPWebSearchClient {
     private async handleErrorResponse(error: Error): Promise<void> {
         const errorMessage = error.message;
 
-        if (errorMessage.includes('403') || errorMessage.includes('您无权访问')) {
+        if (errorMessage.includes('403') || errorMessage.includes('You do not have permission to access')) {
             if (errorMessage.includes('search-prime') || errorMessage.includes('web_search_prime')) {
-                Logger.warn(`⚠️ [Zhipu MCP] 检测到联网搜索 MCP 权限不足: ${errorMessage}`);
+                Logger.warn(`⚠️ [Zhipu MCP] Detected insufficient web search MCP permissions: ${errorMessage}`);
 
                 const shouldDisableMCP = await this.showMCPDisableDialog();
 
                 if (shouldDisableMCP) {
                     await this.disableMCPMode();
-                    throw new Error('智谱AI搜索权限不足：MCP模式已禁用，请重新尝试搜索。');
+                    throw new Error('ZhipuAI search permission insufficient: MCP mode has been disabled, please try searching again.');
                 } else {
                     throw new Error(
-                        '智谱AI搜索权限不足：您的账户无权访问联网搜索 MCP 功能。请检查您的智谱AI套餐订阅状态。'
+                        'ZhipuAI search permission insufficient: Your account does not have permission to access web search MCP functionality. Please check your ZhipuAI subscription status.'
                     );
                 }
             } else {
-                throw new Error('智谱AI搜索权限不足：403错误。请检查您的API密钥权限或套餐订阅状态。');
+                throw new Error('ZhipuAI search permission insufficient: 403 error. Please check your API key permissions or subscription status.');
             }
         } else if (errorMessage.includes('MCP error')) {
             const mcpErrorMatch = errorMessage.match(/MCP error (\d+): (.+)/);
             if (mcpErrorMatch) {
                 const [, errorCode, errorDesc] = mcpErrorMatch;
-                throw new Error(`智谱AI MCP协议错误 ${errorCode}: ${errorDesc}`);
+                throw new Error(`ZhipuAI MCP protocol error ${errorCode}: ${errorDesc}`);
             }
         }
 
@@ -132,19 +132,19 @@ export class ZhipuMCPWebSearchClient {
 
     private async showMCPDisableDialog(): Promise<boolean> {
         const message =
-            '检测到您的智谱AI账户无权访问联网搜索 MCP 功能。这可能是因为：\n\n' +
-            '1. 您的账户不支持 MCP 功能（需要 Coding Plan 套餐）\n' +
-            '2. API 密钥权限不足\n\n' +
-            '是否切换到标准计费模式（按次计费）？';
+            'Your ZhipuAI account does not have permission to access web search MCP functionality. This may be because:\n\n' +
+            '1. Your account does not support MCP functionality (Coding Plan subscription required)\n' +
+            '2. API key permissions are insufficient\n\n' +
+            'Switch to standard billing mode (pay-per-use)?';
 
         const result = await vscode.window.showWarningMessage(
             message,
             { modal: true },
-            '切换到标准模式',
-            '保持MCP模式'
+            'Switch to Standard Mode',
+            'Keep MCP Mode'
         );
 
-        return result === '切换到标准模式';
+        return result === 'Switch to Standard Mode';
     }
 
     private async disableMCPMode(): Promise<void> {
@@ -152,16 +152,16 @@ export class ZhipuMCPWebSearchClient {
             const config = vscode.workspace.getConfiguration('ccmp.zhipu.search');
             await config.update('enableMCP', false, vscode.ConfigurationTarget.Global);
 
-            Logger.info('✅ [Zhipu MCP] MCP模式已禁用，已切换到标准计费模式');
+            Logger.info('✅ [Zhipu MCP] MCP mode disabled, switched to standard billing mode');
 
             vscode.window.showInformationMessage(
-                '智谱AI搜索已切换到标准计费模式（按次计费）。您可以在设置中重新启用 MCP 模式。'
+                'ZhipuAI search has switched to standard billing mode (pay-per-use). You can re-enable MCP mode in settings.'
             );
 
             await this.internalCleanup();
         } catch (error) {
-            Logger.error('❌ [Zhipu MCP] 禁用MCP模式失败', error instanceof Error ? error : undefined);
-            throw new Error(`禁用MCP模式失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error('❌ [Zhipu MCP] Failed to disable MCP mode', error instanceof Error ? error : undefined);
+            throw new Error(`Failed to disable MCP mode: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
@@ -176,12 +176,12 @@ export class ZhipuMCPWebSearchClient {
 
     private async ensureConnected(): Promise<void> {
         if (this.isConnected()) {
-            Logger.debug('✅ [Zhipu MCP] 客户端已连接');
+            Logger.debug('✅ [Zhipu MCP] Client connected');
             return;
         }
 
         if (this.isConnecting && this.connectionPromise) {
-            Logger.debug('⏳ [Zhipu MCP] 等待连接完成...');
+            Logger.debug('⏳ [Zhipu MCP] Waiting for connection to complete...');
             return this.connectionPromise;
         }
 
@@ -196,18 +196,18 @@ export class ZhipuMCPWebSearchClient {
 
     private async initializeClient(): Promise<void> {
         if (this.client && this.transport) {
-            Logger.debug('✅ [Zhipu MCP] 客户端已初始化');
+            Logger.debug('✅ [Zhipu MCP] Client initialized');
             return;
         }
 
         const apiKey = this.currentApiKey || (await ApiKeyManager.getApiKey('zhipu'));
         if (!apiKey) {
-            throw new Error('智谱AI API密钥未设置');
+            throw new Error('ZhipuAI API key not set');
         }
 
         this.currentApiKey = apiKey;
 
-        Logger.info('🔗 [Zhipu MCP] 初始化 MCP 客户端...');
+        Logger.info('🔗 [Zhipu MCP] Initializing MCP client...');
 
         try {
             let httpUrl = 'https://open.bigmodel.cn/api/mcp/web_search_prime/mcp';
@@ -240,30 +240,30 @@ export class ZhipuMCPWebSearchClient {
             });
 
             await this.client.connect(this.transport);
-            Logger.info('✅ [Zhipu MCP] 使用 StreamableHTTP 传输连接成功');
+            Logger.info('✅ [Zhipu MCP] Connected successfully using StreamableHTTP transport');
         } catch (error) {
-            Logger.error('❌ [Zhipu MCP] 客户端初始化失败', error instanceof Error ? error : undefined);
+            Logger.error('❌ [Zhipu MCP] Client initialization failed', error instanceof Error ? error : undefined);
             await this.internalCleanup();
-            throw new Error(`MCP 客户端连接失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            throw new Error(`MCP client connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     async search(params: ZhipuWebSearchRequest): Promise<ZhipuSearchResult[]> {
-        Logger.info(`🔍 [Zhipu MCP] 开始搜索: "${params.search_query}"`);
+        Logger.info(`🔍 [Zhipu MCP] Starting search: "${params.search_query}"`);
 
         await this.ensureConnected();
 
         if (!this.client) {
-            throw new Error('MCP 客户端未初始化');
+            throw new Error('MCP client not initialized');
         }
 
         try {
             const tools = await this.client.listTools();
-            Logger.debug(`📋 [Zhipu MCP] 可用工具: ${tools.tools.map(t => t.name).join(', ')}`);
+            Logger.debug(`📋 [Zhipu MCP] Available tools: ${tools.tools.map(t => t.name).join(', ')}`);
 
             const webSearchTool = tools.tools.find(t => t.name === 'web_search_prime');
             if (!webSearchTool) {
-                throw new Error('未找到 web_search_prime 工具');
+                throw new Error('web_search_prime tool not found');
             }
 
             const result = await this.client.callTool({
@@ -285,25 +285,25 @@ export class ZhipuMCPWebSearchClient {
                     throw new Error(text);
                 }
                 const searchResults = JSON.parse(JSON.parse(text) as string) as ZhipuSearchResult[];
-                Logger.debug(`📊 [Zhipu MCP] 工具调用成功: ${searchResults?.length || 0}个结果`);
+                Logger.debug(`📊 [Zhipu MCP] Tool invocation successful: ${searchResults?.length || 0} results`);
                 return searchResults;
             }
 
-            Logger.debug('📊 [Zhipu MCP] 工具调用结束: 无结果');
+            Logger.debug('📊 [Zhipu MCP] Tool invocation ended: no results');
             return [];
         } catch (error) {
-            Logger.error('❌ [Zhipu MCP] 搜索失败', error instanceof Error ? error : undefined);
+            Logger.error('❌ [Zhipu MCP] Search failed', error instanceof Error ? error : undefined);
 
             if (error instanceof Error) {
                 await this.handleErrorResponse(error);
             }
 
-            if (error instanceof Error && (error.message.includes('连接') || error.message.includes('connect'))) {
-                Logger.warn('⚠️ [Zhipu MCP] 检测到连接错误，将在下次搜索时自动重连');
+            if (error instanceof Error && (error.message.includes('connect') || error.message.includes('connection'))) {
+                Logger.warn('⚠️ [Zhipu MCP] Detected connection error, will auto-reconnect on next search');
                 await this.internalCleanup();
             }
 
-            throw new Error(`搜索失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            throw new Error(`Search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
@@ -317,7 +317,7 @@ export class ZhipuMCPWebSearchClient {
     }
 
     private async internalCleanup(): Promise<void> {
-        Logger.debug('🔌 [Zhipu MCP] 清理客户端连接...');
+        Logger.debug('🔌 [Zhipu MCP] Cleaning up client connection...');
 
         try {
             if (this.transport) {
@@ -327,31 +327,31 @@ export class ZhipuMCPWebSearchClient {
 
             this.client = null;
 
-            Logger.debug('✅ [Zhipu MCP] 客户端连接已清理');
+            Logger.debug('✅ [Zhipu MCP] Client connection cleaned up');
         } catch (error) {
-            Logger.error('❌ [Zhipu MCP] 连接清理失败', error instanceof Error ? error : undefined);
+            Logger.error('❌ [Zhipu MCP] Connection cleanup failed', error instanceof Error ? error : undefined);
         }
     }
 
     async cleanup(): Promise<void> {
-        Logger.info('🔌 [Zhipu MCP] 清理客户端资源...');
+        Logger.info('🔌 [Zhipu MCP] Cleaning up client resources...');
 
         try {
             await this.internalCleanup();
 
             if (this.currentApiKey) {
                 ZhipuMCPWebSearchClient.clientCache.delete(this.currentApiKey);
-                Logger.info(`🗑️ [Zhipu MCP] 已从缓存中移除客户端 (API key: ${this.currentApiKey.substring(0, 8)}...)`);
+                Logger.info(`🗑️ [Zhipu MCP] Removed client from cache (API key: ${this.currentApiKey.substring(0, 8)}...)`);
             }
 
-            Logger.info('✅ [Zhipu MCP] 客户端资源已清理');
+            Logger.info('✅ [Zhipu MCP] Client resources cleaned up');
         } catch (error) {
-            Logger.error('❌ [Zhipu MCP] 资源清理失败', error instanceof Error ? error : undefined);
+            Logger.error('❌ [Zhipu MCP] Resource cleanup failed', error instanceof Error ? error : undefined);
         }
     }
 
     async reconnect(): Promise<void> {
-        Logger.info('🔄 [Zhipu MCP] 重新连接客户端...');
+        Logger.info('🔄 [Zhipu MCP] Reconnecting client...');
         await this.internalCleanup();
         await this.ensureConnected();
     }

@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  OpenAI 自定义 SSE 处理器
- *  使用原生 fetch API 和自定义 SSE 流处理，支持 reasoning_content 等扩展字段
+ *  OpenAI Custom SSE Handler
+ *  Uses native fetch API and custom SSE stream processing, supports extended fields like reasoning_content
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -14,7 +14,7 @@ import { StreamReporter } from './streamReporter';
 import type { GenericModelProvider } from '../providers/genericModelProvider';
 
 /**
- * OpenAI Handler 接口（用于类型安全的消息和工具转换）
+ * OpenAI Handler interface (for type-safe message and tool conversion)
  */
 interface IOpenAIHandler {
     convertMessagesToOpenAI(
@@ -25,14 +25,14 @@ interface IOpenAIHandler {
 }
 
 /**
- * 扩展Delta类型以支持reasoning_content字段
+ * Extended Delta type to support reasoning_content field
  */
 export interface ExtendedDelta extends OpenAI.Chat.ChatCompletionChunk.Choice.Delta {
     reasoning_content?: string;
 }
 
 /**
- * 扩展的 CompletionUsage 接口，包含 prompt_tokens_details 和 completion_tokens_details
+ * Extended CompletionUsage interface, containing prompt_tokens_details and completion_tokens_details
  */
 interface ExtendedCompletionUsage extends OpenAI.Completions.CompletionUsage {
     prompt_tokens_details?: {
@@ -48,14 +48,14 @@ interface ExtendedCompletionUsage extends OpenAI.Completions.CompletionUsage {
 }
 
 /**
- * OpenAI 自定义 SSE 处理器
- * 使用原生 fetch API 和自定义 SSE 流处理
+ * OpenAI Custom SSE Handler
+ * Uses native fetch API and custom SSE stream processing
  */
 export class OpenAICustomHandler {
     constructor(
         private providerInstance: GenericModelProvider,
         private openaiHandler: IOpenAIHandler
-    ) {}
+    ) { }
     private get provider(): string {
         return this.providerInstance.provider;
     }
@@ -64,7 +64,7 @@ export class OpenAICustomHandler {
     }
 
     /**
-     * 使用自定义 SSE 流处理的请求方法
+     * Request method using custom SSE stream processing
      */
     async handleRequest(
         model: vscode.LanguageModelChatInformation,
@@ -78,7 +78,7 @@ export class OpenAICustomHandler {
         const provider = modelConfig.provider || this.provider;
         const apiKey = await ApiKeyManager.getApiKey(provider);
         if (!apiKey) {
-            throw new Error(`缺少 ${provider} API 密钥`);
+            throw new Error(`Missing ${provider} API key`);
         }
 
         const baseURL = (modelConfig.baseUrl || 'https://api.openai.com/v1').replace(/\/$/, '');
@@ -89,13 +89,13 @@ export class OpenAICustomHandler {
                 : `${baseURL}${customEndpoint.startsWith('/') ? customEndpoint : `/${customEndpoint}`}`
             : `${baseURL}/chat/completions`;
 
-        Logger.info(`[${model.name}] 处理 ${messages.length} 条消息，使用自定义 SSE 处理`);
+        Logger.info(`[${model.name}] Processing ${messages.length} messages using custom SSE processing`);
 
         if (!this.openaiHandler) {
-            throw new Error('OpenAI 处理器未初始化');
+            throw new Error('OpenAI handler not initialized');
         }
 
-        // 构建请求参数
+        // Build request parameters
         const requestBody: OpenAI.Chat.ChatCompletionCreateParamsStreaming = {
             model: modelConfig.model || modelConfig.id,
             messages: this.openaiHandler.convertMessagesToOpenAI(messages, modelConfig),
@@ -104,32 +104,32 @@ export class OpenAICustomHandler {
             stream_options: { include_usage: true }
         };
 
-        // 添加工具支持（如果有）
+        // Add tool support (if any)
         if (options.tools && options.tools.length > 0 && modelConfig.capabilities?.toolCalling) {
             requestBody.tools = this.openaiHandler.convertToolsToOpenAI([...options.tools]);
         }
 
-        // 合并 extraBody 参数（如果有）
+        // Merge extraBody parameters (if any)
         if (modelConfig.extraBody) {
             const filteredExtraBody = modelConfig.extraBody;
             Object.assign(requestBody, filteredExtraBody);
-            Logger.trace(`${model.name} 合并了 extraBody 参数: ${JSON.stringify(filteredExtraBody)}`);
+            Logger.trace(`${model.name} Merged extraBody parameters: ${JSON.stringify(filteredExtraBody)}`);
         }
 
-        Logger.debug(`[${model.name}] 发送 API 请求`);
+        Logger.debug(`[${model.name}] Sending API request`);
 
         const abortController = new AbortController();
         const cancellationListener = token.onCancellationRequested(() => abortController.abort());
 
         try {
-            // 合并提供商级别和模型级别的 customHeader
-            // 模型级别的 customHeader 会覆盖提供商级别的同名头部
+            // Merge provider-level and model-level customHeader
+            // Model-level customHeader overrides provider-level customHeader with the same name
             const mergedCustomHeader = {
                 ...this.providerConfig?.customHeader,
                 ...modelConfig?.customHeader
             };
 
-            // 处理合并后的 customHeader 中的 API 密钥替换
+            // Handle API key replacement in merged customHeader
             const processedCustomHeader = ApiKeyManager.processCustomHeader(mergedCustomHeader, apiKey);
 
             const response = await fetch(url, {
@@ -145,9 +145,9 @@ export class OpenAICustomHandler {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                let errorMessage = `API请求失败: ${response.status} ${response.statusText}`;
+                let errorMessage = `API request failed: ${response.status} ${response.statusText}`;
 
-                // 尝试解析错误响应，提取详细的错误信息
+                // Try to parse error response, extract detailed error information
                 try {
                     const errorJson = JSON.parse(errorText);
                     if (errorJson.error) {
@@ -158,7 +158,7 @@ export class OpenAICustomHandler {
                         }
                     }
                 } catch {
-                    // 如果解析失败，使用原始错误文本
+                    // If parsing fails, use original error text
                     if (errorText) {
                         errorMessage = `${errorMessage} - ${errorText}`;
                     }
@@ -168,10 +168,10 @@ export class OpenAICustomHandler {
             }
 
             if (!response.body) {
-                throw new Error('响应体为空');
+                throw new Error('Response body is empty');
             }
 
-            // 创建统一的流报告器
+            // Create unified stream reporter
             const reporter = new StreamReporter({
                 modelName: model.name,
                 modelId: model.id,
@@ -182,10 +182,10 @@ export class OpenAICustomHandler {
 
             await this.processStream(model, response.body, reporter, requestId || '', token);
 
-            Logger.debug(`[${model.name}] API请求完成`);
+            Logger.debug(`[${model.name}] API request completed`);
         } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') {
-                Logger.warn(`[${model.name}] 用户取消了请求`);
+                Logger.warn(`[${model.name}] User cancelled the request`);
                 throw new vscode.CancellationError();
             }
             throw error;
@@ -195,7 +195,7 @@ export class OpenAICustomHandler {
     }
 
     /**
-     * 处理 SSE 流
+     * Process SSE stream
      */
     private async processStream(
         model: vscode.LanguageModelChatInformation,
@@ -209,15 +209,15 @@ export class OpenAICustomHandler {
         let buffer = '';
         let chunkCount = 0;
 
-        // Token 统计: 收集 usage 信息
+        // Token statistics: Collect usage information
         let finalUsage: ExtendedCompletionUsage | undefined;
-        // 记录流处理的开始和结束时间
+        // Record stream processing start and end times
         let streamStartTime: number | undefined = undefined;
 
         try {
             while (true) {
                 if (token.isCancellationRequested) {
-                    Logger.warn(`[${model.name}] 用户取消了请求`);
+                    Logger.warn(`[${model.name}] User cancelled the request`);
                     break;
                 }
 
@@ -226,7 +226,7 @@ export class OpenAICustomHandler {
                     break;
                 }
 
-                // 记录首个 chunk 的时间作为流开始时间
+                // Record time of first chunk as stream start time
                 if (streamStartTime === undefined) {
                     streamStartTime = Date.now();
                 }
@@ -240,12 +240,12 @@ export class OpenAICustomHandler {
                         continue;
                     }
 
-                    // 处理 SSE 数据行
+                    // Process SSE data line
                     if (line.startsWith('data:')) {
                         const data = line.substring(5).trim();
 
                         if (data === '[DONE]') {
-                            Logger.debug(`[${model.name}] 收到流结束标记`);
+                            Logger.debug(`[${model.name}] Received stream end marker`);
                             continue;
                         }
 
@@ -253,31 +253,31 @@ export class OpenAICustomHandler {
                             const chunk = JSON.parse(data);
                             chunkCount++;
 
-                            // 提取响应 ID（从首个 chunk）
+                            // Extract response ID (from first chunk)
                             if (chunk.id && typeof chunk.id === 'string') {
                                 reporter.setResponseId(chunk.id);
                             }
 
-                            // 检查是否是包含 usage 信息的最终 chunk
+                            // Check if this is the final chunk containing usage information
                             if (chunk.usage) {
                                 finalUsage = chunk.usage;
                             }
 
-                            // 处理正常的 choices
+                            // Process normal choices
                             for (const choice of chunk.choices || []) {
                                 const delta = choice.delta as ExtendedDelta | undefined;
 
-                                // 处理思考内容（reasoning_content）
+                                // Process thinking content (reasoning_content)
                                 if (delta && delta.reasoning_content && typeof delta.reasoning_content === 'string') {
                                     reporter.bufferThinking(delta.reasoning_content);
                                 }
 
-                                // 处理文本内容
+                                // Process text content
                                 if (delta && delta.content && typeof delta.content === 'string') {
                                     reporter.reportText(delta.content);
                                 }
 
-                                // 处理工具调用 - 支持分块数据的累积处理
+                                // Process tool calls - support accumulated processing of chunked data
                                 if (delta && delta.tool_calls && Array.isArray(delta.tool_calls)) {
                                     for (const toolCall of delta.tool_calls) {
                                         const toolIndex = toolCall.index ?? 0;
@@ -290,10 +290,10 @@ export class OpenAICustomHandler {
                                     }
                                 }
 
-                                // 注意：不在这里调用 flushAll，统一在流结束时处理
+                                // Note: Do not call flushAll here, handle uniformly at stream end
                             }
                         } catch (error) {
-                            Logger.error(`[${model.name}] 解析 JSON 失败: ${data}`, error);
+                            Logger.error(`[${model.name}] Failed to parse JSON: ${data}`, error);
                         }
                     }
                 }
@@ -302,27 +302,27 @@ export class OpenAICustomHandler {
             reader.releaseLock();
         }
 
-        // 记录流结束时间
+        // Record stream end time
         const streamEndTime = Date.now();
 
-        // 流结束，输出所有剩余内容
+        // Stream ended, output all remaining content
         reporter.flushAll(null);
 
-        Logger.trace(`[${model.name}] SSE 流处理统计: ${chunkCount} 个 chunk, hasContent=${reporter.hasContent}`);
-        Logger.debug(`[${model.name}] 流处理完成`);
+        Logger.trace(`[${model.name}] SSE stream processing statistics: ${chunkCount} chunks, hasContent=${reporter.hasContent}`);
+        Logger.debug(`[${model.name}] Stream processing completed`);
 
         if (finalUsage) {
-            // 提取缓存 token 信息
+            // Extract cached token information
             const cacheReadTokens = finalUsage.prompt_tokens_details?.cached_tokens ?? 0;
-            // 计算输出速度
+            // Calculate output speed
             const duration = streamStartTime && streamEndTime ? streamEndTime - streamStartTime : 0;
             const speed = duration > 0 ? ((finalUsage.completion_tokens / duration) * 1000).toFixed(1) : 'N/A';
             Logger.info(
-                `📊 ${model.name} Token使用: 输入${finalUsage.prompt_tokens}${cacheReadTokens > 0 ? ` (缓存:${cacheReadTokens})` : ''} + 输出${finalUsage.completion_tokens} = 总计${finalUsage.total_tokens}, 耗时=${duration}ms, 速度=${speed} tokens/s`
+                `📊 ${model.name} Token Usage: Input ${finalUsage.prompt_tokens}${cacheReadTokens > 0 ? ` (cached:${cacheReadTokens})` : ''} + Output ${finalUsage.completion_tokens} = Total ${finalUsage.total_tokens}, Elapsed=${duration}ms, Speed=${speed} tokens/s`
             );
         }
 
-        // === Token 统计: 更新实际 token ===
+        // === Token statistics: Update actual tokens ===
         try {
             const usagesManager = TokenUsagesManager.instance;
             await usagesManager.updateActualTokens({
@@ -333,7 +333,7 @@ export class OpenAICustomHandler {
                 streamEndTime
             });
         } catch (err) {
-            Logger.warn('更新Token统计失败:', err);
+            Logger.warn('Failed to update Token statistics:', err);
         }
     }
 }

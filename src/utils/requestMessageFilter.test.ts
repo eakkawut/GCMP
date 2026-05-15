@@ -7,7 +7,7 @@ const ASSISTANT_ROLE = 2;
 
 test('filterAbortedAssistantMessages removes an empty assistant residual and its triggering user prompt', () => {
     const messages = [
-        { role: USER_ROLE, content: [{ value: '这是一条已经被中止的提示词' }] },
+        { role: USER_ROLE, content: [{ value: 'This is an aborted prompt' }] },
         {
             role: ASSISTANT_ROLE,
             content: [{ value: ' ' }, { value: '\n```\n\n```\n\n```\n\n```\n' }]
@@ -22,7 +22,7 @@ test('filterAbortedAssistantMessages removes an empty assistant residual and its
 
 test('filterAbortedAssistantMessages only removes the empty assistant when the nearest user message is tool-result-only', () => {
     const messages = [
-        { role: USER_ROLE, content: [{ value: '最初的用户问题' }] },
+        { role: USER_ROLE, content: [{ value: 'Initial user question' }] },
         { role: ASSISTANT_ROLE, content: [{ name: 'write_file', input: {}, callId: 'call_1' }] },
         { role: USER_ROLE, content: [{ callId: 'call_1', content: [{ value: 'ok' }] }] },
         {
@@ -39,7 +39,7 @@ test('filterAbortedAssistantMessages only removes the empty assistant when the n
 test('isAbortResidualAssistantMessage keeps assistant messages with meaningful text', () => {
     const message = {
         role: ASSISTANT_ROLE,
-        content: [{ value: ' ' }, { value: '已完成全部 16 份报告的格式调整。' }]
+        content: [{ value: ' ' }, { value: 'Completed formatting adjustments for all 16 reports.' }]
     };
 
     assert.equal(isAbortResidualAssistantMessage(message), false);

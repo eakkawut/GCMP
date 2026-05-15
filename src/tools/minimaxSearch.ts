@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  MiniMax 网络搜索工具
- *  使用 Coding Plan API 直接进行 HTTP 请求
+ *  MiniMax Web Search Tool
+ *  Uses Coding Plan API for direct HTTP requests
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -11,27 +11,27 @@ import { VersionManager } from '../utils/versionManager';
 import { StatusBarManager } from '../status';
 
 /**
- * MiniMax 搜索请求参数
+ * MiniMax search request parameters
  */
 export interface MiniMaxSearchRequest {
-    q: string; // 搜索查询词
+    q: string; // Search query term
 }
 
 /**
- * MiniMax 搜索结果项
+ * MiniMax search result item
  */
 export interface MiniMaxSearchResult {
     title: string;
     link: string;
-    snippet: string; // 内容摘要
-    date: string; // 发布日期
+    snippet: string; // Content summary
+    date: string; // Publication date
 }
 
 /**
- * MiniMax 搜索响应
+ * MiniMax search response
  */
 export interface MiniMaxSearchResponse {
-    organic: MiniMaxSearchResult[]; // 搜索结果列表
+    organic: MiniMaxSearchResult[]; // Search results list
     base_resp: {
         status_code: number;
         status_msg: string;
@@ -39,18 +39,18 @@ export interface MiniMaxSearchResponse {
 }
 
 /**
- * MiniMax 网络搜索工具
+ * MiniMax web search tool
  */
 export class MiniMaxSearchTool {
     private readonly baseURL = 'https://api.minimax.chat/v1/coding_plan/search';
 
     /**
-     * 执行搜索
+     * Execute search
      */
     async search(params: MiniMaxSearchRequest): Promise<MiniMaxSearchResponse> {
         const apiKey = await ApiKeyManager.getApiKey('minimax-coding');
         if (!apiKey) {
-            throw new Error('MiniMax Coding Plan API密钥未设置，请先运行命令"CCMP: 设置 MiniMax Coding Plan API密钥"');
+            throw new Error('MiniMax Coding Plan API key not set, please run command "CCMP: Set MiniMax Coding Plan API Key" first');
         }
 
         const requestData = JSON.stringify({
@@ -67,12 +67,12 @@ export class MiniMaxSearchTool {
             }
         };
 
-        Logger.info(`🔍 [MiniMax 搜索] 开始搜索: "${params.q}"`);
-        Logger.debug(`📝 [MiniMax 搜索] 请求数据: ${requestData}`);
+        Logger.info(`🔍 [MiniMax Search] Starting search: "${params.q}"`);
+        Logger.debug(`📝 [MiniMax Search] Request data: ${requestData}`);
 
         let requestUrl = this.baseURL;
         if (ConfigManager.getMinimaxEndpoint() === 'minimax.io') {
-            // 国际站需要使用指定的搜索端点
+            // International site needs to use the specified search endpoint
             requestUrl = requestUrl.replace('api.minimax.chat', 'api.minimax.io');
         }
 
@@ -86,37 +86,37 @@ export class MiniMaxSearchTool {
 
                 res.on('end', () => {
                     try {
-                        Logger.debug(`📊 [MiniMax 搜索] 响应状态码: ${res.statusCode}`);
-                        Logger.debug(`📄 [MiniMax 搜索] 响应数据: ${data}`);
+                        Logger.debug(`📊 [MiniMax Search] Response status code: ${res.statusCode}`);
+                        Logger.debug(`📄 [MiniMax Search] Response data: ${data}`);
 
                         if (res.statusCode !== 200) {
-                            let errorMessage = `MiniMax搜索API错误 ${res.statusCode}`;
+                            let errorMessage = `MiniMax search API error ${res.statusCode}`;
                             try {
                                 const errorData = JSON.parse(data);
                                 errorMessage += `: ${errorData.error?.message || JSON.stringify(errorData)}`;
                             } catch {
                                 errorMessage += `: ${data}`;
                             }
-                            Logger.error('❌ [MiniMax 搜索] API返回错误', new Error(errorMessage));
+                            Logger.error('❌ [MiniMax Search] API returned error', new Error(errorMessage));
                             reject(new Error(errorMessage));
                             return;
                         }
 
                         const response = JSON.parse(data) as MiniMaxSearchResponse;
-                        Logger.info(`✅ [MiniMax 搜索] 搜索完成: 找到 ${response.organic?.length || 0} 个结果`);
+                        Logger.info(`✅ [MiniMax Search] Search completed: found ${response.organic?.length || 0} results`);
                         resolve(response);
                     } catch (error) {
-                        Logger.error('❌ [MiniMax 搜索] 解析响应失败', error instanceof Error ? error : undefined);
+                        Logger.error('❌ [MiniMax Search] Failed to parse response', error instanceof Error ? error : undefined);
                         reject(
-                            new Error(`解析MiniMax搜索响应失败: ${error instanceof Error ? error.message : '未知错误'}`)
+                            new Error(`Failed to parse MiniMax search response: ${error instanceof Error ? error.message : 'Unknown error'}`)
                         );
                     }
                 });
             });
 
             req.on('error', error => {
-                Logger.error('❌ [MiniMax 搜索] 请求失败', error);
-                reject(new Error(`MiniMax搜索请求失败: ${error.message}`));
+                Logger.error('❌ [MiniMax Search] Request failed', error);
+                reject(new Error(`MiniMax search request failed: ${error.message}`));
             });
 
             req.write(requestData);
@@ -125,21 +125,21 @@ export class MiniMaxSearchTool {
     }
 
     /**
-     * 工具调用处理器
+     * Tool invocation handler
      */
     async invoke(
         request: vscode.LanguageModelToolInvocationOptions<MiniMaxSearchRequest>
     ): Promise<vscode.LanguageModelToolResult> {
         try {
-            Logger.info(`🚀 [工具调用] MiniMax网络搜索工具被调用: ${JSON.stringify(request.input)}`);
+            Logger.info(`🚀 [Tool Invocation] MiniMax web search tool invoked: ${JSON.stringify(request.input)}`);
 
             const params = request.input as MiniMaxSearchRequest;
             if (!params.q) {
-                throw new Error('缺少必需参数: q');
+                throw new Error('Missing required parameter: q');
             }
 
             const response = await this.search(params);
-            Logger.info('✅ [工具调用] MiniMax网络搜索工具调用成功');
+            Logger.info('✅ [Tool Invocation] MiniMax web search tool invoked successfully');
 
             StatusBarManager.minimax?.delayedUpdate();
 
@@ -148,20 +148,20 @@ export class MiniMaxSearchTool {
                 new vscode.LanguageModelTextPart(JSON.stringify(searchResults))
             ]);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : '未知错误';
-            Logger.error('❌ [工具调用] MiniMax网络搜索工具调用失败', error instanceof Error ? error : undefined);
-            throw new vscode.LanguageModelError(`MiniMax搜索失败: ${errorMessage}`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            Logger.error('❌ [Tool Invocation] MiniMax web search tool invocation failed', error instanceof Error ? error : undefined);
+            throw new vscode.LanguageModelError(`MiniMax search failed: ${errorMessage}`);
         }
     }
 
     /**
-     * 清理工具资源
+     * Clean up tool resources
      */
     async cleanup(): Promise<void> {
         try {
-            Logger.info('✅ [MiniMax 搜索] 工具资源已清理');
+            Logger.info('✅ [MiniMax Search] Tool resources cleaned up');
         } catch (error) {
-            Logger.error('❌ [MiniMax 搜索] 资源清理失败', error instanceof Error ? error : undefined);
+            Logger.error('❌ [MiniMax Search] Resource cleanup failed', error instanceof Error ? error : undefined);
         }
     }
 }

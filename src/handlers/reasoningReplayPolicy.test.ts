@@ -80,17 +80,17 @@ test('Unrelated OpenAI-compatible models do not backfill reasoning_content', () 
     assert.equal(shouldInjectReasoningPlaceholder(policy, true, true), false);
 });
 
-// ── Converter 级集成决策测试 ──
-// 模拟 convertAssistantMessage 和 apiMessageToAnthropicContent 中的完整判定链路。
-// 这些测试不直接导入 converter（需要 VS Code 运行时），但精确复现其决策树。
+// ── Converter Level Integration Decision Tests ──
+// Simulate the complete decision chain in convertAssistantMessage and apiMessageToAnthropicContent.
+// These tests do not directly import converter (requires VS Code runtime), but precisely reproduce the decision tree.
 
 /**
- * 模拟 OpenAI convertAssistantMessage 的 thinking 恢复决策：
- *  1. 调 getReasoningReplayPolicy
- *  2. 若无 ThinkingPart 且 policy.restoreFromStatefulMarker：
- *     a. 从 marker 取 completeThinking / hasToolCalls
- *     b. 有 completeThinking → 直接用
- *     c. 否则走 shouldInjectReasoningPlaceholder
+ * Simulate OpenAI convertAssistantMessage thinking recovery decision:
+ *  1. Call getReasoningReplayPolicy
+ *  2. If no ThinkingPart and policy.restoreFromStatefulMarker:
+ *     a. Get completeThinking / hasToolCalls from marker
+ *     b. If completeThinking exists → use directly
+ *     c. Otherwise, call shouldInjectReasoningPlaceholder
  */
 function simulateOpenAIAssistantThinkingRecovery(
     policyContext: Parameters<typeof getReasoningReplayPolicy>[0],
@@ -112,12 +112,12 @@ function simulateOpenAIAssistantThinkingRecovery(
 }
 
 /**
- * 模拟 Anthropic apiMessageToAnthropicContent 的 thinking 恢复决策：
- *  1. 调 getReasoningReplayPolicy
- *  2. 若 thinkingBlocks 为空且 policy.restoreFromStatefulMarker：
- *     a. 从 marker 取 thinking / hasToolCalls
- *     b. 检查 otherBlocks 是否有 tool_use
- *     c. marker.thinking 非空 或 shouldInjectReasoningPlaceholder → 补 thinking 块
+ * Simulate Anthropic apiMessageToAnthropicContent thinking recovery decision:
+ *  1. Call getReasoningReplayPolicy
+ *  2. If thinkingBlocks is empty and policy.restoreFromStatefulMarker:
+ *     a. Get thinking / hasToolCalls from marker
+ *     b. Check if otherBlocks have tool_use
+ *     c. If marker.thinking is not empty or shouldInjectReasoningPlaceholder → inject thinking block
  */
 function simulateAnthropicThinkingRecovery(
     policyContext: Parameters<typeof getReasoningReplayPolicy>[0],

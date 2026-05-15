@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  API密钥安全存储管理器
- *  使用 VS Code SecretStorage 安全管理 API密钥
+ *  API Key Secure Storage Manager
+ *  Uses VS Code SecretStorage for secure API key management
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -11,22 +11,22 @@ import { configProviders } from '../providers/config';
 import { CliAuthFactory } from '../cli/auth/cliAuthFactory';
 
 /**
- * API密钥安全存储管理器
- * 支持多提供商模式
+ * API Key Secure Storage Manager
+ * Supports multi-provider mode
  */
 export class ApiKeyManager {
     private static context: vscode.ExtensionContext;
     private static builtinProviders: Set<string> | null = null;
 
     /**
-     * 初始化API密钥管理器
+     * Initialize API key manager
      */
     static initialize(context: vscode.ExtensionContext): void {
         this.context = context;
     }
 
     /**
-     * 获取内置提供商列表
+     * Get built-in provider list
      */
     private static async getBuiltinProviders(): Promise<Set<string>> {
         if (this.builtinProviders !== null) {
@@ -35,23 +35,23 @@ export class ApiKeyManager {
         try {
             this.builtinProviders = new Set(Object.keys(configProviders));
         } catch (error) {
-            Logger.warn('无法获取内置提供商列表:', error);
+            Logger.warn('Failed to get built-in provider list:', error);
             this.builtinProviders = new Set();
         }
         return this.builtinProviders;
     }
 
     /**
-     * 获取提供商的密钥存储键名
-     * 对于内置提供商，使用其原始键名
-     * 对于自定义提供商，使用 provider 作为键名
+     * Get secret storage key for provider
+     * For built-in providers, use their original key name
+     * For custom providers, use 'provider' as the key name
      */
     private static getSecretKey(provider: string): string {
         return `${provider}.apiKey`;
     }
 
     /**
-     * 检查是否有API密钥
+     * Check if API key exists
      */
     static async hasValidApiKey(provider: string): Promise<boolean> {
         const secretKey = this.getSecretKey(provider);
@@ -60,9 +60,9 @@ export class ApiKeyManager {
     }
 
     /**
-     * 获取API密钥
-     * 内置提供商：直接使用提供商名称作为键名
-     * 自定义提供商：使用 provider 作为键名
+     * Get API key
+     * Built-in providers: use provider name directly as key
+     * Custom providers: use 'provider' as key name
      */
     static async getApiKey(provider: string): Promise<string | undefined> {
         const secretKey = this.getSecretKey(provider);
@@ -70,19 +70,19 @@ export class ApiKeyManager {
     }
 
     /**
-     * 验证API密钥
+     * Validate API key
      */
     static validateApiKey(apiKey: string, _provider: string): ApiKeyValidation {
-        // 空值允许，用于清空密钥
+        // Empty value allowed for clearing key
         if (!apiKey || apiKey.trim().length === 0) {
             return { isValid: true, isEmpty: true };
         }
-        // 不验证具体格式，只要不为空即为有效
+        // No specific format validation, any non-empty value is valid
         return { isValid: true };
     }
 
     /**
-     * 设置API密钥到安全存储
+     * Set API key to secure storage
      */
     static async setApiKey(provider: string, apiKey: string): Promise<void> {
         const secretKey = this.getSecretKey(provider);
@@ -90,7 +90,7 @@ export class ApiKeyManager {
     }
 
     /**
-     * 删除API密钥
+     * Delete API key
      */
     static async deleteApiKey(provider: string): Promise<void> {
         const secretKey = this.getSecretKey(provider);
@@ -98,95 +98,95 @@ export class ApiKeyManager {
     }
 
     /**
-     * 确保有API密钥，如果没有则提示用户输入
-     * @param provider 提供商标识
-     * @param displayName 显示名称
-     * @param throwError 是否在检查失败时抛出错误，默认为 true
-     * @returns 检查是否成功
+     * Ensure API key exists, prompt user to input if not
+     * @param provider Provider identifier
+     * @param displayName Display name
+     * @param throwError Whether to throw error on check failure, default true
+     * @returns Whether check succeeded
      */
     static async ensureApiKey(provider: string, displayName: string, throwError = true): Promise<boolean> {
-        // 对于 CLI 认证提供商，需要特殊处理
+        // CLI auth providers need special handling
         const supportedCliTypes = CliAuthFactory.getSupportedCliTypes();
         const cliAuthProviders = supportedCliTypes.map(cli => cli.id);
         if (cliAuthProviders.includes(provider)) {
-            // CLI 提供商，从 CLI 加载
+            // CLI provider, load from CLI
             return await this.handleCliAuth(provider, displayName);
         }
 
-        // 对于非 CLI 认证提供商，使用原有逻辑
+        // Non-CLI auth providers use original logic
         if (await this.hasValidApiKey(provider)) {
             return true;
         }
 
-        // 检查是否为内置提供商
+        // Check if built-in provider
         const builtinProviders = await this.getBuiltinProviders();
         if (builtinProviders.has(provider)) {
-            // 内置提供商：触发对应的设置命令，让Provider处理具体配置
+            // Built-in provider: trigger corresponding setup command, let Provider handle specific config
             const commandId = `ccmp.${provider}.setApiKey`;
             await vscode.commands.executeCommand(commandId);
         } else {
-            // 自定义提供商：直接提示输入API密钥
+            // Custom provider: directly prompt for API key input
             await this.promptAndSetApiKey(provider, provider, 'sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
         }
 
-        // 验证设置后是否有效
+        // Verify if valid after setup
         const isValid = await this.hasValidApiKey(provider);
         if (!isValid && throwError) {
-            throw new Error(`需要 API密钥 才能使用 ${displayName} 模型`);
+            throw new Error(`API Key required to use ${displayName} model`);
         }
         return isValid;
     }
 
     /**
-     * 强制刷新 CLI 认证凭证
-     * @param provider 提供商标识
-     * @param displayName 显示名称
-     * @returns 刷新是否成功
+     * Force refresh CLI authentication credentials
+     * @param provider Provider identifier
+     * @param displayName Display name
+     * @returns Whether refresh succeeded
      */
     static async forceRefreshCliAuth(provider: string, displayName: string): Promise<boolean> {
-        // 检查是否为 CLI 认证提供商
+        // Check if CLI auth provider
         const supportedCliTypes = CliAuthFactory.getSupportedCliTypes();
         const cliAuthProviders = supportedCliTypes.map(cli => cli.id);
         if (!cliAuthProviders.includes(provider)) {
-            Logger.warn(`[ApiKeyManager] ${provider} 不是 CLI 认证提供商`);
+            Logger.warn(`[ApiKeyManager] ${provider} is not a CLI auth provider`);
             return false;
         }
 
         const apiKey = await CliAuthFactory.getInstance(provider)?.getApiKey(true);
         if (apiKey) {
-            Logger.info(`[ApiKeyManager] 已强制刷新 ${displayName} CLI 认证`);
+            Logger.info(`[ApiKeyManager] Force refreshed ${displayName} CLI auth`);
             return true;
         }
-        Logger.warn(`[ApiKeyManager] 无法从 ${displayName} CLI 加载认证凭证`);
+        Logger.warn(`[ApiKeyManager] Failed to load auth credentials from ${displayName} CLI`);
         return false;
     }
 
     /**
-     * 处理 CLI 认证
-     * @param provider 提供商标识
-     * @param displayName 显示名称
-     * @param throwError 是否在检查失败时抛出错误
-     * @returns 认证是否成功
+     * Handle CLI authentication
+     * @param provider Provider identifier
+     * @param displayName Display name
+     * @param throwError Whether to throw error on check failure
+     * @returns Whether authentication succeeded
      */
     private static async handleCliAuth(provider: string, displayName: string): Promise<boolean> {
         const credentials = await CliAuthFactory.ensureAuthenticated(provider);
         if (credentials) {
             const apiKey = await CliAuthFactory.getInstance(provider)?.getApiKey();
             if (!apiKey) {
-                Logger.warn(`[ApiKeyManager] ${displayName} CLI 加载认证凭证失败`);
+                Logger.warn(`[ApiKeyManager] ${displayName} CLI failed to load auth credentials`);
                 return false;
             }
-            // Cli 访问密钥验证通过后保存到密钥存储
+            // Save access key to secret storage after CLI validation passes
             await this.setApiKey(provider, apiKey);
-            Logger.info(`[ApiKeyManager] 已从 ${displayName} CLI 加载认证凭证`);
+            Logger.info(`[ApiKeyManager] Loaded auth credentials from ${displayName} CLI`);
             return true;
         }
         return false;
     }
 
     /**
-     * 处理 customHeader 中的 API 密钥替换
-     * 将 ${APIKEY} 替换为实际的 API 密钥（不区分大小写）
+     * Handle API key replacement in customHeader
+     * Replace ${APIKEY} with actual API key (case-insensitive)
      */
     static processCustomHeader(
         customHeader: Record<string, string> | undefined,
@@ -198,7 +198,7 @@ export class ApiKeyManager {
 
         const processedHeader: Record<string, string> = {};
         for (const [key, value] of Object.entries(customHeader)) {
-            // 不区分大小写地替换 ${APIKEY} 为实际的 API 密钥
+            // Replace ${APIKEY} with actual API key (case-insensitive)
             const processedValue = value.replace(/\$\{\s*APIKEY\s*\}/gi, apiKey);
             processedHeader[key] = processedValue;
         }
@@ -206,12 +206,12 @@ export class ApiKeyManager {
     }
 
     /**
-     * 通用API密钥输入和设置逻辑
+     * Generic API key input and setup logic
      */
     static async promptAndSetApiKey(provider: string, displayName: string, placeHolder: string): Promise<void> {
         const apiKey = await vscode.window.showInputBox({
-            prompt: `请输入您的 ${displayName} API密钥（留空则清除密钥）`,
-            title: `设置 ${displayName} API Key`,
+            prompt: `Enter your ${displayName} API Key (leave blank to clear)`,
+            title: `Set ${displayName} API Key`,
             placeHolder: placeHolder,
             password: true,
             ignoreFocusOut: true
@@ -220,20 +220,20 @@ export class ApiKeyManager {
             const validation = this.validateApiKey(apiKey, provider);
             if (validation.isEmpty) {
                 await this.deleteApiKey(provider);
-                vscode.window.showInformationMessage(`已清除 ${displayName} API密钥`);
+                vscode.window.showInformationMessage(`${displayName} API Key has been cleared`);
             } else {
                 await this.setApiKey(provider, apiKey.trim());
-                vscode.window.showInformationMessage(`已设置 ${displayName} API密钥`);
+                vscode.window.showInformationMessage(`${displayName} API Key has been set`);
             }
-            // API密钥更改后，相关组件会通过ConfigManager的配置监听器自动更新
-            Logger.debug(`API密钥已更新: ${provider}`);
+            // After API key change, related components will auto-update via ConfigManager's config listener
+            Logger.debug(`API key updated: ${provider}`);
 
-            // API密钥 设置后，更新状态栏
+            // After API key setup, update status bar
             if (provider === 'deepseek' || provider === 'moonshot') {
                 try {
                     StatusBarManager.checkAndShowStatus(provider);
                 } catch (error) {
-                    Logger.warn('更新状态栏失败:', provider, error);
+                    Logger.warn('Failed to update status bar:', provider, error);
                 }
             }
         }

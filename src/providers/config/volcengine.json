@@ -1,5 +1,5 @@
 {
-    "displayName": "火山方舟",
+    "displayName": "Volcengine Ark",
     "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
     "apiKeyTemplate": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
     "tokenKeyTemplate": "ark-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx-xxxxx",
@@ -10,10 +10,15 @@
             "model": "doubao-seed-code",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/coding",
-            "tooltip": "Coding Plan Code模型。豆包编程模型，面向Agentic编程任务进行了深度优化，具备精准的代码生成、任务调度与逻辑协同能力。",
+            "tooltip": "Coding Plan Code model. Doubao programming model, deeply optimized for Agentic programming tasks, with accurate code generation, task scheduling, and logical collaboration capabilities.",
             "maxInputTokens": 224000,
             "maxOutputTokens": 32000,
-            "reasoningEffort": ["minimal", "low", "medium", "high"],
+            "reasoningEffort": [
+                "minimal",
+                "low",
+                "medium",
+                "high"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -25,10 +30,15 @@
             "model": "doubao-seed-2.0-code",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/coding",
-            "tooltip": "Coding Plan Code模型。面向真实编程环境优化的 Coding 模型，能稳定调用 Claude Code 等常见 IDE 中的工具。模型特别优化了前端能力，在使用常见的前端框架时能有良好表现。模型支持使用 Skills，可以配合多种自定义技能使用。",
+            "tooltip": "Coding Plan Code model. Coding model optimized for real-world programming environments, capable of stably calling tools in common IDEs like Claude Code. Model specially optimized for frontend capabilities, performing well when using common frontend frameworks. Model supports using Skills, can be used with various custom skills.",
             "maxInputTokens": 256000,
             "maxOutputTokens": 128000,
-            "reasoningEffort": ["minimal", "low", "medium", "high"],
+            "reasoningEffort": [
+                "minimal",
+                "low",
+                "medium",
+                "high"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -40,10 +50,15 @@
             "model": "doubao-seed-2.0-lite",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/coding",
-            "tooltip": "Coding Plan Code模型。兼顾生成质量与响应速度，适合作为通用生产级模型，胜任非结构化信息处理、内容创作、搜索推荐、数据分析等生产型工作。",
+            "tooltip": "Coding Plan Code model. Balancing generation quality and response speed, suitable as a general production-grade model, capable of unstructured information processing, content creation, search recommendation, data analysis, and other production work.",
             "maxInputTokens": 256000,
             "maxOutputTokens": 128000,
-            "reasoningEffort": ["minimal", "low", "medium", "high"],
+            "reasoningEffort": [
+                "minimal",
+                "low",
+                "medium",
+                "high"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -55,10 +70,15 @@
             "model": "doubao-seed-2.0-pro",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/coding",
-            "tooltip": "Coding Plan Code模型。旗舰级全能通用模型，适合复杂推理与长链路任务执行场景，强调多模态理解、长上下文推理、结构化生成与工具增强执行。",
+            "tooltip": "Coding Plan Code model. Flagship-level all-around general model, suitable for complex reasoning and long-chain task execution scenarios, emphasizing multimodal understanding, long-context reasoning, structured generation, and tool-enhanced execution.",
             "maxInputTokens": 256000,
             "maxOutputTokens": 128000,
-            "reasoningEffort": ["minimal", "low", "medium", "high"],
+            "reasoningEffort": [
+                "minimal",
+                "low",
+                "medium",
+                "high"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -70,10 +90,13 @@
             "model": "kimi-k2.6",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/coding",
-            "tooltip": "Coding Plan Code模型。具备强思考能力，支持多步工具调用和推理，擅长解决复杂问题，如复杂的逻辑推理、数学问题、代码编写等。",
+            "tooltip": "Coding Plan Code model. Possesses strong thinking capabilities, supports multi-step tool calling and reasoning, excels at solving complex problems such as complex logical reasoning, math problems, and code writing.",
             "maxInputTokens": 224000,
             "maxOutputTokens": 32000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -85,10 +108,13 @@
             "model": "kimi-k2.5",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/coding",
-            "tooltip": "Coding Plan Code模型。Moonshot AI 最新编程模型，进一步强化前端代码质量与设计表现力前端能力。",
+            "tooltip": "Coding Plan Code model. Moonshot AI's latest programming model, further strengthening frontend code quality and design expression capabilities.",
             "maxInputTokens": 224000,
             "maxOutputTokens": 32000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -100,10 +126,13 @@
             "model": "glm-5.1",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/coding",
-            "tooltip": "Coding Plan Code模型。智谱新一代旗舰模型，代码能力增强，长程任务显著提升，能够在单次任务中持续、自主地工作长达 8 小时。",
+            "tooltip": "Coding Plan Code model. Zhipu's new generation flagship model, enhanced code capabilities, significantly improved long-range tasks, capable of working continuously and autonomously for up to 8 hours in a single task.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -115,10 +144,13 @@
             "model": "glm-4.7",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/coding",
-            "tooltip": "Coding Plan Code模型。智谱 AI 旗舰代码大模型，可轻松解析超长代码库、处理复杂智能体（Agent）任务，在代码生成、调试、全链路理解场景中表现优异。",
+            "tooltip": "Coding Plan Code model. Zhipu AI's flagship code large model, capable of easily parsing super-long codebases, handling complex agent (Agent) tasks, excelling in code generation, debugging, and full-link understanding scenarios.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -130,7 +162,7 @@
             "model": "MiniMax-M2.7",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/coding",
-            "tooltip": "Coding Plan Code模型。M2.7 能够自行构建复杂 Agent Harness，并基于 Agent Teams、复杂 Skills、Tool 等能力，完成高度复杂的生产力任务。",
+            "tooltip": "Coding Plan Code model. M2.7 can autonomously build complex Agent Harness, and based on Agent Teams, complex Skills, Tool capabilities, complete highly complex productivity tasks.",
             "maxInputTokens": 204800,
             "maxOutputTokens": 64000,
             "capabilities": {
@@ -144,7 +176,7 @@
             "model": "MiniMax-M2.5",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/coding",
-            "tooltip": "Coding Plan Code模型。MiniMax 旗舰级开源大模型，在编程、工具调用和搜索、办公等生产力场景都达到或者刷新了行业的 SOTA。",
+            "tooltip": "Coding Plan Code model. MiniMax's flagship open-source large model, reaching or refreshing industry SOTA in programming, tool calling and search, office and other productivity scenarios.",
             "maxInputTokens": 204800,
             "maxOutputTokens": 64000,
             "capabilities": {
@@ -158,10 +190,13 @@
             "model": "deepseek-v3.2",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/coding",
-            "tooltip": "Coding Plan Code模型。DeepSeek-V3.2，平衡推理能力与输出长度，在通用问答、日常 Agent 任务、轻量级代码开发场景中稳定高效，适配多元AI 需求。",
+            "tooltip": "Coding Plan Code model. DeepSeek-V3.2, balancing reasoning capability and output length, stable and efficient in general Q&A, daily Agent tasks, and lightweight code development scenarios, adapting to diverse AI needs.",
             "maxInputTokens": 96000,
             "maxOutputTokens": 32000,
-            "thinking": ["disabled", "enabled"],
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -174,10 +209,13 @@
             "provider": "volcengine-agent",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/plan",
-            "tooltip": "Agent Plan 模型。依托 Seed 2.0 Agent 与 VLM 能力，强化代码能力：前端出众，多语言适配，适合接入各类 AI 编程工具。默认 non-thinking，支持开启深度思考。",
+            "tooltip": "Agent Plan model. Relying on Seed 2.0 Agent and VLM capabilities, enhanced code capabilities: outstanding frontend, multi-language adaptation, suitable for connecting to various AI programming tools. Default non-thinking, supports enabling deep thinking.",
             "maxInputTokens": 256000,
             "maxOutputTokens": 128000,
-            "thinking": ["disabled", "enabled"],
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -190,10 +228,13 @@
             "provider": "volcengine-agent",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/plan",
-            "tooltip": "Agent Plan 模型。旗舰级全能通用模型，适合复杂推理与长链路任务执行场景，强调多模态理解、长上下文推理、结构化生成与工具增强执行。默认 thinking，支持关闭深度思考。",
+            "tooltip": "Agent Plan model. Flagship-level all-around general model, suitable for complex reasoning and long-chain task execution scenarios, emphasizing multimodal understanding, long-context reasoning, structured generation, and tool-enhanced execution. Default thinking, supports disabling deep thinking.",
             "maxInputTokens": 256000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -206,10 +247,13 @@
             "provider": "volcengine-agent",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/plan",
-            "tooltip": "Agent Plan 模型。兼顾生成质量与响应速度，适合作为通用生产级模型，胜任非结构化信息处理、内容创作、搜索推荐、数据分析等生产型工作。默认 thinking，支持关闭深度思考。",
+            "tooltip": "Agent Plan model. Balancing generation quality and response speed, suitable as a general production-grade model, capable of unstructured information processing, content creation, search recommendation, data analysis, and other production work. Default thinking, supports disabling deep thinking.",
             "maxInputTokens": 256000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -222,10 +266,13 @@
             "provider": "volcengine-agent",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/plan",
-            "tooltip": "Agent Plan 模型。面向低时延、高并发与成本敏感场景，提供极致的模型推理速度，适合成本和速度优先的轻量级任务。默认 thinking，支持关闭深度思考。",
+            "tooltip": "Agent Plan model. Designed for low-latency, high-concurrency, and cost-sensitive scenarios, providing extreme model reasoning speed, suitable for cost and speed-prioritized lightweight tasks. Default thinking, supports disabling deep thinking.",
             "maxInputTokens": 224000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -238,10 +285,13 @@
             "provider": "volcengine-agent",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/plan",
-            "tooltip": "Agent Plan 模型。智谱新一代旗舰模型，开源版本。默认 thinking，支持关闭深度思考。",
+            "tooltip": "Agent Plan model. Zhipu's new generation flagship model, open-source version. Default thinking, supports disabling deep thinking.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -254,10 +304,13 @@
             "provider": "volcengine-agent",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/plan",
-            "tooltip": "Agent Plan 模型。M2.7 能够自行构建复杂 Agent Harness，并基于 Agent Teams、复杂 Skills、Tool 等能力，完成高度复杂的生产力任务。默认 thinking，支持关闭深度思考。",
+            "tooltip": "Agent Plan model. M2.7 can autonomously build complex Agent Harness, and based on Agent Teams, complex Skills, Tool capabilities, complete highly complex productivity tasks. Default thinking, supports disabling deep thinking.",
             "maxInputTokens": 204800,
             "maxOutputTokens": 64000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -270,10 +323,13 @@
             "provider": "volcengine-agent",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/plan",
-            "tooltip": "Agent Plan 模型。月之暗面新一代智能模型，默认 thinking，支持关闭深度思考。",
+            "tooltip": "Agent Plan model. Moonshot AI's new generation intelligent model. Default thinking, supports disabling deep thinking.",
             "maxInputTokens": 224000,
             "maxOutputTokens": 32000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -286,10 +342,13 @@
             "provider": "volcengine-agent",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/plan",
-            "tooltip": "Agent Plan 模型。平衡推理能力与输出长度，在通用问答、日常 Agent 任务、轻量级代码开发场景中稳定高效，适配多元AI 需求。默认 non-thinking，支持开启深度思考。",
+            "tooltip": "Agent Plan model. Balancing reasoning capability and output length, stable and efficient in general Q&A, daily Agent tasks, and lightweight code development scenarios, adapting to diverse AI needs. Default non-thinking, supports enabling deep thinking.",
             "maxInputTokens": 96000,
             "maxOutputTokens": 32000,
-            "thinking": ["disabled", "enabled"],
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -301,10 +360,15 @@
             "model": "doubao-seed-2-0-code-preview-260215",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/compatible",
-            "tooltip": "Doubao-Seed-2.0-Code 面向企业级编程需求优化，在 Seed 2.0 优秀的 Agent、VLM 能力基础上，特别增强了代码能力，不仅前端能力表现出众，也对企业常见的多语言编码需求做了特别优化，适合接入各种 AI 编程工具使用。",
+            "tooltip": "Doubao-Seed-2.0-Code optimized for enterprise-level programming needs, on the basis of Seed 2.0's excellent Agent and VLM capabilities, specially enhanced code capabilities, not only outstanding frontend capabilities but also special optimization for enterprise common multi-language coding needs, suitable for connecting to various AI programming tools.",
             "maxInputTokens": 256000,
             "maxOutputTokens": 128000,
-            "reasoningEffort": ["minimal", "low", "medium", "high"],
+            "reasoningEffort": [
+                "minimal",
+                "low",
+                "medium",
+                "high"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -316,10 +380,15 @@
             "model": "doubao-seed-2-0-mini-260428",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/compatible",
-            "tooltip": "Doubao-Seed-2.0-mini-260428 新版本，能够同时输入并理解视频、图片、语音和文本四种模态，并进行跨模态的联合推理，能直接处理必须音画结合才能做出判断业务需求。",
+            "tooltip": "Doubao-Seed-2.0-mini-260428 new version, capable of simultaneously inputting and understanding video, images, audio, and text four modalities, and performing cross-modal joint reasoning, directly processing business requirements that must combine audio and video for judgment.",
             "maxInputTokens": 224000,
             "maxOutputTokens": 128000,
-            "reasoningEffort": ["minimal", "low", "medium", "high"],
+            "reasoningEffort": [
+                "minimal",
+                "low",
+                "medium",
+                "high"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -331,10 +400,15 @@
             "model": "doubao-seed-2-0-lite-260428",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/compatible",
-            "tooltip": "Doubao-Seed-2.0-lite-260428 新版本，支持视频、图像、音频、文本原生统一理解，是豆包大模型家族首款全模态理解模型，同时升级Agent、Coding与GUI能力。在同等算力成本下，是企业大规模、批量化部署全模态推理任务的更优性价比选择。",
+            "tooltip": "Doubao-Seed-2.0-lite-260428 new version, supporting native unified understanding of video, images, audio, and text, is the first full-modality understanding model in the Doubao large model family, simultaneously upgrading Agent, Coding, and GUI capabilities. Under the same compute cost, it is a more cost-effective choice for enterprise large-scale, batch deployment of full-modality reasoning tasks.",
             "maxInputTokens": 224000,
             "maxOutputTokens": 128000,
-            "reasoningEffort": ["minimal", "low", "medium", "high"],
+            "reasoningEffort": [
+                "minimal",
+                "low",
+                "medium",
+                "high"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -346,10 +420,15 @@
             "model": "doubao-seed-2-0-pro-260215",
             "sdkMode": "anthropic",
             "baseUrl": "https://ark.cn-beijing.volces.com/api/compatible",
-            "tooltip": "Doubao-Seed-2.0-pro是旗舰级全能通用模型，面向 Agent 时代的复杂推理与长链路任务执行场景。强调多模态理解、长上下文推理、结构化生成与工具增强执行。复杂指令与多约束执行能力突出，可稳定应对多步复杂规划、复杂图文推理、视频内容理解与高难度分析等场景。",
+            "tooltip": "Doubao-Seed-2.0-pro is a flagship-level all-around general model, designed for complex reasoning and long-chain task execution scenarios in the Agent era. Emphasizing multimodal understanding, long-context reasoning, structured generation, and tool-enhanced execution. Outstanding complex instruction and multi-constraint execution capabilities, stably handling multi-step complex planning, complex image-text reasoning, video content understanding, and high-difficulty analysis scenarios.",
             "maxInputTokens": 256000,
             "maxOutputTokens": 128000,
-            "reasoningEffort": ["minimal", "low", "medium", "high"],
+            "reasoningEffort": [
+                "minimal",
+                "low",
+                "medium",
+                "high"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -359,10 +438,15 @@
             "id": "doubao-seed-1-8",
             "name": "Doubao-Seed-1.8-251228",
             "model": "doubao-seed-1-8-251228",
-            "tooltip": "全新面向多模态 Agent 场景定向优化模型。更强Agent能力、升级多模态理解、更灵活的上下文管理。",
+            "tooltip": "New model specifically optimized for multimodal Agent scenarios. Stronger Agent capabilities, upgraded multimodal understanding, more flexible context management.",
             "maxInputTokens": 224000,
             "maxOutputTokens": 64000,
-            "reasoningEffort": ["minimal", "low", "medium", "high"],
+            "reasoningEffort": [
+                "minimal",
+                "low",
+                "medium",
+                "high"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -373,10 +457,15 @@
             "name": "Doubao-Seed-1.8-251228 (Caching)",
             "model": "doubao-seed-1-8-251228",
             "sdkMode": "openai-responses",
-            "tooltip": "全新面向多模态 Agent 场景定向优化模型。更强Agent能力、升级多模态理解、更灵活的上下文管理。",
+            "tooltip": "New model specifically optimized for multimodal Agent scenarios. Stronger Agent capabilities, upgraded multimodal understanding, more flexible context management.",
             "maxInputTokens": 224000,
             "maxOutputTokens": 64000,
-            "reasoningEffort": ["minimal", "low", "medium", "high"],
+            "reasoningEffort": [
+                "minimal",
+                "low",
+                "medium",
+                "high"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -386,10 +475,13 @@
             "id": "deepseek-v3.2",
             "name": "DeepSeek-V3.2-251201",
             "model": "deepseek-v3-2-251201",
-            "tooltip": "DeepSeek-V3.2正式版，平衡推理能力与输出长度，适合日常使用，例如问答场景和通用 Agent 任务场景",
+            "tooltip": "DeepSeek-V3.2 official version, balancing reasoning capability and output length, suitable for daily use, such as Q&A scenarios and general Agent task scenarios",
             "maxInputTokens": 96000,
             "maxOutputTokens": 32000,
-            "thinking": ["disabled", "enabled"],
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -399,10 +491,13 @@
             "id": "glm-4.7",
             "name": "GLM-4.7-251222",
             "model": "glm-4-7-251222",
-            "tooltip": "GLM-4.7 是智谱最新旗舰模型，更强的编程能力与更稳定的多步骤推理/执行能力。在执行复杂智能体任务提升明显，同时对话更自然，前端审美更好。",
+            "tooltip": "GLM-4.7 is Zhipu's latest flagship model, with stronger programming capabilities and more stable multi-step reasoning/execution capabilities. Significant improvement in executing complex agent tasks, while conversations are more natural and frontend aesthetics are better.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -413,16 +508,21 @@
             "name": "GLM-4.7-251222 (Caching)",
             "model": "glm-4-7-251222",
             "sdkMode": "openai-responses",
-            "tooltip": "GLM-4.7 是智谱最新旗舰模型，更强的编程能力与更稳定的多步骤推理/执行能力。在执行复杂智能体任务提升明显，同时对话更自然，前端审美更好。",
+            "tooltip": "GLM-4.7 is Zhipu's latest flagship model, with stronger programming capabilities and more stable multi-step reasoning/execution capabilities. Significant improvement in executing complex agent tasks, while conversations are more natural and frontend aesthetics are better.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
             },
             "extraBody": {
-                "caching": { "type": "enabled" }
+                "caching": {
+                    "type": "enabled"
+                }
             }
         }
     ]

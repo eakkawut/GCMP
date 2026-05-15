@@ -8,9 +8,9 @@ export interface VisionBridgeDefinition {
 export const visionBridgeDefinitions = {
     minimax: {
         toolName: 'minimax_vision',
-        label: 'MiniMax 图片桥接'
+        label: 'MiniMax Image Bridge'
     }
-    // zhipu 智谱AI的模型不认模拟调用的工具，目前仅限MiniMax桥接
+    // ZhipuAI models do not recognize simulated tool calls, currently limited to MiniMax bridge only
 } as const satisfies Record<string, VisionBridgeDefinition>;
 
 export interface VisionBridgeBuildResult {
@@ -24,8 +24,8 @@ export function createVisionBridgeToolCallId(toolName: string): string {
 
 export function buildVisionBridgeToolResultParts(imageDescriptions: string[]): vscode.LanguageModelTextPart[] {
     const parts: vscode.LanguageModelTextPart[] = [
-        new vscode.LanguageModelTextPart(`共识别 ${imageDescriptions.length} 张图片。`),
-        new vscode.LanguageModelTextPart('图片分析结果：')
+        new vscode.LanguageModelTextPart(`Total ${imageDescriptions.length} images recognized.`),
+        new vscode.LanguageModelTextPart('Image analysis results:')
     ];
 
     imageDescriptions.forEach((description, index) => {

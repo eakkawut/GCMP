@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  小时统计图表组件
- *  使用 Chart.js 展示提供商的性能指标趋势
+ *  Hourly Statistics Chart Component
+ *  Uses Chart.js to display provider performance metric trends
  *--------------------------------------------------------------------------------------------*/
 
 import type { HourlyStats } from '../types';
@@ -8,25 +8,25 @@ import { createElement } from '../../utils';
 import { getProviderDisplayName } from '../utils';
 import { Chart } from 'chart.js/auto';
 
-// 保存图表实例引用，避免重复创建导致闪烁
+// Save chart instance references to avoid flickering from repeated creation
 let speedChartInstance: Chart | null = null;
 let latencyChartInstance: Chart | null = null;
 
 /**
- * 创建或更新小时统计图表（包含三个子图表）
- * 如果容器已存在，只更新数据；否则创建新图表
+ * Create or update hourly statistics chart (includes three sub-charts)
+ * If container already exists, only update data; otherwise create a new chart
  */
 export function createHourlyChart(
     hourlyStats: Record<string, HourlyStats>,
     existingContainer?: HTMLElement
 ): HTMLElement {
-    // 如果传入了已存在的容器，只更新数据
+    // If an existing container is provided, only update data
     if (existingContainer) {
         const speedCanvas = existingContainer.querySelector('#speed-chart') as HTMLCanvasElement;
         const latencyCanvas = existingContainer.querySelector('#latency-chart') as HTMLCanvasElement;
 
         if (speedCanvas && latencyCanvas) {
-            // 容器存在，只更新图表数据
+            // Container exists, only update chart data
             setTimeout(() => {
                 initSpeedChart(speedCanvas, hourlyStats);
                 initLatencyChart(latencyCanvas, hourlyStats);
@@ -35,82 +35,82 @@ export function createHourlyChart(
         }
     }
 
-    // 创建新容器
+    // Create new container
     const section = createElement('section', 'hourly-chart-section');
 
     const h2 = createElement('h2');
-    h2.textContent = '📊 提供商性能指标趋势';
+    h2.textContent = '📊 Provider Performance Metrics Trend';
     section.appendChild(h2);
 
     if (!hourlyStats || Object.keys(hourlyStats).length === 0) {
         const empty = createElement('div', 'empty-message');
-        empty.textContent = '暂无小时统计数据';
+        empty.textContent = 'No hourly statistics data available';
         section.appendChild(empty);
         return section;
     }
 
-    // 检查是否有有效数据（包含速度相关数据的小时）
-    // 老旧数据可能没有速度字段，需要过滤
+    // Check if there is valid data (hours containing speed-related data)
+    // Old data may not have speed fields, needs filtering
     const validHoursCount = Object.values(hourlyStats).filter(stats => {
         if (!stats.providers || Object.keys(stats.providers).length === 0) {
             return false;
         }
-        // 检查是否有提供商包含速度相关数据
+        // Check if any provider contains speed-related data
         return Object.values(stats.providers).some(provider => provider.outputSpeeds || provider.firstTokenLatency);
     }).length;
 
     if (validHoursCount < 1) {
         const empty = createElement('div', 'empty-message');
-        empty.textContent = '暂无有效速度数据';
+        empty.textContent = 'No valid speed data available';
         section.appendChild(empty);
         return section;
     }
 
-    // 创建切换按钮
+    // Create toggle buttons
     const toggleContainer = createElement('div', 'chart-toggle-container');
     const speedButton = createElement('button', 'chart-toggle-button active');
-    speedButton.textContent = '⚡ 速度';
+    speedButton.textContent = '⚡ Speed';
     const latencyButton = createElement('button', 'chart-toggle-button');
-    latencyButton.textContent = '⏱️ 延迟';
+    latencyButton.textContent = '⏱️ Latency';
     toggleContainer.appendChild(speedButton);
     toggleContainer.appendChild(latencyButton);
     section.appendChild(toggleContainer);
 
-    // 创建两个独立的图表容器
+    // Create two independent chart containers
     const chartsWrapper = createElement('div', 'charts-wrapper');
 
-    // 1. 输出速度图表
+    // 1. Output speed chart
     const speedSection = createElement('div', 'chart-item chart-visible');
     const speedTitle = createElement('h3');
-    speedTitle.textContent = '⚡ 平均输出速度 (tokens/秒)';
+    speedTitle.textContent = '⚡ Average Output Speed (tokens/sec)';
     speedSection.appendChild(speedTitle);
     const speedContainer = createElement('div', 'chart-container');
     const speedCanvas = createElement('canvas', 'speed-chart') as HTMLCanvasElement;
-    speedCanvas.id = 'speed-chart'; // 添加 id 以便后续查找
+    speedCanvas.id = 'speed-chart'; // Add id for later lookup
     speedContainer.appendChild(speedCanvas);
     speedSection.appendChild(speedContainer);
     chartsWrapper.appendChild(speedSection);
 
-    // 2. 延迟图表
+    // 2. Latency chart
     const latencySection = createElement('div', 'chart-item chart-hidden');
     const latencyTitle = createElement('h3');
-    latencyTitle.textContent = '⏱️ 首 Token 平均延迟 (毫秒)';
+    latencyTitle.textContent = '⏱️ Average First Token Latency (milliseconds)';
     latencySection.appendChild(latencyTitle);
     const latencyContainer = createElement('div', 'chart-container');
     const latencyCanvas = createElement('canvas', 'latency-chart') as HTMLCanvasElement;
-    latencyCanvas.id = 'latency-chart'; // 添加 id 以便后续查找
+    latencyCanvas.id = 'latency-chart'; // Add id for later lookup
     latencyContainer.appendChild(latencyCanvas);
     latencySection.appendChild(latencyContainer);
     chartsWrapper.appendChild(latencySection);
 
     section.appendChild(chartsWrapper);
 
-    // 延迟初始化图表（确保 DOM 已渲染）
+    // Delay chart initialization (ensure DOM is rendered)
     setTimeout(() => {
         initSpeedChart(speedCanvas, hourlyStats);
         initLatencyChart(latencyCanvas, hourlyStats);
 
-        // 添加切换事件
+        // Add toggle events
         speedButton.onclick = () => {
             speedButton.classList.add('active');
             latencyButton.classList.remove('active');
@@ -134,17 +134,17 @@ export function createHourlyChart(
 }
 
 /**
- * 计算平均首token延迟
+ * Calculate average first token latency
  */
 function calcFirstTokenLatency(stats: { firstTokenLatency?: number }): number {
     if (!stats.firstTokenLatency || stats.firstTokenLatency <= 0) {
         return 0;
     }
-    return stats.firstTokenLatency; // 毫秒
+    return stats.firstTokenLatency; // milliseconds
 }
 
 /**
- * 初始化输出速度图表
+ * Initialize output speed chart
  */
 function initSpeedChart(canvas: HTMLCanvasElement, hourlyStats: Record<string, HourlyStats>): void {
     const hourKeys = Object.keys(hourlyStats).sort((a, b) => {
@@ -155,7 +155,7 @@ function initSpeedChart(canvas: HTMLCanvasElement, hourlyStats: Record<string, H
 
     const hours = hourKeys.map(h => parseInt(h, 10));
 
-    // Map 结构: providerId -> { name: string, data: Map<hour, value> }
+    // Map structure: providerId -> { name: string, data: Map<hour, value> }
     const providerMap = new Map<string, { name: string; data: Map<number, number> }>();
 
     hourKeys.forEach(hourKey => {
@@ -163,7 +163,7 @@ function initSpeedChart(canvas: HTMLCanvasElement, hourlyStats: Record<string, H
         if (stats && stats.providers) {
             const hour = parseInt(hourKey, 10);
             Object.entries(stats.providers).forEach(([providerId, providerStats]) => {
-                // 使用 providerId 作为唯一标识，避免相同名称的 provider 被合并
+                // Use providerId as unique identifier to avoid merging providers with the same name
                 if (!providerMap.has(providerId)) {
                     providerMap.set(providerId, {
                         name: getProviderDisplayName(providerId, providerStats.providerName),
@@ -179,21 +179,21 @@ function initSpeedChart(canvas: HTMLCanvasElement, hourlyStats: Record<string, H
 
     const datasets = createDatasetsFromMap(providerMap, hours);
 
-    // 检查现有图表实例是否有效（canvas 是否还在 DOM 中）
+    // Check if existing chart instance is valid (canvas still in DOM)
     if (speedChartInstance && speedChartInstance.canvas === canvas) {
         updateChartData(speedChartInstance, hours, datasets);
     } else {
-        // 如果 canvas 不匹配，销毁旧实例并创建新图表
+        // If canvas doesn't match, destroy old instance and create new chart
         if (speedChartInstance) {
             speedChartInstance.destroy();
             speedChartInstance = null;
         }
-        speedChartInstance = createSingleChart(canvas, hours, datasets, '输出速度 (tokens/秒)', 'tokens/秒');
+        speedChartInstance = createSingleChart(canvas, hours, datasets, 'Output Speed (tokens/sec)', 'tokens/sec');
     }
 }
 
 /**
- * 初始化延迟图表
+ * Initialize latency chart
  */
 function initLatencyChart(canvas: HTMLCanvasElement, hourlyStats: Record<string, HourlyStats>): void {
     const hourKeys = Object.keys(hourlyStats).sort((a, b) => {
@@ -204,7 +204,7 @@ function initLatencyChart(canvas: HTMLCanvasElement, hourlyStats: Record<string,
 
     const hours = hourKeys.map(h => parseInt(h, 10));
 
-    // Map 结构: providerId -> { name: string, data: Map<hour, value> }
+    // Map structure: providerId -> { name: string, data: Map<hour, value> }
     const providerMap = new Map<string, { name: string; data: Map<number, number> }>();
 
     hourKeys.forEach(hourKey => {
@@ -212,7 +212,7 @@ function initLatencyChart(canvas: HTMLCanvasElement, hourlyStats: Record<string,
         if (stats && stats.providers) {
             const hour = parseInt(hourKey, 10);
             Object.entries(stats.providers).forEach(([providerId, providerStats]) => {
-                // 使用 providerId 作为唯一标识，避免相同名称的 provider 被合并
+                // Use providerId as unique identifier to avoid merging providers with the same name
                 if (!providerMap.has(providerId)) {
                     providerMap.set(providerId, {
                         name: getProviderDisplayName(providerId, providerStats.providerName),
@@ -227,21 +227,21 @@ function initLatencyChart(canvas: HTMLCanvasElement, hourlyStats: Record<string,
 
     const datasets = createDatasetsFromMap(providerMap, hours);
 
-    // 检查现有图表实例是否有效（canvas 是否还在 DOM 中）
+    // Check if existing chart instance is valid (canvas still in DOM)
     if (latencyChartInstance && latencyChartInstance.canvas === canvas) {
         updateChartData(latencyChartInstance, hours, datasets);
     } else {
-        // 如果 canvas 不匹配，销毁旧实例并创建新图表
+        // If canvas doesn't match, destroy old instance and create new chart
         if (latencyChartInstance) {
             latencyChartInstance.destroy();
             latencyChartInstance = null;
         }
-        latencyChartInstance = createSingleChart(canvas, hours, datasets, '首 Token 延迟 (毫秒)', '毫秒');
+        latencyChartInstance = createSingleChart(canvas, hours, datasets, 'First Token Latency (milliseconds)', 'milliseconds');
     }
 }
 
 /**
- * 从数据映射创建数据集
+ * Create datasets from data map
  */
 function createDatasetsFromMap(
     providerMap: Map<string, { name: string; data: Map<number, number> }>,
@@ -268,21 +268,21 @@ function createDatasetsFromMap(
     }> = [];
 
     const providerColors = [
-        { border: 'rgb(59, 130, 246)', bg: 'rgba(59, 130, 246, 0.1)' }, // 蓝色
-        { border: 'rgb(34, 197, 94)', bg: 'rgba(34, 197, 94, 0.1)' }, // 绿色
-        { border: 'rgb(249, 115, 22)', bg: 'rgba(249, 115, 22, 0.1)' }, // 橙色
-        { border: 'rgb(234, 179, 8)', bg: 'rgba(234, 179, 8, 0.1)' }, // 黄色
-        { border: 'rgb(20, 184, 166)', bg: 'rgba(20, 184, 166, 0.1)' }, // 青色
-        { border: 'rgb(139, 92, 246)', bg: 'rgba(139, 92, 246, 0.1)' }, // 紫罗兰
-        { border: 'rgb(6, 182, 212)', bg: 'rgba(6, 182, 212, 0.1)' }, // 浅蓝
-        { border: 'rgb(132, 204, 22)', bg: 'rgba(132, 204, 22, 0.1)' }, // 青柠
-        { border: 'rgb(99, 102, 241)', bg: 'rgba(99, 102, 241, 0.1)' }, // 靛蓝
-        { border: 'rgb(21, 128, 61)', bg: 'rgba(21, 128, 61, 0.1)' }, // 深绿
-        { border: 'rgb(124, 45, 18)', bg: 'rgba(124, 45, 18, 0.1)' }, // 棕色
-        { border: 'rgb(107, 114, 128)', bg: 'rgba(107, 114, 128, 0.1)' }, // 灰色
-        { border: 'rgb(128, 0, 128)', bg: 'rgba(128, 0, 128, 0.1)' }, // 紫色
-        { border: 'rgb(0, 100, 0)', bg: 'rgba(0, 100, 0, 0.1)' }, // 暗绿
-        { border: 'rgb(70, 130, 180)', bg: 'rgba(70, 130, 180, 0.1)' } // 钢蓝
+        { border: 'rgb(59, 130, 246)', bg: 'rgba(59, 130, 246, 0.1)' }, // Blue
+        { border: 'rgb(34, 197, 94)', bg: 'rgba(34, 197, 94, 0.1)' }, // Green
+        { border: 'rgb(249, 115, 22)', bg: 'rgba(249, 115, 22, 0.1)' }, // Orange
+        { border: 'rgb(234, 179, 8)', bg: 'rgba(234, 179, 8, 0.1)' }, // Yellow
+        { border: 'rgb(20, 184, 166)', bg: 'rgba(20, 184, 166, 0.1)' }, // Cyan
+        { border: 'rgb(139, 92, 246)', bg: 'rgba(139, 92, 246, 0.1)' }, // Violet
+        { border: 'rgb(6, 182, 212)', bg: 'rgba(6, 182, 212, 0.1)' }, // Light Blue
+        { border: 'rgb(132, 204, 22)', bg: 'rgba(132, 204, 22, 0.1)' }, // Lime
+        { border: 'rgb(99, 102, 241)', bg: 'rgba(99, 102, 241, 0.1)' }, // Indigo
+        { border: 'rgb(21, 128, 61)', bg: 'rgba(21, 128, 61, 0.1)' }, // Dark Green
+        { border: 'rgb(124, 45, 18)', bg: 'rgba(124, 45, 18, 0.1)' }, // Brown
+        { border: 'rgb(107, 114, 128)', bg: 'rgba(107, 114, 128, 0.1)' }, // Gray
+        { border: 'rgb(128, 0, 128)', bg: 'rgba(128, 0, 128, 0.1)' }, // Purple
+        { border: 'rgb(0, 100, 0)', bg: 'rgba(0, 100, 0, 0.1)' }, // Dark Green
+        { border: 'rgb(70, 130, 180)', bg: 'rgba(70, 130, 180, 0.1)' } // Steel Blue
     ];
 
     let colorIndex = 0;
@@ -290,13 +290,13 @@ function createDatasetsFromMap(
         const { name: providerName, data: hourData } = providerInfo;
         const data = hours.map(hour => {
             const value = hourData.get(hour) || 0;
-            return value > 0 ? value : null; // null 会让 Chart.js 跳过该点并连接相邻有效点
+            return value > 0 ? value : null; // null will make Chart.js skip this point and connect adjacent valid points
         });
 
         if (data.some(v => v !== null && v > 0)) {
             const color = providerColors[colorIndex % providerColors.length];
             datasets.push({
-                label: providerName, // 使用友好名称作为显示标签
+                label: providerName, // Use friendly name as display label
                 data: data,
                 borderColor: color.border,
                 backgroundColor: color.bg,
@@ -319,7 +319,7 @@ function createDatasetsFromMap(
 }
 
 /**
- * 更新图表数据
+ * Update chart data
  */
 function updateChartData(
     chart: Chart,
@@ -337,8 +337,8 @@ function updateChartData(
 ): void {
     const labels = hours.map(h => `${String(h).padStart(2, '0')}:00`);
 
-    // 根据图表类型设置不同的点样式
-    // 通过检查 canvas id 来判断图表类型
+    // Set different point styles based on chart type
+    // Determine chart type by checking canvas id
     const canvasId = chart.canvas.id;
     const isSpeedChart = canvasId === 'speed-chart';
     const pointStyle = isSpeedChart ? 'circle' : 'rectRot';
@@ -349,12 +349,12 @@ function updateChartData(
         pointStyle: pointStyle
     }));
 
-    // 使用 'none' 模式：禁用动画，立即更新
+    // Use 'none' mode: disable animation, update immediately
     chart.update('none');
 }
 
 /**
- * 创建单图表
+ * Create single chart
  */
 function createSingleChart(
     canvas: HTMLCanvasElement,
@@ -374,8 +374,8 @@ function createSingleChart(
 ): Chart {
     const labels = hours.map(h => `${String(h).padStart(2, '0')}:00`);
 
-    // 根据图表类型设置不同的点样式
-    const isSpeedChart = unit === 'tokens/秒';
+    // Set different point styles based on chart type
+    const isSpeedChart = unit === 'tokens/sec';
     const pointStyle = isSpeedChart ? 'circle' : 'rectRot';
 
     const chart = new Chart(canvas, {
@@ -389,9 +389,9 @@ function createSingleChart(
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false, // 禁用自动宽高比，使用固定高度
-            animation: false, // 禁用所有动画
-            spanGaps: true, // 自动跳过 null 值并连接相邻有效数据点
+            maintainAspectRatio: false, // Disable auto aspect ratio, use fixed height
+            animation: false, // Disable all animations
+            spanGaps: true, // Automatically skip null values and connect adjacent valid data points
             interaction: {
                 mode: 'index',
                 intersect: false
@@ -444,7 +444,7 @@ function createSingleChart(
                     display: true,
                     title: {
                         display: true,
-                        text: '时间',
+                        text: 'Time',
                         font: {
                             size: 11,
                             weight: 'bold'
@@ -489,7 +489,7 @@ function createSingleChart(
 }
 
 /**
- * 格式化数值显示
+ * Format numeric value display
  */
 function formatValue(value: number, unit: string): string {
     if (unit === 'Tokens') {
@@ -502,14 +502,14 @@ function formatValue(value: number, unit: string): string {
         return String(value);
     }
 
-    if (unit === '毫秒') {
+    if (unit === 'milliseconds') {
         if (value >= 1000) {
             return `${(value / 1000).toFixed(1)}s`;
         }
         return `${Math.round(value)}ms`;
     }
 
-    // tokens/秒
+    // tokens/sec
     if (value >= 1000) {
         return `${(value / 1000).toFixed(1)}k`;
     }

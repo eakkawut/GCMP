@@ -1,7 +1,7 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  日志写入管理器
- *  带写入锁机制,保证每行日志的完整性
- *  使用队列 + 异步锁实现互斥写入
+ *  Log Write Manager
+ *  With write lock mechanism to ensure integrity of each log line
+ *  Uses queue + async lock to achieve mutual exclusion writes
  *--------------------------------------------------------------------------------------------*/
 
 import * as fs from 'fs/promises';
@@ -10,7 +10,7 @@ import { LogPathManager } from './logPathManager';
 import type { TokenRequestLog } from './types';
 
 /**
- * 写入任务
+ * Write Task
  */
 interface WriteTask {
     log: TokenRequestLog;
@@ -19,8 +19,8 @@ interface WriteTask {
 }
 
 /**
- * 日志写入管理器
- * 使用队列保证写入顺序,使用锁保证写入互斥
+ * Log Write Manager
+ * Uses queue to ensure write order, uses lock to ensure write mutual exclusion
  */
 export class LogWriteManager {
     private readonly pathManager: LogPathManager;
@@ -33,31 +33,31 @@ export class LogWriteManager {
     }
 
     /**
-     * 追加日志条目(异步,使用队列)
+     * Append Log Entry (asynchronous, using queue)
      */
     async appendLog(log: TokenRequestLog): Promise<void> {
         if (this.isDisposed) {
-            throw new Error('[LogWriteManager] 写入管理器已销毁');
+            throw new Error('[LogWriteManager] Write manager destroyed');
         }
 
         return new Promise((resolve, reject) => {
-            // 添加到队列
+            // Add to queue
             this.writeQueue.push({ log, resolve, reject });
 
-            // 触发处理
+            // Trigger processing
             this.processQueue();
         });
     }
 
     /**
-     * 批量追加日志条目
+     * Batch Append Log Entries
      */
     async appendLogs(logs: TokenRequestLog[]): Promise<void> {
         if (this.isDisposed) {
-            throw new Error('[LogWriteManager] 写入管理器已销毁');
+            throw new Error('[LogWriteManager] Write manager destroyed');
         }
 
-        // 批量添加到队列
+        // Batch add to queue
         const promises = logs.map(
             log =>
                 new Promise<void>((resolve, reject) => {
@@ -65,18 +65,18 @@ export class LogWriteManager {
                 })
         );
 
-        // 触发处理
+        // Trigger processing
         this.processQueue();
 
-        // 等待所有任务完成
+        // Wait for all tasks to complete
         await Promise.all(promises);
     }
 
     /**
-     * 处理写入队列
+     * Process Write Queue
      */
     private async processQueue(): Promise<void> {
-        // 如果已经在处理,直接返回
+        // If already processing, return directly
         if (this.isProcessing) {
             return;
         }
@@ -103,44 +103,44 @@ export class LogWriteManager {
     }
 
     /**
-     * 内部写入方法(实际执行写入)
-     * 每次请求都追加新行,形成流水记录
+     * Internal Write Method (actual write execution)
+     * Appends new line for each request, forming sequential records
      */
     private async writeLogInternal(log: TokenRequestLog): Promise<void> {
         const logPath = this.pathManager.getLogPathFromDate(new Date(log.timestamp));
 
         try {
-            // 确保日期文件夹存在（使用 PathManager 统一的方法）
+            // Ensure date folder exists (use unified method from PathManager)
             await this.pathManager.ensureDirectoryExists(logPath.dateFolder);
 
-            // 将日志对象转换为JSONL格式(一行一个JSON)
-            // 每次调用都追加新行,同一requestId可能有多条记录(预估→完成/失败)
+            // Convert log object to JSONL format (one JSON per line)
+            // Each call appends a new line, same requestId may have multiple records (estimated→completed/failed)
             const line = JSON.stringify(log) + '\n';
 
-            // 追加到文件(使用 appendFile 自动处理并发)
+            // Append to file (use appendFile to automatically handle concurrency)
             await fs.appendFile(logPath.fullPath, line, 'utf-8');
 
             StatusLogger.debug(
-                `[LogWriteManager] 写入流水日志: ${logPath.fullPath} (${log.requestId}, status=${log.status})`
+                `[LogWriteManager] Wrote sequential log: ${logPath.fullPath} (${log.requestId}, status=${log.status})`
             );
         } catch (err) {
-            StatusLogger.error(`[LogWriteManager] 写入日志失败: ${logPath.fullPath}`, err);
+            StatusLogger.error(`[LogWriteManager] Failed to write log: ${logPath.fullPath}`, err);
             throw err;
         }
     }
 
     /**
-     * 刷新队列(等待所有待处理任务完成)
+     * Flush Queue (wait for all pending tasks to complete)
      */
     async flush(): Promise<void> {
-        // 等待队列清空
+        // Wait for queue to empty
         while (this.writeQueue.length > 0 || this.isProcessing) {
             await new Promise(resolve => setTimeout(resolve, 10));
         }
     }
 
     /**
-     * 获取队列状态
+     * Get Queue Status
      */
     getQueueStatus(): { queueLength: number; isProcessing: boolean } {
         return {
@@ -150,29 +150,29 @@ export class LogWriteManager {
     }
 
     /**
-     * 销毁写入管理器
+     * Destroy Write Manager
      */
     async dispose(): Promise<void> {
         try {
-            StatusLogger.debug('[LogWriteManager] 开始销毁写入管理器...');
+            StatusLogger.debug('[LogWriteManager] Starting to destroy write manager...');
 
-            // 标记为已销毁，阻止新的写入请求
+            // Mark as destroyed, prevent new write requests
             this.isDisposed = true;
 
-            // 等待队列清空
+            // Wait for queue to empty
             const queueStatus = this.getQueueStatus();
             if (queueStatus.queueLength > 0) {
                 StatusLogger.warn(
-                    `[LogWriteManager] 销毁时发现 ${queueStatus.queueLength} 个待处理的写入任务，正在等待完成...`
+                    `[LogWriteManager] Found ${queueStatus.queueLength} pending write tasks during destruction, waiting for completion...`
                 );
             }
 
-            // 刷新队列中的所有任务
+            // Flush all tasks in queue
             await this.flush();
 
-            StatusLogger.debug('[LogWriteManager] 写入管理器已销毁');
+            StatusLogger.debug('[LogWriteManager] Write manager destroyed');
         } catch (error) {
-            StatusLogger.error('[LogWriteManager] 销毁写入管理器时出错:', error);
+            StatusLogger.error('[LogWriteManager] Error occurred while destroying write manager:', error);
             throw error;
         }
     }

@@ -1,7 +1,7 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  Copilot Document Manager - 文档管理器实现
- *  实现 ICompletionsTextDocumentManager 接口
- *  参考: getInlineCompletions.spec.ts 中的 TestDocumentManager
+ *  Copilot Document Manager - Document Manager Implementation
+ *  Implements ICompletionsTextDocumentManager interface
+ *  Reference: TestDocumentManager in getInlineCompletions.spec.ts
  *--------------------------------------------------------------------------------------------*/
 
 import { ICompletionsTextDocumentManager, ICompletionsWorkspaceFolder } from '@vscode/chat-lib';
@@ -20,7 +20,7 @@ import { Emitter } from '@vscode/chat-lib/dist/src/_internal/util/vs/base/common
 import { Disposable } from '@vscode/chat-lib/dist/src/_internal/util/vs/base/common/lifecycle';
 
 /**
- * 文档管理器实现
+ * Document Manager Implementation
  */
 export class DocumentManager extends Disposable implements ICompletionsTextDocumentManager {
     private readonly _onDidChangeTextDocument = this._register(new Emitter<TextDocumentChangeEvent>());

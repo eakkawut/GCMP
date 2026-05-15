@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  Anthropic SDK Handler
- *  处理使用 Anthropic SDK 的模型请求
+ *  Handle model requests using Anthropic SDK
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -21,12 +21,12 @@ import type { GenericModelProvider } from '../providers/genericModelProvider';
 import type { CommitChatModelOptions } from '../commit';
 
 /**
- * Anthropic 兼容处理器类
- * 接收完整的提供商配置，使用 Anthropic SDK 处理流式聊天完成
+ * Anthropic compatible handler class
+ * Receives complete provider configuration, uses Anthropic SDK to handle streaming chat completion
  */
 export class AnthropicHandler {
     constructor(private readonly providerInstance: GenericModelProvider) {
-        // providerInstance 提供动态获取 providerConfig 和 providerKey 的能力
+        // providerInstance provides dynamic ability to get providerConfig and providerKey
     }
     private get provider(): string {
         return this.providerInstance.provider;
@@ -42,9 +42,9 @@ export class AnthropicHandler {
     }
 
     private generateClaudeCodeStyleSessionKey(): string {
-        // Claude Code 风格：user_<hash>_account__session_<uuid>
-        // - user_<hash>: 64 hex（这里用 sha256(machineId) 生成稳定值）
-        // - session_<uuid>: 每个新会话生成一次，后续靠缓存复用
+        // Claude Code style: user_<hash>_account__session_<uuid>
+        // - user_<hash>: 64 hex (here using sha256(machineId) to generate stable value)
+        // - session_<uuid>: generated once per new session, reused via cache subsequently
         const userHash = crypto.createHash('sha256').update(vscode.env.machineId).digest('hex');
         const sessionUuid = crypto.randomUUID();
         return `user_${userHash}_account__session_${sessionUuid}`;
@@ -103,42 +103,42 @@ export class AnthropicHandler {
     }
 
     /**
-     * 创建 Anthropic 客户端
-     * 每次都创建新的客户端实例，与 OpenAIHandler 保持一致
+     * Create Anthropic client
+     * Create new client instance each time, consistent with OpenAIHandler
      */
     private async createAnthropicClient(modelConfig?: ModelConfig): Promise<Anthropic> {
         const providerKey = modelConfig?.provider || this.provider;
         const currentApiKey = await ApiKeyManager.getApiKey(providerKey);
         if (!currentApiKey) {
-            throw new Error(`缺少 ${this.displayName} API密钥`);
+            throw new Error(`Missing ${this.displayName} API key`);
         }
 
-        // 使用模型配置的 baseUrl 或提供商默认的 baseURL
+        // Use model config's baseUrl or provider's default baseURL
         let baseUrl = modelConfig?.baseUrl || this.baseURL;
         if (providerKey === 'minimax-coding') {
-            // 针对 MiniMax 国际站进行 baseUrl 覆盖设置
+            // Override baseUrl for MiniMax international site
             const endpoint = ConfigManager.getMinimaxEndpoint();
             if (baseUrl && endpoint === 'minimax.io') {
                 baseUrl = baseUrl.replace('api.minimaxi.com', 'api.minimax.io');
             }
         }
         if (providerKey === 'zhipu') {
-            // 针对智谱AI国际站进行 baseUrl 覆盖设置
+            // Override baseUrl for ZhipuAI international site
             const endpoint = ConfigManager.getZhipuEndpoint();
             if (baseUrl && endpoint === 'api.z.ai') {
                 baseUrl = baseUrl.replace('open.bigmodel.cn', 'api.z.ai');
             }
         }
         if (providerKey === 'xiaomimimo-token') {
-            // 针对 Xiaomi MiMo Token Plan 接入点切换
+            // Switch endpoint for Xiaomi MiMo Token Plan
             const endpoint = ConfigManager.getXiaomimimoEndpoint();
             if (baseUrl && endpoint && endpoint !== 'cn') {
                 baseUrl = baseUrl.replace('token-plan-cn', `token-plan-${endpoint}`);
             }
         }
-        Logger.debug(`[${this.displayName}] 创建新的 Anthropic 客户端 (baseUrl: ${baseUrl})`);
+        Logger.debug(`[${this.displayName}] Creating new Anthropic client (baseUrl: ${baseUrl})`);
 
-        // 构建默认头部，包含提供商级别和模型级别的 customHeader
+        // Build default headers, including provider-level and model-level customHeader
         const defaultHeaders: Record<string, string> = {
             'User-Agent': VersionManager.getUserAgent(this.provider),
             // 'User-Agent': 'claude-cli/2.1.108 (external, cli)',
@@ -146,33 +146,33 @@ export class AnthropicHandler {
             'anthropic-dangerous-direct-browser-access': 'true'
         };
 
-        // 合并提供商级别和模型级别的 customHeader
-        // 模型级别的 customHeader 会覆盖提供商级别的同名头部
+        // Merge provider-level and model-level customHeader
+        // Model-level customHeader overrides provider-level customHeader with the same name
         const mergedCustomHeader = {
             ...this.providerConfig?.customHeader,
             ...modelConfig?.customHeader
         };
 
-        // 处理合并后的 customHeader
+        // Process merged customHeader
         const processedCustomHeader = ApiKeyManager.processCustomHeader(mergedCustomHeader, currentApiKey);
         if (Object.keys(processedCustomHeader).length > 0) {
             Object.assign(defaultHeaders, processedCustomHeader);
-            Logger.debug(`${this.displayName} 应用自定义头部: ${JSON.stringify(mergedCustomHeader)}`);
+            Logger.debug(`${this.displayName} Applied custom headers: ${JSON.stringify(mergedCustomHeader)}`);
         }
 
         const client = new Anthropic({
             apiKey: currentApiKey,
             baseURL: baseUrl,
-            authToken: currentApiKey, // 解决 Minimax 报错： Please carry the API secret key in the 'Authorization' field of the request header
+            authToken: currentApiKey, // Resolve Minimax error: Please carry the API secret key in the 'Authorization' field of the request header
             defaultHeaders: defaultHeaders
         });
 
-        Logger.trace(`${this.displayName} Anthropic 兼容客户端已创建`);
+        Logger.trace(`${this.displayName} Anthropic compatible client has been created`);
         return client;
     }
 
     /**
-     * 处理 Anthropic SDK 请求
+     * Handle Anthropic SDK request
      */
     async handleRequest(
         model: vscode.LanguageModelChatInformation,
@@ -183,7 +183,7 @@ export class AnthropicHandler {
         token: vscode.CancellationToken,
         requestId?: string | null
     ): Promise<void> {
-        // 将 vscode.CancellationToken 转换为 AbortSignal
+        // Convert vscode.CancellationToken to AbortSignal
         const abortController = new AbortController();
         const cancellationListener = token.onCancellationRequested(() => abortController.abort());
 
@@ -191,14 +191,14 @@ export class AnthropicHandler {
             const client = await this.createAnthropicClient(modelConfig);
             const { messages: anthropicMessages, system } = apiMessageToAnthropicMessage(modelConfig, messages);
 
-            // 准备工具定义
+            // Prepare tool definitions
             const tools: Anthropic.Messages.ToolUnion[] =
                 options.tools ? convertToAnthropicTools([...options.tools]) : [];
             if (modelConfig.webSearchTool && !tools.some(tool => tool.name === 'web_search')) {
                 tools.push(this.createAnthropicWebSearchTool());
             }
 
-            // 使用模型配置中的 model 字段，如果没有则使用 model.id
+            // Use model field from model config, or model.id if not available
             const modelId = modelConfig.model || modelConfig.id;
 
             const createParams: Anthropic.MessageCreateParamsStreaming = {
@@ -208,7 +208,7 @@ export class AnthropicHandler {
                 stream: true
             };
 
-            // Minimax 图片桥接：添加模拟工具调用
+            // Minimax image bridge: add synthetic tool calls
             if (modelConfig?.provider === 'minimax-coding') {
                 const realToolCount = tools.length;
                 const existingToolNames = new Set(tools.map(tool => tool.name));
@@ -220,28 +220,28 @@ export class AnthropicHandler {
                 if (realToolCount === 0 && historicalTools.length > 0) {
                     createParams.tool_choice = { type: 'none' };
                     Logger.info(
-                        `[${model.name}] 仅存在历史工具调用，设置 tool_choice=none 以避免 synthetic tool 再次触发`
+                        `[${model.name}] Only historical tool calls exist, setting tool_choice=none to avoid synthetic tool re-triggering`
                     );
                 }
             }
 
-            // Anthropic 兼容接口的会话缓存：使用本地 sessionKey 写入 metadata.user_id，
-            // 供“客户端传 session”的网关实现粘性会话。
+            // Anthropic compatible interface session cache: use local sessionKey to write metadata.user_id,
+            // for gateway implementations of "client passes session" to achieve sticky sessions.
             const statefulMarker = getStatefulMarkerAndIndex(model.id, 'anthropic', messages);
             const sessionId = statefulMarker?.statefulMarker?.sessionId || this.generateClaudeCodeStyleSessionKey();
             createParams.metadata = { user_id: sessionId };
 
-            // 合并 extraBody 参数（如果有）
+            // Merge extraBody parameters (if any)
             if (modelConfig.extraBody) {
-                // 过滤掉不可修改的核心参数
+                // Filter out non-modifiable core parameters
                 const filteredExtraBody = OpenAIHandler.filterExtraBodyParams(modelConfig.extraBody);
                 Object.assign(createParams, filteredExtraBody);
                 if (Object.keys(filteredExtraBody).length > 0) {
-                    Logger.trace(`${model.name} 合并了 extraBody 参数: ${JSON.stringify(filteredExtraBody)}`);
+                    Logger.trace(`${model.name} Merged extraBody parameters: ${JSON.stringify(filteredExtraBody)}`);
                 }
             }
 
-            // 根据模型配置设置思考模式和推理长度
+            // Set thinking mode and reasoning length based on model config
             const settings = options.modelConfiguration as ModelChatResponseOptions;
             if (settings?.thinking) {
                 const thinking: { type: string } = createParams.thinking || { type: 'disabled' };
@@ -262,33 +262,33 @@ export class AnthropicHandler {
                     createParams.output_config = undefined;
                 }
             }
-            // 如果处于提交模式，模型支持思考的，不使用思考模式
+            // If in commit mode and model supports thinking, disable thinking mode
             const modelOpts = options.modelOptions as CommitChatModelOptions;
             if (modelOpts?.commit && createParams.thinking) {
                 createParams.thinking.type = 'disabled';
-                // 同时移除 output_config，避免 thinking=disabled 与 reasoning_effort 冲突
+                // Also remove output_config to avoid conflict between thinking=disabled and reasoning_effort
                 createParams.output_config = undefined;
             }
 
-            // 添加系统消息（如果有）
+            // Add system message (if any)
             if (system.text) {
                 createParams.system = [system];
             }
-            // 添加工具（如果有）
+            // Add tools (if any)
             if (tools.length > 0) {
                 createParams.tools = tools;
             }
 
             Logger.debug(
-                `[${model.name}] 发送 Anthropic API 请求，包含 ${anthropicMessages.length} 条消息，使用模型: ${modelId}`
+                `[${model.name}] Sending Anthropic API request with ${anthropicMessages.length} messages, using model: ${modelId}`
             );
 
             // const cacheCount = (JSON.stringify(createParams).match(/"cache_control"\s*:/g) || []).length;
-            // Logger.warn(`[${model.name}] cache_control 数量: ${cacheCount}`);
+            // Logger.warn(`[${model.name}] cache_control count: ${cacheCount}`);
 
             const stream = await client.messages.create(createParams, { signal: abortController.signal });
 
-            // 创建统一的流报告器
+            // Create unified stream reporter
             const reporter = new StreamReporter({
                 modelName: model.name,
                 modelId: model.id,
@@ -298,23 +298,23 @@ export class AnthropicHandler {
                 sessionId
             });
 
-            // 回放 MiniMax 图片桥接工具结果（如适用）
+            // Replay MiniMax image bridge tool results (if applicable)
             if (modelConfig?.provider === 'minimax-coding') {
                 MiniMaxVisionBridge.replayVisionBridge(messages, (callId, resultParts) =>
                     reporter.reportToolResult(callId, resultParts)
                 );
             }
 
-            // 使用完整的流处理函数
+            // Use complete stream processing function
             const result = await this.handleAnthropicStream(stream, reporter, token);
 
-            Logger.info(`[${model.name}] Anthropic 请求完成`, result?.usage);
+            Logger.info(`[${model.name}] Anthropic request completed`, result?.usage);
 
-            // === Token 统计: 更新实际 token ===
+            // === Token statistics: Update actual tokens ===
             if (requestId) {
                 try {
                     const usagesManager = TokenUsagesManager.instance;
-                    // 直接传递 SDK 的 Usage 对象，包含流时间信息
+                    // Pass SDK Usage object directly, including stream timing information
                     await usagesManager.updateActualTokens({
                         requestId,
                         rawUsage: result?.usage || {},
@@ -323,7 +323,7 @@ export class AnthropicHandler {
                         streamEndTime: result?.streamEndTime
                     });
                 } catch (err) {
-                    Logger.warn('更新Token统计失败:', err);
+                    Logger.warn('Failed to update token statistics:', err);
                 }
             }
         } catch (error) {
@@ -332,21 +332,21 @@ export class AnthropicHandler {
                 error instanceof Anthropic.APIUserAbortError ||
                 (error instanceof Error && error.name === 'AbortError')
             ) {
-                Logger.info(`[${model.name}] 用户取消了请求`);
+                Logger.info(`[${model.name}] User cancelled the request`);
                 throw new vscode.CancellationError();
             }
 
             Logger.error(`[${model.name}] Anthropic SDK error:`, error);
 
-            // // 提供详细的错误信息
-            // let errorMessage = `[${model.name}] Anthropic API调用失败`;
+            // // Provide detailed error information
+            // let errorMessage = `[${model.name}] Anthropic API call failed`;
             // if (error instanceof Error) {
             //     if (error.message.includes('401')) {
-            //         errorMessage += ': API密钥无效，请检查配置';
+            //         errorMessage += ': API key invalid, please check configuration';
             //     } else if (error.message.includes('429')) {
-            //         errorMessage += ': 请求频率限制，请稍后重试';
+            //         errorMessage += ': Request rate limit exceeded, please retry later';
             //     } else if (error.message.includes('500')) {
-            //         errorMessage += ': 服务器错误，请稍后重试';
+            //         errorMessage += ': Server error, please retry later';
             //     } else {
             //         errorMessage += `: ${error.message}`;
             //     }
@@ -360,9 +360,9 @@ export class AnthropicHandler {
     }
 
     /**
-     * 处理 Anthropic 流式响应
-     * 参照官方文档：https://docs.anthropic.com/en/api/messages-streaming
-     * 参照官方实现：https://github.com/microsoft/vscode-copilot-chat/blob/main/src/extension/byok/vscode-node/anthropicProvider.ts
+     * Handle Anthropic streaming response
+     * Refer to official documentation: https://docs.anthropic.com/en/api/messages-streaming
+     * Refer to official implementation: https://github.com/microsoft/vscode-copilot-chat/blob/main/src/extension/byok/vscode-node/anthropicProvider.ts
      */
     private async handleAnthropicStream(
         stream: AsyncIterable<Anthropic.Messages.MessageStreamEvent>,
@@ -379,38 +379,38 @@ export class AnthropicHandler {
         const completedServerToolCalls = new Map<string, { toolId?: string; name?: string; jsonInput?: string }>();
         let usage: Anthropic.Messages.Usage | undefined;
         let responseId: string | undefined;
-        // 记录流处理的开始时间（在 message_start 事件中设置）
+        // Record stream processing start time (set in message_start event)
         let streamStartTime = Date.now();
         let streamEndTime: number | undefined = undefined;
 
-        Logger.debug('开始处理 Anthropic 流式响应');
+        Logger.debug('Starting to process Anthropic streaming response');
 
         try {
             for await (const chunk of stream) {
                 if (token.isCancellationRequested) {
-                    Logger.debug('流处理被取消');
+                    Logger.debug('Stream processing cancelled');
                     reporter.flushAll(null);
                     break;
                 }
 
                 switch (chunk.type) {
                     case 'message_start':
-                        // 消息开始 - 记录流开始时间
+                        // Message start - record stream start time
                         streamStartTime = Date.now();
-                        // 收集初始使用统计
+                        // Collect initial usage statistics
                         if (chunk.message.usage) {
                             usage = chunk.message.usage;
                         }
-                        // 获取响应消息ID：message_start.message.id
+                        // Get response message ID: message_start.message.id
                         if (!responseId && chunk.message.id) {
                             responseId = chunk.message.id;
                             reporter.setResponseId(responseId);
-                            Logger.debug(`收到 Anthropic message id (responseId): ${responseId}`);
+                            Logger.debug(`Received Anthropic message id (responseId): ${responseId}`);
                         }
                         break;
 
                     case 'content_block_start':
-                        // 内容块开始
+                        // Content block start
                         if (chunk.content_block.type === 'tool_use') {
                             pendingToolCall = {
                                 toolId: chunk.content_block.id,
@@ -427,17 +427,17 @@ export class AnthropicHandler {
                             const serverToolCall =
                                 completedServerToolCalls.get(chunk.content_block.tool_use_id) ?? pendingServerToolCall;
                             if (!serverToolCall?.toolId) {
-                                Logger.warn('收到 web_search_tool_result 但没有对应的 server_tool_use');
+                                Logger.warn('Received web_search_tool_result but no corresponding server_tool_use');
                                 break;
                             }
 
                             const searchResults = this.formatWebSearchToolResult(chunk.content_block);
                             // Logger.trace(
-                            //     `[${reporter.getModelName()}] 收到原生 web_search_tool_result: ${searchResults}`
+                            //     `[${reporter.getModelName()}] Received native web_search_tool_result: ${searchResults}`
                             // );
                             if (!Array.isArray(chunk.content_block.content)) {
                                 Logger.warn(
-                                    `[${reporter.getModelName()}] web_search_tool_result 返回错误: ${chunk.content_block.content.error_code}`
+                                    `[${reporter.getModelName()}] web_search_tool_result returned error: ${chunk.content_block.content.error_code}`
                                 );
                                 completedServerToolCalls.delete(chunk.content_block.tool_use_id);
                                 if (pendingServerToolCall?.toolId === chunk.content_block.tool_use_id) {
@@ -455,29 +455,29 @@ export class AnthropicHandler {
                         break;
 
                     case 'content_block_delta':
-                        // 内容块增量更新
+                        // Content block delta update
                         if (chunk.delta.type === 'text_delta') {
-                            // 文本内容增量
+                            // Text content delta
                             reporter.reportText(chunk.delta.text);
                         } else if (chunk.delta.type === 'input_json_delta' && pendingToolCall) {
-                            // 工具调用参数增量
+                            // Tool call parameter delta
                             pendingToolCall.jsonInput = (pendingToolCall.jsonInput || '') + chunk.delta.partial_json;
 
-                            // 尝试立即解析并报告工具调用（如果 JSON 已完整）
+                            // Try to parse and report tool call immediately (if JSON is complete)
                             try {
                                 const parsedJson = JSON.parse(pendingToolCall.jsonInput);
-                                // JSON 解析成功，立即报告工具调用
+                                // JSON parsing successful, report tool call immediately
                                 reporter.reportToolCall(pendingToolCall.toolId!, pendingToolCall.name!, parsedJson);
-                                Logger.trace(`[${reporter.getModelName()}] 工具调用完成: ${pendingToolCall.name}`);
-                                pendingToolCall = undefined; // 清除待处理的工具调用
+                                Logger.trace(`[${reporter.getModelName()}] Tool call completed: ${pendingToolCall.name}`);
+                                pendingToolCall = undefined; // Clear pending tool call
                             } catch {
-                                // JSON 还不完整，继续累积
+                                // JSON not yet complete, continue accumulating
                             }
                         } else if (chunk.delta.type === 'input_json_delta' && pendingServerToolCall) {
                             pendingServerToolCall.jsonInput =
                                 (pendingServerToolCall.jsonInput || '') + chunk.delta.partial_json;
                         } else if (chunk.delta.type === 'thinking_delta') {
-                            // 思考内容增量
+                            // Thinking content delta
                             const thinkingDelta = chunk.delta.thinking || '';
                             reporter.bufferThinking(thinkingDelta);
                         } else if (chunk.delta.type === 'citations_delta') {
@@ -488,66 +488,66 @@ export class AnthropicHandler {
                             const citationContent = this.formatCitationDelta(chunk.delta.citation);
                             if (citationContent) {
                                 // Logger.trace(
-                                //     `[${reporter.getModelName()}] 收到 web_search citation: ${citationContent}`
+                                //     `[${reporter.getModelName()}] Received web_search citation: ${citationContent}`
                                 // );
                                 reporter.reportToolResult('citation', citationContent);
                             }
                         } else if (chunk.delta.type === 'signature_delta') {
-                            // 累积签名
+                            // Accumulate signature
                             const signatureDelta = chunk.delta.signature || '';
                             reporter.bufferSignature(signatureDelta);
                         }
                         break;
 
                     case 'content_block_stop':
-                        // 内容块停止（兜底处理）
+                        // Content block stop (fallback handling)
                         if (pendingToolCall) {
-                            // 如果还有未处理的工具调用，尝试最后一次解析
+                            // If there are still unprocessed tool calls, try one last parse
                             try {
                                 const jsonInput = pendingToolCall.jsonInput || '{}';
                                 Logger.trace(
-                                    `[${reporter.getModelName()}] content_block_stop 兜底处理工具调用 (${pendingToolCall.name}): ${jsonInput}`
+                                    `[${reporter.getModelName()}] content_block_stop fallback handling tool call (${pendingToolCall.name}): ${jsonInput}`
                                 );
 
                                 let parsedJson: Record<string, unknown>;
                                 try {
                                     parsedJson = JSON.parse(jsonInput);
                                 } catch {
-                                    // JSON 解析失败，使用空对象
-                                    Logger.warn(`工具调用 JSON 不完整，使用空对象: ${jsonInput}`);
+                                    // JSON parsing failed, use empty object
+                                    Logger.warn(`Tool call JSON incomplete, using empty object: ${jsonInput}`);
                                     parsedJson = {};
                                 }
 
                                 reporter.reportToolCall(pendingToolCall.toolId!, pendingToolCall.name!, parsedJson);
                             } catch (e) {
-                                Logger.error(`兜底处理工具调用失败 (${pendingToolCall.name}):`, e);
+                                Logger.error(`Fallback handling tool call failed (${pendingToolCall.name}):`, e);
                             }
                             pendingToolCall = undefined;
                         } else if (pendingServerToolCall) {
                             const jsonInput = pendingServerToolCall.jsonInput || '{}';
                             Logger.trace(
-                                `[${reporter.getModelName()}] server_tool_use 完成 (${pendingServerToolCall.name || 'web_search'}): ${jsonInput}`
+                                `[${reporter.getModelName()}] server_tool_use completed (${pendingServerToolCall.name || 'web_search'}): ${jsonInput}`
                             );
                             if (pendingServerToolCall.toolId) {
                                 completedServerToolCalls.set(pendingServerToolCall.toolId, pendingServerToolCall);
                             }
                             pendingServerToolCall = undefined;
                         } else {
-                            // 思考块结束时输出剩余思考内容和签名
-                            reporter.flushThinking('思考块完成');
+                            // Output remaining thinking content and signature when thinking block ends
+                            reporter.flushThinking('Thinking block completed');
                             reporter.flushSignature();
                         }
                         break;
 
                     case 'message_delta':
-                        // 消息增量 - 更新使用统计
+                        // Message delta - update usage statistics
                         if (chunk.usage) {
-                            // 部分 Claude 网关只会在 message_delta（通常伴随 stop_reason）里返回 usage。
-                            // 此时 message_start 不包含 usage，所以这里需要支持 usage 的延迟初始化。
+                            // Some Claude gateways only return usage in message_delta (usually accompanied by stop_reason).
+                            // At this point message_start does not contain usage, so delayed initialization of usage is needed here.
                             if (!usage) {
                                 usage = chunk.usage as unknown as Anthropic.Messages.Usage;
                             } else {
-                                // 合并 MessageDeltaUsage 增量到当前 Usage
+                                // Merge MessageDeltaUsage delta into current Usage
                                 usage = {
                                     ...Object.assign(usage || {}, chunk.usage),
                                     input_tokens: chunk.usage.input_tokens ?? usage.input_tokens,
@@ -564,33 +564,33 @@ export class AnthropicHandler {
                     case 'message_stop': {
                         streamEndTime = Date.now();
                         if (responseId) {
-                            // 消息停止 - 传递 StatefulMarker
+                            // Message stop - pass StatefulMarker
                             reporter.flushAll(null, { sessionId: reporter.getSessionId(), responseId });
                         }
-                        Logger.trace('消息流完成');
+                        Logger.trace('Message stream completed');
                         break;
                     }
 
                     default:
-                        // 未知事件类型 - 根据官方建议优雅处理
-                        // 可能包括 ping 事件或未来的新事件类型
-                        Logger.trace('收到其他事件类型');
+                        // Unknown event type - handle gracefully per official recommendations
+                        // May include ping events or new event types in the future
+                        Logger.trace('Received other event type');
                         break;
                 }
             }
         } catch (error) {
-            Logger.error('处理 Anthropic 流时出错:', error);
+            Logger.error('Error while processing Anthropic stream:', error);
             throw error;
         }
 
-        // 记录流处理的结束时间
+        // Record stream processing end time
         streamEndTime ??= Date.now();
 
         if (usage) {
             const duration = streamEndTime - streamStartTime;
             const speed = duration > 0 ? ((usage.output_tokens / duration) * 1000).toFixed(1) : 'N/A';
             Logger.debug(
-                `流处理完成 - 最终使用统计: 输入=${usage.input_tokens}, 输出=${usage.output_tokens}, 耗时=${duration}ms, 速度=${speed} tokens/s`
+                `Stream processing completed - Final usage statistics: input=${usage.input_tokens}, output=${usage.output_tokens}, duration=${duration}ms, speed=${speed} tokens/s`
             );
         }
         return { usage, responseId, streamStartTime, streamEndTime };

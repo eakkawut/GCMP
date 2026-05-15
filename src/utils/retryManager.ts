@@ -1,12 +1,12 @@
 /*---------------------------------------------------------------------------------------------
- *  重试管理器
- *  提供累加延迟重试机制，专门处理可重试的限流错误
+ *  Retry Manager
+ *  Provides cumulative delay retry mechanism, specifically for handling retryable rate limit errors
  *--------------------------------------------------------------------------------------------*/
 
 import { Logger } from './logger';
 
 /**
- * 重试配置接口
+ * Retry configuration interface
  */
 export interface RetryConfig {
     maxAttempts: number;
@@ -15,7 +15,7 @@ export interface RetryConfig {
 }
 
 /**
- * 错误类型定义
+ * Error type definition
  */
 export type RetryableError = Error & {
     status?: number;
@@ -25,7 +25,7 @@ export type RetryableError = Error & {
 };
 
 /**
- * 默认重试配置
+ * Default retry configuration
  */
 const DEFAULT_RETRY_CONFIG: RetryConfig = {
     maxAttempts: 3,
@@ -34,8 +34,8 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
 };
 
 /**
- * 重试管理器类
- * 提供递增累加延迟重试机制
+ * Retry manager class
+ * Provides incremental cumulative delay retry mechanism
  */
 export class RetryManager {
     private config: RetryConfig;
@@ -45,11 +45,11 @@ export class RetryManager {
     }
 
     /**
-     * 执行带有重试机制的操作
-     * @param operation 要执行的操作函数
-     * @param isRetryable 判断是否可以重试的函数
-     * @param providerName 提供商名称（用于日志）
-     * @returns 操作结果
+     * Execute operation with retry mechanism
+     * @param operation Operation function to execute
+     * @param isRetryable Function to determine if error is retryable
+     * @param providerName Provider name (for logging)
+     * @returns Operation result
      */
     async executeWithRetry<T>(
         operation: () => Promise<T>,
@@ -59,94 +59,94 @@ export class RetryManager {
         let lastError: RetryableError | undefined;
         let attempt = 0;
 
-        // 首次请求
-        Logger.trace(`[${providerName}] 开始首次请求`);
+        // First request
+        Logger.trace(`[${providerName}] Starting first request`);
         try {
             const result = await operation();
             return result;
         } catch (error) {
             lastError = error as RetryableError;
-            // 如果首次请求就失败且不可重试，直接抛出
+            // If first request fails and is not retryable, throw directly
             if (!isRetryable(lastError)) {
-                Logger.warn(`[${providerName}] 首次请求失败: ${lastError.message}`);
+                Logger.warn(`[${providerName}] First request failed: ${lastError.message}`);
                 throw lastError;
             }
-            Logger.warn(`[${providerName}] 首次请求失败，开始重试机制: ${lastError.message}`);
+            Logger.warn(`[${providerName}] First request failed, starting retry mechanism: ${lastError.message}`);
         }
 
-        // 重试循环
+        // Retry loop
         while (attempt < this.config.maxAttempts) {
             attempt++;
 
-            // 计算延迟时间
+            // Calculate delay time
             const actualDelayMs = this.calculateDelayMs(attempt);
-            Logger.info(`[${providerName}] ${actualDelayMs / 1000}秒后重试...`);
+            Logger.info(`[${providerName}] Retrying after ${actualDelayMs / 1000} second(s)...`);
 
-            // 等待延迟时间
+            // Wait for delay time
             await this.delay(actualDelayMs);
 
-            // 执行重试
-            Logger.info(`[${providerName}] 重试尝试 #${attempt}/${this.config.maxAttempts}`);
+            // Execute retry
+            Logger.info(`[${providerName}] Retry attempt #${attempt}/${this.config.maxAttempts}`);
             try {
                 const result = await operation();
-                Logger.info(`[${providerName}] 重试成功！在第 ${attempt} 次重试后`);
+                Logger.info(`[${providerName}] Retry succeeded! After ${attempt} retry attempt(s)`);
                 return result;
             } catch (error) {
                 lastError = error as RetryableError;
 
-                // 如果不是可重试的错误，直接抛出
+                // If not a retryable error, throw directly
                 if (!isRetryable(lastError)) {
-                    Logger.warn(`[${providerName}] 第 ${attempt} 次重试失败: ${lastError.message}`);
+                    Logger.warn(`[${providerName}] ${attempt}th retry failed: ${lastError.message}`);
                     throw lastError;
                 }
 
-                Logger.warn(`[${providerName}] 第 ${attempt} 次重试失败，准备下一次重试: ${lastError.message}`);
+                Logger.warn(`[${providerName}] ${attempt}th retry failed, preparing next retry: ${lastError.message}`);
             }
         }
 
-        // 所有重试都失败，抛出最后一个错误
+        // All retries failed, throw last error
         if (lastError) {
-            Logger.error(`[${providerName}] 所有重试尝试都失败了: ${lastError.message}`);
+            Logger.error(`[${providerName}] All retry attempts failed: ${lastError.message}`);
             throw lastError;
         } else {
-            throw new Error(`[${providerName}] 未知错误`);
+            throw new Error(`[${providerName}] Unknown error`);
         }
     }
 
     /**
-     * 判断是否是 429 错误
-     * @param error 错误对象
-     * @returns 是否是 429 错误
+     * Check if 429 error
+     * @param error Error object
+     * @returns Whether it is a 429 error
      */
     static isRateLimitError(error: RetryableError, deep = 0): boolean {
-        // 检查 OpenAI 错误对象
+        // Check OpenAI error object
         if ('status' in error && (error.status === 429 || error.status === 529)) {
             return true;
         }
-        // 检查是否有 statusCode 属性
+        // Check if statusCode property exists
         if ('statusCode' in error && (error.statusCode === 429 || error.statusCode === 529)) {
             return true;
         }
 
         if (error.message && typeof error.message === 'string') {
-            // 检查错误消息中是否包含 429/529 字样
+            // Check if error message contains 429/529
             if (error.message.includes('429') || error.message.includes('529')) {
                 return true;
             }
-            // 一些提供商可能在错误消息中包含特定的速率限制提示
-            if (error.message.toLowerCase().includes('rate limit') || error.message.includes('请求过于频繁')) {
+            // Some providers may include specific rate limit hints in error message
+            if (error.message.toLowerCase().includes('rate limit') || error.message.includes('request too frequent')) {
                 return true;
             }
-            // 某些提供商可能使用“temporarily overloaded”或“访问量过大”等提示来表示服务器过载，也可以视为需要重试的情况
+            // Some providers may use "temporarily overloaded" or "excessive traffic" hints to indicate server overload, which can also be considered as retryable
             if (
                 error.message.toLowerCase().includes('temporarily overloaded') ||
-                error.message.includes('访问量过大')
+                error.message.includes('excessive traffic')
             ) {
                 return true;
             }
         }
 
-        // 检查是否有嵌套的 error 对象
+        // Check if nested error object exists
         if (deep <= 3 && 'error' in error && typeof error.error === 'object' && error.error !== null) {
             return this.isRateLimitError(error.error as RetryableError, deep + 1);
         }
@@ -154,8 +154,8 @@ export class RetryManager {
     }
 
     /**
-     * 延迟指定毫秒数
-     * @param ms 毫秒数
+     * Delay for specified milliseconds
+     * @param ms Milliseconds
      * @returns Promise
      */
     private delay(ms: number): Promise<void> {
@@ -163,7 +163,7 @@ export class RetryManager {
     }
 
     /**
-     * 计算第 N 次重试前的等待时间
+     * Calculate wait time before Nth retry
      * 1 -> 1s, 2 -> 3s, 3 -> 6s, 4 -> 10s, 5 -> 15s
      */
     private calculateDelayMs(attempt: number): number {

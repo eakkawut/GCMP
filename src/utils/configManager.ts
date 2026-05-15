@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  配置管理器
- *  用于管理CCMP扩展的全局配置设置和提供商配置
+ *  Configuration Manager
+ *  Manages global configuration settings and provider configurations for CCMP extension
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -10,47 +10,47 @@ import { configProviders } from '../providers/config';
 import { CommitFormat, CommitLanguage, CommitModelSelection } from '../commit/types';
 
 /**
- * 智谱AI搜索配置
+ * ZhipuAI Search Configuration
  */
 export interface ZhipuSearchConfig {
-    /** 是否启用SSE通讯模式（仅Pro+套餐支持） */
+    /** Whether to enable SSE communication mode (only Pro+ plan supports) */
     enableMCP: boolean;
 }
 
 /**
- * 智谱AI统一配置
+ * ZhipuAI Unified Configuration
  */
 export interface ZhipuConfig {
-    /** 搜索功能配置 */
+    /** Search feature configuration */
     search: ZhipuSearchConfig;
-    /** 接入站点 */
+    /** Access endpoint */
     endpoint: 'open.bigmodel.cn' | 'api.z.ai';
 }
 
 /**
- * MiniMax 配置
+ * MiniMax Configuration
  */
 export interface MiniMaxConfig {
-    /** Coding Plan 接入点 */
+    /** Coding Plan endpoint */
     endpoint: 'minimaxi.com' | 'minimax.io';
 }
 
 /**
- * Xiaomi MiMo 配置
+ * Xiaomi MiMo Configuration
  */
 export interface XiaomimimoConfig {
-    /** Token Plan 接入点 */
+    /** Token Plan endpoint */
     endpoint: 'cn' | 'sgp' | 'ams';
 }
 
 /**
- * NES 补全配置
+ * NES Completion Configuration
  */
 export interface NESCompletionConfig {
     enabled: boolean;
     debounceMs: number;
-    timeoutMs: number; // 请求超时时间
-    manualOnly: boolean; // 仅手动触发模式
+    timeoutMs: number; // Request timeout
+    manualOnly: boolean; // Manual trigger only mode
     modelConfig: {
         provider: string;
         baseUrl: string;
@@ -62,14 +62,14 @@ export interface NESCompletionConfig {
 export type FIMCompletionConfig = Omit<NESCompletionConfig, 'manualOnly'>;
 
 /**
- * 请求重试配置
+ * Request Retry Configuration
  */
 export interface RequestRetryConfig {
     maxAttempts: number;
 }
 
 /**
- * Commit 配置
+ * Commit Configuration
  */
 export interface CommitConfig {
     language: CommitLanguage;
@@ -79,34 +79,34 @@ export interface CommitConfig {
 }
 
 /**
- * CCMP配置接口
+ * CCMP Configuration Interface
  */
 export interface CCMPConfig {
-    /** 最大输出token数量 */
+    /** Maximum output token count */
     maxTokens: number;
-    /** 请求失败重试配置 */
+    /** Request failure retry configuration */
     retry: RequestRetryConfig;
-    /** 自动为模型ID添加提供商前缀 */
+    /** Automatically add provider prefix to model ID */
     autoPrefixModelId: boolean;
-    /** 智谱AI配置 */
+    /** ZhipuAI configuration */
     zhipu: ZhipuConfig;
-    /** MiniMax配置 */
+    /** MiniMax configuration */
     minimax: MiniMaxConfig;
-    /** Xiaomi MiMo配置 */
+    /** Xiaomi MiMo configuration */
     xiaomimimo: XiaomimimoConfig;
-    /** FIM补全配置 */
+    /** FIM completion configuration */
     fimCompletion: FIMCompletionConfig;
-    /** NES补全配置 */
+    /** NES completion configuration */
     nesCompletion: NESCompletionConfig;
-    /** Commit 模块配置 */
+    /** Commit module configuration */
     commit: CommitConfig;
-    /** 提供商配置覆盖 */
+    /** Provider configuration overrides */
     providerOverrides: UserConfigOverrides;
 }
 
 /**
- * 配置管理器类
- * 负责读取和管理 VS Code 设置中的 CCMP 配置以及package.json中的提供商配置
+ * Configuration Manager Class
+ * Responsible for reading and managing CCMP configuration in VS Code settings and provider configuration in package.json
  */
 export class ConfigManager {
     private static readonly CONFIG_SECTION = 'ccmp';
@@ -114,30 +114,30 @@ export class ConfigManager {
     private static configListener: vscode.Disposable | null = null;
 
     /**
-     * 初始化配置管理器
-     * 设置配置变更监听器
+     * Initialize configuration manager
+     * Set up configuration change listener
      */
     static initialize(): vscode.Disposable {
-        // 清理之前的监听器
+        // Dispose previous listener
         if (this.configListener) {
             this.configListener.dispose();
         }
 
-        // 设置配置变更监听器
+        // Set up configuration change listener
         this.configListener = vscode.workspace.onDidChangeConfiguration(event => {
             if (event.affectsConfiguration(this.CONFIG_SECTION)) {
-                this.cache = null; // 清除缓存，强制重新读取
-                Logger.info('CCMP配置已更新，缓存已清除');
+                this.cache = null; // Clear cache, force reload
+                Logger.info('CCMP configuration updated, cache cleared');
             }
         });
 
-        Logger.debug('配置管理器已初始化');
+        Logger.debug('Configuration manager initialized');
         return this.configListener;
     }
 
     /**
-     * 获取当前配置
-     * 使用缓存机制提高性能
+     * Get current configuration
+     * Uses caching mechanism for performance
      */
     static getConfig(): CCMPConfig {
         if (this.cache) {
@@ -154,7 +154,7 @@ export class ConfigManager {
             autoPrefixModelId: config.get<boolean>('autoPrefixModelId', false),
             zhipu: {
                 search: {
-                    enableMCP: config.get<boolean>('zhipu.search.enableMCP', true) // 默认启用MCP模式（Coding Plan专属）
+                    enableMCP: config.get<boolean>('zhipu.search.enableMCP', true) // Enable MCP mode by default (Coding Plan exclusive)
                 },
                 endpoint: config.get<ZhipuConfig['endpoint']>('zhipu.endpoint', 'open.bigmodel.cn')
             },
@@ -194,7 +194,7 @@ export class ConfigManager {
                 }
             },
             commit: {
-                // VS Code 会自动应用 package.json configuration contribution 的 default。
+                // VS Code will automatically apply defaults from package.json configuration contribution.
                 language: (config.get<CommitLanguage>('commit.language') ?? 'chinese') as CommitLanguage,
                 format: (config.get<CommitFormat>('commit.format') ?? 'auto') as CommitFormat,
                 customInstructions: config.get<string>('commit.customInstructions') ?? '',
@@ -203,99 +203,99 @@ export class ConfigManager {
             providerOverrides: config.get<UserConfigOverrides>('providerOverrides', {})
         };
 
-        Logger.debug('配置已加载', this.cache);
+        Logger.debug('Configuration loaded', this.cache);
         return this.cache;
     }
 
     /**
-     * 获取最大token数量
+     * Get maximum token count
      */
     static getMaxTokens(): number {
         return this.getConfig().maxTokens;
     }
 
     /**
-     * 获取请求重试配置
+     * Get request retry configuration
      */
     static getRetryConfig(): RequestRetryConfig {
         return this.getConfig().retry;
     }
 
     /**
-     * 获取最大重试次数
+     * Get maximum retry count
      */
     static getRetryMaxAttempts(): number {
         return this.getRetryConfig().maxAttempts;
     }
 
     /**
-     * 获取是否为模型ID自动添加提供商前缀的配置
+     * Get configuration for automatically adding provider prefix to model ID
      */
     static getAutoPrefixModelId(): boolean {
         return this.getConfig().autoPrefixModelId;
     }
     /**
-     * 获取智谱AI搜索配置
+     * Get ZhipuAI search configuration
      */
     static getZhipuSearchConfig(): ZhipuSearchConfig {
         return this.getConfig().zhipu.search;
     }
 
     /**
-     * 获取智谱AI统一配置
+     * Get ZhipuAI unified configuration
      */
     static getZhipuConfig(): ZhipuConfig {
         return this.getConfig().zhipu;
     }
 
     /**
-     * 获取智谱AI接入点配置
-     * @returns 'open.bigmodel.cn' 或 'api.z.ai'，默认 'open.bigmodel.cn'
+     * Get ZhipuAI endpoint configuration
+     * @returns 'open.bigmodel.cn' or 'api.z.ai', default 'open.bigmodel.cn'
      */
     static getZhipuEndpoint(): 'open.bigmodel.cn' | 'api.z.ai' {
         return this.getConfig().zhipu.endpoint;
     }
 
     /**
-     * 获取 MiniMax Coding Plan 接入点配置
-     * @returns 'minimaxi.com' 或 'minimax.io'，默认 'minimaxi.com'
+     * Get MiniMax Coding Plan endpoint configuration
+     * @returns 'minimaxi.com' or 'minimax.io', default 'minimaxi.com'
      */
     static getMinimaxEndpoint(): 'minimaxi.com' | 'minimax.io' {
         return this.getConfig().minimax.endpoint;
     }
 
     /**
-     * 获取 Xiaomi MiMo Token Plan 接入点配置
-     * @returns 'cn' | 'sgp' | 'ams'，默认 'cn'
+     * Get Xiaomi MiMo Token Plan endpoint configuration
+     * @returns 'cn' | 'sgp' | 'ams', default 'cn'
      */
     static getXiaomimimoEndpoint(): XiaomimimoConfig['endpoint'] {
         return this.getConfig().xiaomimimo.endpoint;
     }
 
     /**
-     * 获取FIM补全配置
+     * Get FIM completion configuration
      */
     static getFIMConfig(): FIMCompletionConfig {
         return this.getConfig().fimCompletion;
     }
 
     /**
-     * 获取NES补全配置
+     * Get NES completion configuration
      */
     static getNESConfig(): NESCompletionConfig {
         return this.getConfig().nesCompletion;
     }
 
     /**
-     * 获取 Commit 配置对象
+     * Get Commit configuration object
      */
     static getCommitConfig(): CommitConfig {
         return this.getConfig().commit;
     }
 
     /**
-     * 获取适合模型的最大token数量
-     * 考虑模型限制和用户配置
+     * Get maximum token count suitable for model
+     * Considering model limits and user configuration
      */
     static getMaxTokensForModel(modelMaxTokens: number): number {
         const configMaxTokens = this.getMaxTokens();
@@ -303,76 +303,76 @@ export class ConfigManager {
     }
 
     /**
-     * 验证最大token数量
+     * Validate maximum token count
      */
     private static validateMaxTokens(value: number): number {
         if (isNaN(value) || value < 32 || value > 256000) {
-            Logger.warn(`无效的maxTokens值: ${value}，使用默认值16000`);
+            Logger.warn(`Invalid maxTokens value: ${value}, using default value 16000`);
             return 16000;
         }
         return Math.floor(value);
     }
 
     /**
-     * 验证最大重试次数
+     * Validate maximum retry count
      */
     private static validateRetryMaxAttempts(value: number): number {
         if (isNaN(value) || value < 1 || value > 5) {
-            Logger.warn(`无效的retry.maxAttempts值: ${value}，使用默认值3`);
+            Logger.warn(`Invalid retry.maxAttempts value: ${value}, using default value 3`);
             return 3;
         }
         return Math.floor(value);
     }
 
     /**
-     * 验证防抖延迟时间
+     * Validate debounce delay time
      */
     private static validateNESDebounceMs(value: number): number {
         if (isNaN(value) || value < 50 || value > 2000) {
-            Logger.warn(`无效的debounceMs值: ${value}，使用默认值500`);
+            Logger.warn(`Invalid debounceMs value: ${value}, using default value 500`);
             return 500;
         }
         return Math.floor(value);
     }
 
     /**
-     * 验证超时时间
+     * Validate timeout
      */
     private static validateNESTimeoutMs(value: number): number {
         if (isNaN(value) || value < 1000 || value > 30000) {
-            Logger.warn(`无效的timeoutMs值: ${value}，使用默认值5000`);
+            Logger.warn(`Invalid timeoutMs value: ${value}, using default value 5000`);
             return 5000;
         }
         return Math.floor(value);
     }
 
     /**
-     * 验证NES补全的maxTokens参数
+     * Validate NES completion maxTokens parameter
      */
     private static validateNESMaxTokens(value: number): number {
         if (isNaN(value) || value < 50 || value > 16000) {
-            Logger.warn(`无效的NES maxTokens值: ${value}，使用默认值200`);
+            Logger.warn(`Invalid NES maxTokens value: ${value}, using default value 200`);
             return 200;
         }
         return Math.floor(value);
     }
 
     /**
-     * 获取提供商配置（新模式：直接 import configProviders）
+     * Get provider configuration (new mode: directly import configProviders)
      */
     static getConfigProvider(): ConfigProvider {
         return configProviders;
     }
 
     /**
-     * 获取配置覆盖设置
+     * Get configuration override settings
      */
     static getProviderOverrides(): UserConfigOverrides {
         return this.getConfig().providerOverrides;
     }
 
     /**
-     * 应用配置覆盖到原始提供商配置
+     * Apply configuration overrides to original provider configuration
      */
     static applyProviderOverrides(providerKey: string, originalConfig: ProviderConfig): ProviderConfig {
         const overrides = this.getProviderOverrides();
@@ -382,64 +382,64 @@ export class ConfigManager {
             return originalConfig;
         }
 
-        Logger.debug(`🔧 应用提供商 ${providerKey} 的配置覆盖`);
+        Logger.debug(`🔧 Applying configuration override for provider ${providerKey}`);
 
-        // 创建配置的深拷贝
+        // Create deep copy of configuration
         const config: ProviderConfig = JSON.parse(JSON.stringify(originalConfig));
 
         const applyModelOverride = (target: ModelConfig, modelOverride: ModelOverride): void => {
             if (modelOverride.name !== undefined) {
                 target.name = modelOverride.name;
-                Logger.debug(`  模型 ${modelOverride.id}: 覆盖 name = ${modelOverride.name}`);
+                Logger.debug(`  Model ${modelOverride.id}: override name = ${modelOverride.name}`);
             }
             if (modelOverride.tooltip !== undefined) {
                 target.tooltip = modelOverride.tooltip;
-                Logger.debug(`  模型 ${modelOverride.id}: 覆盖 tooltip = ${modelOverride.tooltip}`);
+                Logger.debug(`  Model ${modelOverride.id}: override tooltip = ${modelOverride.tooltip}`);
             }
             if (modelOverride.model !== undefined) {
                 target.model = modelOverride.model;
-                Logger.debug(`  模型 ${modelOverride.id}: 覆盖 model = ${modelOverride.model}`);
+                Logger.debug(`  Model ${modelOverride.id}: override model = ${modelOverride.model}`);
             }
             if (modelOverride.maxInputTokens !== undefined) {
                 target.maxInputTokens = modelOverride.maxInputTokens;
-                Logger.debug(`  模型 ${modelOverride.id}: 覆盖 maxInputTokens = ${modelOverride.maxInputTokens}`);
+                Logger.debug(`  Model ${modelOverride.id}: override maxInputTokens = ${modelOverride.maxInputTokens}`);
             }
             if (modelOverride.maxOutputTokens !== undefined) {
                 target.maxOutputTokens = modelOverride.maxOutputTokens;
-                Logger.debug(`  模型 ${modelOverride.id}: 覆盖 maxOutputTokens = ${modelOverride.maxOutputTokens}`);
+                Logger.debug(`  Model ${modelOverride.id}: override maxOutputTokens = ${modelOverride.maxOutputTokens}`);
             }
             if (modelOverride.sdkMode !== undefined) {
                 target.sdkMode = modelOverride.sdkMode;
-                Logger.debug(`  模型 ${modelOverride.id}: 覆盖 sdkMode = ${modelOverride.sdkMode}`);
+                Logger.debug(`  Model ${modelOverride.id}: override sdkMode = ${modelOverride.sdkMode}`);
             }
             if (modelOverride.baseUrl !== undefined) {
                 target.baseUrl = modelOverride.baseUrl;
-                Logger.debug(`  模型 ${modelOverride.id}: 覆盖 baseUrl = ${modelOverride.baseUrl}`);
+                Logger.debug(`  Model ${modelOverride.id}: override baseUrl = ${modelOverride.baseUrl}`);
             }
             if (modelOverride.useInstructions !== undefined) {
                 target.useInstructions = modelOverride.useInstructions;
-                Logger.debug(`  模型 ${modelOverride.id}: 覆盖 useInstructions = ${modelOverride.useInstructions}`);
+                Logger.debug(`  Model ${modelOverride.id}: override useInstructions = ${modelOverride.useInstructions}`);
             }
             if (modelOverride.webSearchTool !== undefined) {
                 target.webSearchTool = modelOverride.webSearchTool;
-                Logger.debug(`  模型 ${modelOverride.id}: 覆盖 webSearchTool = ${modelOverride.webSearchTool}`);
+                Logger.debug(`  Model ${modelOverride.id}: override webSearchTool = ${modelOverride.webSearchTool}`);
             }
             if (modelOverride.family !== undefined) {
                 target.family = modelOverride.family;
-                Logger.debug(`  模型 ${modelOverride.id}: 覆盖 family = ${modelOverride.family}`);
+                Logger.debug(`  Model ${modelOverride.id}: override family = ${modelOverride.family}`);
             }
             if (modelOverride.thinking !== undefined) {
                 target.thinking = [...modelOverride.thinking];
-                Logger.debug(`  模型 ${modelOverride.id}: 覆盖 thinking = ${JSON.stringify(modelOverride.thinking)}`);
+                Logger.debug(`  Model ${modelOverride.id}: override thinking = ${JSON.stringify(modelOverride.thinking)}`);
             }
             if (modelOverride.thinkingFormat !== undefined) {
                 target.thinkingFormat = modelOverride.thinkingFormat;
-                Logger.debug(`  模型 ${modelOverride.id}: 覆盖 thinkingFormat = ${modelOverride.thinkingFormat}`);
+                Logger.debug(`  Model ${modelOverride.id}: override thinkingFormat = ${modelOverride.thinkingFormat}`);
             }
             if (modelOverride.reasoningEffort !== undefined) {
                 target.reasoningEffort = [...modelOverride.reasoningEffort];
                 Logger.debug(
-                    `  模型 ${modelOverride.id}: 覆盖 reasoningEffort = ${JSON.stringify(modelOverride.reasoningEffort)}`
+                    `  Model ${modelOverride.id}: override reasoningEffort = ${JSON.stringify(modelOverride.reasoningEffort)}`
                 );
             }
             if (modelOverride.capabilities) {
@@ -447,42 +447,42 @@ export class ConfigManager {
                     ...target.capabilities,
                     ...modelOverride.capabilities
                 };
-                Logger.debug(`  模型 ${modelOverride.id}: 合并 capabilities = ${JSON.stringify(target.capabilities)}`);
+                Logger.debug(`  Model ${modelOverride.id}: merge capabilities = ${JSON.stringify(target.capabilities)}`);
             }
             if (modelOverride.customHeader) {
                 target.customHeader = { ...target.customHeader, ...modelOverride.customHeader };
-                Logger.debug(`  模型 ${modelOverride.id}: 合并 customHeader = ${JSON.stringify(target.customHeader)}`);
+                Logger.debug(`  Model ${modelOverride.id}: merge customHeader = ${JSON.stringify(target.customHeader)}`);
             }
             if (modelOverride.extraBody) {
                 target.extraBody = { ...target.extraBody, ...modelOverride.extraBody };
-                Logger.debug(`  模型 ${modelOverride.id}: 合并 extraBody = ${JSON.stringify(target.extraBody)}`);
+                Logger.debug(`  Model ${modelOverride.id}: merge extraBody = ${JSON.stringify(target.extraBody)}`);
             }
         };
 
-        // 应用提供商级别的覆盖
+        // Apply provider-level overrides
         if (override.baseUrl) {
             config.baseUrl = override.baseUrl;
-            Logger.debug(`  覆盖 baseUrl: ${override.baseUrl}`);
+            Logger.debug(`  Override baseUrl: ${override.baseUrl}`);
         }
         if (override.customHeader) {
             config.customHeader = { ...config.customHeader, ...override.customHeader };
-            Logger.debug(`  覆盖 provider customHeader = ${JSON.stringify(config.customHeader)}`);
+            Logger.debug(`  Override provider customHeader = ${JSON.stringify(config.customHeader)}`);
         }
 
-        // 应用模型级别的覆盖
+        // Apply model-level overrides
         if (override.models && override.models.length > 0) {
             for (const modelOverride of override.models) {
                 const existingModelIndex = config.models.findIndex(m => m.id === modelOverride.id);
                 if (existingModelIndex >= 0) {
-                    // 覆盖现有模型
+                    // Override existing model
                     const existingModel = config.models[existingModelIndex];
                     applyModelOverride(existingModel, modelOverride);
                 } else {
-                    // 添加新模型
+                    // Add new model
                     const newModel: ModelConfig = {
                         id: modelOverride.id,
                         name: modelOverride.name || modelOverride.id,
-                        tooltip: modelOverride.tooltip || `用户自定义模型: ${modelOverride.id}`,
+                        tooltip: modelOverride.tooltip || `User-defined model: ${modelOverride.id}`,
                         maxInputTokens: modelOverride.maxInputTokens || 128000,
                         maxOutputTokens: modelOverride.maxOutputTokens || 8192,
                         capabilities: {
@@ -492,30 +492,30 @@ export class ConfigManager {
                     };
                     applyModelOverride(newModel, modelOverride);
                     config.models.push(newModel);
-                    Logger.info(`  添加新模型: ${modelOverride.id}`);
+                    Logger.info(`  Added new model: ${modelOverride.id}`);
                 }
             }
         }
 
-        // 将提供商级别的 customHeader 合并到所有模型中（模型级别 customHeader 优先）
+        // Merge provider-level customHeader into all models (model-level customHeader takes priority)
         if (override.customHeader) {
             for (const model of config.models) {
                 if (model.customHeader) {
-                    // 如果模型已有 customHeader，提供商级别的作为默认值合并
+                    // If model already has customHeader, merge provider-level as default values
                     model.customHeader = { ...override.customHeader, ...model.customHeader };
                 } else {
-                    // 如果模型没有 customHeader，直接使用提供商级别的
+                    // If model has no customHeader, use provider-level directly
                     model.customHeader = { ...override.customHeader };
                 }
             }
-            Logger.debug(`  提供商 ${providerKey}: 将提供商级别 customHeader 合并到所有模型中`);
+            Logger.debug(`  Provider ${providerKey}: Merged provider-level customHeader into all models`);
         }
 
         return config;
     }
 
     /**
-     * 清理资源
+     * Dispose resources
      */
     static dispose(): void {
         if (this.configListener) {
@@ -523,6 +523,6 @@ export class ConfigManager {
             this.configListener = null;
         }
         this.cache = null;
-        Logger.trace('配置管理器已清理');
+        Logger.trace('Configuration manager disposed');
     }
 }

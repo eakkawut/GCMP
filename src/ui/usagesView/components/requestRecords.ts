@@ -1,31 +1,31 @@
 ﻿/**
- * 请求记录组件
- * 负责渲染请求记录表格
+ * Request Records Component
+ * Responsible for rendering the request records table
  */
 
 import type { ExtendedTokenRequestLog } from '../types';
 import { createElement } from '../../utils';
 import { formatTokens, getProviderDisplayName } from '../utils';
 
-// ============= 全局状态 =============
+// ============= Global State =============
 
-// 保存当前页码
+// Save current page number
 let currentPage = 1;
 
-// ============= 工具函数 =============
+// ============= Utility Functions =============
 
 /**
- * 改变页码（直接更新 DOM，不通过 VS Code 通讯）
+ * Change page number (directly update DOM, without VS Code communication)
  */
 export function changePage(page: number): void {
     if (!window.usagesState?.dateDetails?.records) {
         return;
     }
 
-    // 更新全局页码
+    // Update global page number
     currentPage = page;
 
-    // 重新渲染请求记录区域（使用容器复用）
+    // Re-render request records section (using container reuse)
     const recordsContainer = document.querySelector('#records-container') as HTMLElement;
     if (recordsContainer) {
         createRequestRecordsSection(window.usagesState.dateDetails.records, currentPage, recordsContainer);
@@ -33,14 +33,14 @@ export function changePage(page: number): void {
 }
 
 /**
- * 创建分页组件
+ * Create pagination component
  */
 function createPagination(currentPage: number, totalPages: number, totalRecords: number): HTMLElement {
     const container = createElement('div', 'pagination');
 
-    // 上一页按钮
+    // Previous page button
     const prevBtn = createElement('button') as HTMLButtonElement;
-    prevBtn.textContent = '上一页';
+    prevBtn.textContent = 'Previous';
     prevBtn.disabled = currentPage <= 1;
     prevBtn.onclick = () => {
         if (currentPage > 1) {
@@ -49,7 +49,7 @@ function createPagination(currentPage: number, totalPages: number, totalRecords:
     };
     container.appendChild(prevBtn);
 
-    // 第1页按钮（首页）
+    // Page 1 button (first page)
     const firstPageBtn = createElement('button') as HTMLButtonElement;
     firstPageBtn.textContent = '1';
     firstPageBtn.className = `page-number${currentPage === 1 ? ' active' : ''}`;
@@ -60,17 +60,17 @@ function createPagination(currentPage: number, totalPages: number, totalRecords:
     };
     container.appendChild(firstPageBtn);
 
-    // 页码按钮（中间部分）
+    // Page number buttons (middle section)
     const maxPages = 5;
     let startPage = Math.max(2, currentPage - Math.floor(maxPages / 2));
     const endPage = Math.min(totalPages - 1, startPage + maxPages - 1);
 
-    // 调整起始位置
+    // Adjust starting position
     if (endPage - startPage < maxPages - 1) {
         startPage = Math.max(2, endPage - maxPages + 1);
     }
 
-    // 显示前导省略号（如果第1页和第一个显示页码之间有间隔）
+    // Show leading ellipsis (if there's a gap between page 1 and the first displayed page number)
     if (startPage > 2) {
         const ellipsis = createElement('span');
         ellipsis.textContent = '...';
@@ -89,14 +89,14 @@ function createPagination(currentPage: number, totalPages: number, totalRecords:
         container.appendChild(pageBtn);
     }
 
-    // 显示尾部省略号（如果最后一个显示页码和最后一页之间有间隔）
+    // Show trailing ellipsis (if there's a gap between the last displayed page number and the last page)
     if (endPage < totalPages - 1) {
         const ellipsis = createElement('span');
         ellipsis.textContent = '...';
         container.appendChild(ellipsis);
     }
 
-    // 最后一页按钮（尾页）- 只有当 totalPages > 1 时才显示
+    // Last page button (last page) - only shown when totalPages > 1
     if (totalPages > 1) {
         const lastPageBtn = createElement('button') as HTMLButtonElement;
         lastPageBtn.textContent = String(totalPages);
@@ -109,9 +109,9 @@ function createPagination(currentPage: number, totalPages: number, totalRecords:
         container.appendChild(lastPageBtn);
     }
 
-    // 下一页按钮
+    // Next page button
     const nextBtn = createElement('button') as HTMLButtonElement;
-    nextBtn.textContent = '下一页';
+    nextBtn.textContent = 'Next';
     nextBtn.disabled = currentPage >= totalPages;
     nextBtn.onclick = () => {
         if (currentPage < totalPages) {
@@ -120,7 +120,7 @@ function createPagination(currentPage: number, totalPages: number, totalRecords:
     };
     container.appendChild(nextBtn);
 
-    // 页码信息
+    // Page info
     const info = createElement('span', 'pagination-info');
     const start = (currentPage - 1) * 20 + 1;
     const end = Math.min(currentPage * 20, totalRecords);
@@ -130,29 +130,29 @@ function createPagination(currentPage: number, totalPages: number, totalRecords:
     return container;
 }
 
-// ============= 组件渲染 =============
+// ============= Component Rendering =============
 
 /**
- * 创建请求记录表格
+ * Create request records table
  */
 function createRequestRecordsTable(records: ExtendedTokenRequestLog[]): HTMLElement {
     const table = createElement('table', 'records-table');
 
-    // 表头
+    // Table header
     const thead = createElement('thead');
     const headerRow = createElement('tr');
 
     const headers = [
-        '时间',
-        '提供商',
-        '模型',
-        '输入令牌',
-        '缓存命中',
-        '输出令牌',
-        '消耗令牌',
-        '首令延迟 + 输出耗时',
-        '输出速度',
-        '状态'
+        'Time',
+        'Provider',
+        'Model',
+        'Input Tokens',
+        'Cache Hit',
+        'Output Tokens',
+        'Consumed Tokens',
+        'First Token Latency + Output Duration',
+        'Output Speed',
+        'Status'
     ];
     headers.forEach(h => {
         const th = createElement('th');
@@ -162,7 +162,7 @@ function createRequestRecordsTable(records: ExtendedTokenRequestLog[]): HTMLElem
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
-    // 表体
+    // Table body
     const tbody = createElement('tbody');
 
     if (records && records.length > 0) {
@@ -188,12 +188,12 @@ function createRequestRecordsTable(records: ExtendedTokenRequestLog[]): HTMLElem
             model.textContent = record.modelName || '-';
 
             const input = createElement('td');
-            // 根据状态决定显示实际值还是预估值
+            // Decide whether to display actual value or estimate based on status
             if (record.status === 'completed' && record.rawUsage && record.totalTokens > 0) {
-                // 完成状态且有实际值：显示实际值
+                // Completed status with actual value: display actual value
                 input.textContent = formatTokens(record.actualInput);
             } else {
-                // 预估或失败状态或无实际值：显示预估值（带 ~ 前缀），否则显示 '-'
+                // Estimate or failed status or no actual value: display estimate (with ~ prefix), otherwise display '-'
                 if (record.estimatedInput !== undefined && record.estimatedInput > 0) {
                     input.textContent = `~${formatTokens(record.estimatedInput)}`;
                 } else {
@@ -223,7 +223,7 @@ function createRequestRecordsTable(records: ExtendedTokenRequestLog[]): HTMLElem
             }
 
             const firstTokenLatency = createElement('td');
-            // 优先使用 streamDuration（已计算好的耗时）
+            // Prioritize using streamDuration (already calculated duration)
             if (record.streamDuration !== undefined && record.streamDuration > 0) {
                 let durationStr: string;
                 if (record.streamDuration >= 1000) {
@@ -231,7 +231,7 @@ function createRequestRecordsTable(records: ExtendedTokenRequestLog[]): HTMLElem
                 } else {
                     durationStr = `<span>${Math.round(record.streamDuration)}ms</span>`;
                 }
-                // 只有同时有首令延迟时才显示
+                // Only display when both first token latency and timestamp are available
                 if (record.streamStartTime !== undefined && record.timestamp !== undefined) {
                     const latency = record.streamStartTime - record.timestamp;
                     if (Number.isFinite(latency) && latency >= 0) {
@@ -246,7 +246,7 @@ function createRequestRecordsTable(records: ExtendedTokenRequestLog[]): HTMLElem
                         firstTokenLatency.innerHTML = '- + ' + durationStr;
                     }
                 } else {
-                    // 只有耗时，没有首令延迟
+                    // Only duration, no first token latency
                     firstTokenLatency.innerHTML = '- + ' + durationStr;
                 }
             } else {
@@ -279,7 +279,7 @@ function createRequestRecordsTable(records: ExtendedTokenRequestLog[]): HTMLElem
     } else {
         const emptyRow = createElement('tr');
         const emptyCell = createElement('td', '', { colSpan: 10 });
-        emptyCell.textContent = '暂无请求记录';
+        emptyCell.textContent = 'No request records available';
         emptyCell.style.textAlign = 'center';
         emptyRow.appendChild(emptyCell);
         tbody.appendChild(emptyRow);
@@ -291,22 +291,22 @@ function createRequestRecordsTable(records: ExtendedTokenRequestLog[]): HTMLElem
 }
 
 /**
- * 创建请求记录区域
- * @param records 所有请求记录
- * @param page 当前页码（可选，不传则使用当前保存的页码）
- * @param existingContainer 已存在的容器（用于复用，避免闪烁）
+ * Create request records section
+ * @param records All request records
+ * @param page Current page number (optional, uses saved page number if not provided)
+ * @param existingContainer Existing container (for reuse, to avoid flickering)
  */
 export function createRequestRecordsSection(
     records: ExtendedTokenRequestLog[],
     page?: number,
     existingContainer?: HTMLElement
 ): HTMLElement {
-    // 如果传入了页码，更新全局页码；否则使用当前保存的页码
+    // If page number is provided, update global page number; otherwise use saved page number
     if (page !== undefined) {
         currentPage = page;
     }
 
-    // 如果有已存在的容器，直接复用
+    // If existing container is provided, reuse it directly
     if (existingContainer) {
         existingContainer.innerHTML = '';
         const wrapper = createElement('div');
@@ -314,22 +314,22 @@ export function createRequestRecordsSection(
         const totalRecords = records.length;
         const totalPages = Math.ceil(totalRecords / 20) || 1;
 
-        // 确保当前页码在有效范围内
+        // Ensure current page number is within valid range
         if (currentPage > totalPages) {
             currentPage = Math.max(1, totalPages);
         }
 
-        // 分页组件
+        // Pagination component
         const paginationTop = createPagination(currentPage, totalPages, totalRecords);
         wrapper.appendChild(paginationTop);
 
-        // 表格
+        // Table
         const startIndex = (currentPage - 1) * 20;
         const endIndex = Math.min(startIndex + 20, totalRecords);
         const pageRecords = records.slice(startIndex, endIndex);
         wrapper.appendChild(createRequestRecordsTable(pageRecords));
 
-        // 分页组件（底部）
+        // Pagination component (bottom)
         const paginationBottom = createPagination(currentPage, totalPages, totalRecords);
         wrapper.appendChild(paginationBottom);
 
@@ -337,7 +337,7 @@ export function createRequestRecordsSection(
         return existingContainer;
     }
 
-    // 创建新的容器
+    // Create new container
     const section = createElement('div');
     section.id = 'records-container';
 
@@ -346,22 +346,22 @@ export function createRequestRecordsSection(
     const totalRecords = records.length;
     const totalPages = Math.ceil(totalRecords / 20) || 1;
 
-    // 确保当前页码在有效范围内
+    // Ensure current page number is within valid range
     if (currentPage > totalPages) {
         currentPage = Math.max(1, totalPages);
     }
 
-    // 分页组件
+    // Pagination component
     const paginationTop = createPagination(currentPage, totalPages, totalRecords);
     wrapper.appendChild(paginationTop);
 
-    // 表格
+    // Table
     const startIndex = (currentPage - 1) * 20;
     const endIndex = Math.min(startIndex + 20, totalRecords);
     const pageRecords = records.slice(startIndex, endIndex);
     wrapper.appendChild(createRequestRecordsTable(pageRecords));
 
-    // 分页组件（底部）
+    // Pagination component (bottom)
     const paginationBottom = createPagination(currentPage, totalPages, totalRecords);
     wrapper.appendChild(paginationBottom);
 

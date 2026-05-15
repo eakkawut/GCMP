@@ -1,19 +1,19 @@
 ﻿/**
- * UsagesView 工具函数
+ * UsagesView Utility Functions
  */
 
 import type { BaseStats, HourlyStats } from '../../usages/fileLogger/types';
 import { WebViewMessage } from './types';
 
 /**
- * 获取提供商显示名称（处理特殊情况）
- * 例如：providerKey 为 "kimi" 时，显示名称应为 "Kimi"
- * @param providerKey - 提供商唯一标识
- * @param providerName - 原始提供商名称
- * @returns 显示名称
+ * Get provider display name (handling special cases)
+ * For example: when providerKey is "kimi", display name should be "Kimi"
+ * @param providerKey - Provider unique identifier
+ * @param providerName - Original provider name
+ * @returns Display name
  */
 export function getProviderDisplayName(providerKey: string, providerName: string): string {
-    // 特殊处理：kimi 显示为 Kimi
+    // Special case: kimi displays as Kimi
     if (providerKey === 'kimi') {
         return 'Kimi';
     }
@@ -21,7 +21,7 @@ export function getProviderDisplayName(providerKey: string, providerName: string
 }
 
 /**
- * 格式化 Token 数量显示
+ * Format Token quantity display
  */
 export function formatTokens(tokens: number | undefined | null): string {
     const safeTokens = tokens ?? 0;
@@ -34,15 +34,15 @@ export function formatTokens(tokens: number | undefined | null): string {
 }
 
 /**
- * 计算总 Token 数
+ * Calculate total Token count
  */
 export function calculateTotalTokens(stats: BaseStats): number {
     return stats.actualInput + stats.outputTokens;
 }
 
 /**
- * 计算平均输出速度
- * 优先使用 outputSpeeds（已聚合后的平均速度，写入缓存）
+ * Calculate average output speed
+ * Prefer outputSpeeds (aggregated average speed, written to cache)
  */
 export function calculateAverageSpeed(stats: BaseStats | HourlyStats): string {
     if (stats.outputSpeeds && stats.outputSpeeds > 0) {
@@ -52,7 +52,7 @@ export function calculateAverageSpeed(stats: BaseStats | HourlyStats): string {
 }
 
 /**
- * 计算平均首Token延迟
+ * Calculate average first Token latency
  */
 export function calculateAverageFirstTokenLatency(stats: BaseStats): string {
     if (!stats.firstTokenLatency || stats.firstTokenLatency <= 0) {
@@ -66,7 +66,7 @@ export function calculateAverageFirstTokenLatency(stats: BaseStats): string {
 }
 
 /**
- * 获取今日日期字符串
+ * Get today's date string
  */
 export function getTodayDateString(): string {
     const now = new Date();
@@ -74,7 +74,7 @@ export function getTodayDateString(): string {
 }
 
 /**
- * 向 VSCode 发送消息
+ * Send message to VSCode
  */
 export function postToVSCode(message: WebViewMessage): void {
     try {
@@ -85,6 +85,6 @@ export function postToVSCode(message: WebViewMessage): void {
             }
         }
     } catch (error) {
-        console.error('发送消息失败:', error);
+        console.error('Failed to send message:', error);
     }
 }

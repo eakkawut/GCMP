@@ -1,9 +1,9 @@
 ﻿/**
- * UsagesView 统一类型定义
- * 直接使用存储服务的原始数据类型，避免重复定义和转换
+ * UsagesView Unified Type Definitions
+ * Directly use storage service's raw data types, avoiding duplicate definitions and conversions
  */
 
-// ============= 从存储服务导入原始类型 =============
+// ============= Import Raw Types from Storage Service =============
 
 import type { DateSummary } from '../../usages/types';
 import type {
@@ -14,26 +14,26 @@ import type {
 } from '../../usages/fileLogger/types';
 import type { ExtendedTokenRequestLog } from '../../usages/fileLogger/usageParser';
 
-// ============= UI 层数据类型 =============
+// ============= UI Layer Data Types =============
 
 /**
- * UI 层的提供商数据类型
- * 扩展自 FileLoggerProviderStats，添加 providerKey 字段
- * 因为在 UI 层使用数组形式，需要保留 providerKey 信息
+ * UI layer provider data type
+ * Extended from FileLoggerProviderStats with added providerKey field
+ * Since array form is used in UI layer, need to preserve providerKey information
  */
 export interface ProviderData extends FileLoggerProviderStats {
     providerKey: string;
 }
 
-// ============= 重新导出类型供外部使用 =============
+// ============= Re-export Types for External Use =============
 
 export type { DateSummary, ModelData, HourlyStats, RequestRecord };
 export type { ExtendedTokenRequestLog };
 
-// ============= 消息类型定义 =============
+// ============= Message Type Definitions =============
 
 /**
- * WebView 发送到 VSCode 的消息类型
+ * Message types sent from WebView to VSCode
  */
 export type WebViewMessage =
     | { command: 'getInitialData' }
@@ -42,7 +42,7 @@ export type WebViewMessage =
     | { command: 'openStorageDir' };
 
 /**
- * VSCode 发送到 WebView 的消息类型
+ * Message types sent from VSCode to WebView
  */
 export interface UpdateDateListMessage {
     command: 'updateDateList';
@@ -62,10 +62,10 @@ export interface UpdateDateDetailsMessage {
 
 export type HostMessage = UpdateDateListMessage | UpdateDateDetailsMessage;
 
-// ============= 应用状态类型 =============
+// ============= Application State Type =============
 
 /**
- * 简化状态（用于内部状态管理）
+ * Simplified state (for internal state management)
  */
 export interface State {
     selectedDate: string;
@@ -78,7 +78,7 @@ export interface State {
 }
 
 /**
- * 日期详情（用于内部状态管理）
+ * Date details (for internal state management)
  */
 export interface DateDetails {
     date: string;
@@ -89,7 +89,7 @@ export interface DateDetails {
 }
 
 /**
- * 扩展 Window 接口，添加应用状态
+ * Extend Window interface with application state
  */
 declare global {
     interface Window {

@@ -1,23 +1,23 @@
 ﻿/**
- * UsagesView 原生 TypeScript 入口
+ * UsagesView Native TypeScript Entry
  */
 
 import './style.less';
-import 'chart.js/auto'; // 导入 Chart.js
+import 'chart.js/auto'; // Import Chart.js
 
 import type { HostMessage, State } from './types';
 import { getTodayDateString, postToVSCode } from './utils';
 import { createElement } from '../utils';
 
-// 导入组件
+// Import components
 import { createSidebar, updateDateList } from './components/dateList';
 import { createMainContent, updateMainContent } from './components/mainContent';
 import { createRequestRecordsSection } from './components/requestRecords';
 
-// ============= 全局状态管理 =============
+// ============= Global State Management =============
 
 /**
- * 全局状态
+ * Global state
  */
 const state: State = {
     selectedDate: '',
@@ -29,29 +29,29 @@ const state: State = {
     }
 };
 
-// 跟踪上一次的日期，用于检测日期变化
+// Track previous date for detecting date changes
 let lastDateDetailsDate: string | null = null;
 
 /**
- * 状态监听器列表
+ * State listener list
  */
 const listeners: ((state: State) => void)[] = [];
 
 /**
- * 设置状态并通知监听器
+ * Set state and notify listeners
  */
 function setState(newState: Partial<State>): void {
     Object.assign(state, newState);
     listeners.forEach(listener => listener(state));
 
-    // 如果更新了 loading 状态，同步更新遮罩层
+    // If loading state is updated, synchronously update overlay
     if (newState.loading) {
         updateLoadingOverlay();
     }
 }
 
 /**
- * 订阅状态变化
+ * Subscribe to state changes
  */
 function subscribeState(listener: (state: State) => void): () => void {
     listeners.push(listener);
@@ -64,7 +64,7 @@ function subscribeState(listener: (state: State) => void): () => void {
 }
 
 /**
- * 设置加载状态
+ * Set loading state
  */
 function setLoading(type: 'dateDetails', isLoading: boolean): void {
     setState({
@@ -74,17 +74,17 @@ function setLoading(type: 'dateDetails', isLoading: boolean): void {
         }
     });
 
-    // 更新 loading-overlay 的显示状态
+    // Update loading-overlay display state
     updateLoadingOverlay();
 }
 
 /**
- * 更新加载遮罩层的显示状态
+ * Update loading overlay display state
  */
 function updateLoadingOverlay(): void {
     let overlay = document.getElementById('loading-overlay');
 
-    // 如果需要显示loading且overlay不存在，则创建
+    // Create if loading needed but overlay doesn't exist
     const isLoading = state.loading.dateDetails;
 
     if (isLoading) {
@@ -95,7 +95,7 @@ function updateLoadingOverlay(): void {
             const content = createElement('div', 'loading-content');
             const spinner = createElement('div', 'loading-spinner');
             const text = createElement('div', 'loading-text');
-            text.textContent = '加载中...';
+            text.textContent = 'Loading...';
 
             content.appendChild(spinner);
             content.appendChild(text);
@@ -103,27 +103,27 @@ function updateLoadingOverlay(): void {
             document.body.appendChild(overlay);
         }
 
-        // 使用 setTimeout 确保 DOM 更新后再添加 visible 类
+        // Use setTimeout to ensure DOM updates before adding visible class
         setTimeout(() => {
             overlay?.classList.add('visible');
         }, 0);
     } else {
-        // 隐藏并移除 overlay
+        // Hide and remove overlay
         if (overlay) {
             overlay.classList.remove('visible');
             setTimeout(() => {
                 overlay?.remove();
-            }, 200); // 等待过渡动画完成
+            }, 200); // Wait for transition animation to complete
         }
     }
 }
 
 /**
- * 处理来自 VSCode 的消息
+ * Handle messages from VSCode
  */
 function handleVSCodeMessage(event: MessageEvent): void {
     const message = event.data as HostMessage;
-    console.log('[UsagesView] 收到消息:', message.command, message);
+    console.log('[UsagesView] Received message:', message.command, message);
 
     switch (message.command) {
         case 'updateDateList':
@@ -149,7 +149,7 @@ function handleVSCodeMessage(event: MessageEvent): void {
                 }
             });
 
-            // 如果是小屏幕模式，切换日期后自动隐藏侧边栏
+            // For small screen mode, auto-hide sidebar after date switch
             if (window.innerWidth <= 768) {
                 toggleSidebar(false);
             }
@@ -157,20 +157,20 @@ function handleVSCodeMessage(event: MessageEvent): void {
     }
 }
 
-// ============= 视图更新 =============
+// ============= View Updates =============
 
 /**
- * 更新请求记录
+ * Update request records
  */
 function updateRequestRecords(): void {
-    // 找到请求记录容器，如果不存在则创建
+    // Find request records container, create if not exists
     let recordsSection = document.querySelector('#records-section')?.parentElement;
     if (!recordsSection) {
         const content = document.querySelector('.content');
         if (content) {
             recordsSection = createElement('section');
             const h2 = createElement('h2', '', { id: 'records-section' });
-            h2.textContent = '请求记录';
+            h2.textContent = 'Request Records';
             const container = createElement('div', '', { id: 'records-container' });
             recordsSection.appendChild(h2);
             recordsSection.appendChild(container);
@@ -181,17 +181,17 @@ function updateRequestRecords(): void {
     if (recordsSection) {
         const existingContainer = recordsSection.querySelector('#records-container') as HTMLElement;
         if (existingContainer && state.dateDetails) {
-            // 检测日期是否变化
+            // Detect if date changed
             const dateChanged = lastDateDetailsDate !== state.dateDetails.date;
             lastDateDetailsDate = state.dateDetails.date;
 
-            // 如果日期变化了，重置页码；否则保持当前页码
+            // Reset page number if date changed; otherwise keep current page
             const page = dateChanged ? 1 : undefined;
 
-            // 使用容器复用
+            // Use container reuse
             createRequestRecordsSection(
                 state.dateDetails.records,
-                page, // 日期变化时重置页码，否则保持当前页码
+                page, // Reset page number on date change, otherwise keep current page
                 existingContainer
             );
         }
@@ -199,10 +199,10 @@ function updateRequestRecords(): void {
 }
 
 /**
- * 刷新所有视图
+ * Refresh all views
  */
 function refreshViews(): void {
-    console.log('[UsagesView] 状态变化:', {
+    console.log('[UsagesView] State change:', {
         state,
         selectedDate: state.selectedDate,
         dateListLength: state.dateList.length,
@@ -213,10 +213,10 @@ function refreshViews(): void {
     updateRequestRecords();
 }
 
-// ============= 主应用 =============
+// ============= Main Application =============
 
 /**
- * 切换侧边栏显示/隐藏
+ * Toggle sidebar show/hide
  */
 function toggleSidebar(show?: boolean): void {
     const sidebar = document.querySelector('.sidebar') as HTMLElement;
@@ -234,37 +234,37 @@ function toggleSidebar(show?: boolean): void {
         sidebar.classList.remove('hidden');
         content.classList.add('sidebar-open');
         if (toggleBtn) {
-            toggleBtn.innerHTML = '<span class="toggle-icon">◀</span> 收起列表';
+            toggleBtn.innerHTML = '<span class="toggle-icon">◀</span> Collapse List';
         }
-        // 创建遮罩层
+        // Create overlay
         createOrUpdateOverlay();
     } else {
         sidebar.classList.add('hidden');
         content.classList.remove('sidebar-open');
         if (toggleBtn) {
-            toggleBtn.innerHTML = '<span class="toggle-icon">☰</span> 日期列表';
+            toggleBtn.innerHTML = '<span class="toggle-icon">☰</span> Date List';
         }
-        // 移除遮罩层
+        // Remove overlay
         removeOverlay();
     }
 }
 
 /**
- * 创建或更新遮罩层
+ * Create or update overlay
  */
 function createOrUpdateOverlay(): void {
     let overlay = document.getElementById('sidebar-overlay');
     if (!overlay) {
         overlay = createElement('div', 'sidebar-overlay');
         overlay.id = 'sidebar-overlay';
-        // 点击遮罩层关闭侧边栏
+        // Click overlay to close sidebar
         overlay.onclick = () => toggleSidebar(false);
         document.body.appendChild(overlay);
     }
 }
 
 /**
- * 移除遮罩层
+ * Remove overlay
  */
 function removeOverlay(): void {
     const overlay = document.getElementById('sidebar-overlay');
@@ -274,53 +274,53 @@ function removeOverlay(): void {
 }
 
 /**
- * 创建侧边栏切换按钮
+ * Create sidebar toggle button
  */
 function createSidebarToggle(): HTMLElement {
     const button = createElement('button', 'sidebar-toggle');
-    button.innerHTML = '<span class="toggle-icon">☰</span> 日期';
+    button.innerHTML = '<span class="toggle-icon">☰</span> Date';
     button.onclick = () => toggleSidebar();
     return button;
 }
 
 /**
- * 初始化应用
+ * Initialize application
  */
 function initApp(): void {
-    console.log('[UsagesView] 初始化原生 JS 应用');
+    console.log('[UsagesView] Initializing native JS application');
 
-    // 将状态和工具函数挂载到 window 对象，供所有组件访问
+    // Attach state and utility functions to window object for all components to access
     window.usagesState = state;
     window.usagesSetLoading = setLoading;
 
-    // 创建主容器
+    // Create main container
     const container = createElement('div', 'container');
     container.id = 'usages-view-container';
 
-    // 创建侧边栏和主内容区
+    // Create sidebar and main content area
     const sidebar = createSidebar();
     const mainContent = createMainContent();
 
     container.appendChild(sidebar);
     container.appendChild(mainContent);
 
-    // 添加到文档
+    // Add to document
     document.body.innerHTML = '';
     document.body.appendChild(container);
 
-    // 添加侧边栏切换按钮
+    // Add sidebar toggle button
     const content = document.querySelector('.content');
     if (content) {
         const toggleBtn = createSidebarToggle();
         content.insertBefore(toggleBtn, content.firstChild);
     }
 
-    // 检查窗口宽度，如果小于768px，默认隐藏侧边栏
+    // Check window width, hide sidebar by default if less than 768px
     if (window.innerWidth <= 768) {
         toggleSidebar(false);
     }
 
-    // 监听窗口大小变化
+    // Listen for window resize events
     window.addEventListener('resize', () => {
         const sidebar = document.querySelector('.sidebar') as HTMLElement;
         if (!sidebar) {
@@ -328,12 +328,12 @@ function initApp(): void {
         }
 
         if (window.innerWidth <= 768) {
-            // 小屏幕时，默认隐藏侧边栏
+            // On small screens, hide sidebar by default
             if (!sidebar.classList.contains('hidden')) {
                 toggleSidebar(false);
             }
         } else {
-            // 大屏幕时，默认显示侧边栏，并移除遮罩层
+            // On large screens, show sidebar by default and remove overlay
             if (sidebar.classList.contains('hidden')) {
                 sidebar.classList.remove('hidden');
                 const content = document.querySelector('.content') as HTMLElement;
@@ -342,30 +342,30 @@ function initApp(): void {
                     content.classList.remove('sidebar-open');
                 }
                 if (toggleBtn) {
-                    toggleBtn.innerHTML = '<span class="toggle-icon">☰</span> 日期';
+                    toggleBtn.innerHTML = '<span class="toggle-icon">☰</span> Date';
                 }
             }
-            // 确保移除遮罩层
+            // Ensure overlay is removed
             removeOverlay();
         }
     });
 
-    // 设置今日日期
+    // Set today's date
     state.today = getTodayDateString();
 
-    // 订阅状态变化
+    // Subscribe to state changes
     subscribeState(() => refreshViews());
 
-    // 注册消息监听
+    // Register message listener
     window.addEventListener('message', handleVSCodeMessage);
 
-    // 请求初始数据
+    // Request initial data
     postToVSCode({ command: 'getInitialData' });
 }
 
-// ============= 启动 =============
+// ============= Startup =============
 
-// 当 DOM 准备好时启动应用
+// Start application when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initApp);
 } else {

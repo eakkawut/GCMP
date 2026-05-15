@@ -1,13 +1,13 @@
 /*---------------------------------------------------------------------------------------------
- *  Token文件日志系统 - 主管理器
- *  整合路径管理、写入管理、读取管理、统计管理
+ *  Token File Logging System - Main Manager
+ *  Integrates path management, write management, read management, and statistics management
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * 用量缓存版本时间戳
- * ⚠️ 手动更新：当代码有导致缓存格式不兼容的变更时，需要手动更新此时间戳
- * 缓存判断逻辑：stats.json 修改时间 >= 缓存时间时，需要重新计算
- * 更新后首次运行会自动用当前时间创建新缓存，后续使用存储的缓存时间
+ * Usage Cache Version Timestamp
+ * Manual Update: When code changes cause cache format incompatibility, manually update this timestamp
+ * Cache Judgment Logic: When stats.json modification time >= cache time, recalculation is required
+ * After update, first run will automatically create new cache with current time, subsequent runs use stored cache time
  */
 const USAGES_CACHE_VERSION_TIMESTAMP = new Date('2026-03-05T21:35:00+08:00').getTime();
 
@@ -24,8 +24,8 @@ import { EventEmitter } from 'events';
 import type { DateIndexEntry, TokenRequestLog, TokenUsageStatsFromFile } from './types';
 
 /**
- * Token文件日志管理器
- * 主入口,提供完整的日志记录和统计功能
+ * Token File Log Manager
+ * Main entry point, providing complete log recording and statistics functionality
  */
 export class TokenFileLogger {
     private readonly pathManager: LogPathManager;
@@ -36,16 +36,16 @@ export class TokenFileLogger {
     private readonly logStatsManager: LogStatsManager;
     private readonly eventEmitter: EventEmitter;
 
-    // 内存中的待更新日志(requestId -> log)
+    // Pending logs in memory (requestId -> log)
     private pendingLogs = new Map<string, TokenRequestLog>();
 
-    // pendingLogs 清理任务
+    // pendingLogs cleanup task
     private pendingLogsCleanupTimer: ReturnType<typeof setInterval> | null = null;
-    private readonly pendingLogsTTL: number = 5 * 60 * 1000; // 5分钟 TTL
-    private readonly pendingLogsCleanupInterval: number = 60 * 1000; // 1分钟检查一次
+    private readonly pendingLogsTTL: number = 5 * 60 * 1000; // 5 minutes TTL
+    private readonly pendingLogsCleanupInterval: number = 60 * 1000; // Check every 1 minute
 
-    // 缓存版本时间戳：早于此时间的缓存都会重新计算
-    // 由常量 USAGES_CACHE_VERSION_TIMESTAMP 手动控制，在 initialize() 中从 index.json 读取或更新
+    // Cache version timestamp: caches earlier than this time will be recalculated
+    // Manually controlled by constant USAGES_CACHE_VERSION_TIMESTAMP, read from or updated in index.json during initialize()
     cacheVersionTimestamp: number = 0;
 
     constructor(private context: vscode.ExtensionContext) {
@@ -61,79 +61,79 @@ export class TokenFileLogger {
     }
 
     /**
-     * 初始化日志系统
+     * Initialize Logging System
      */
     async initialize(): Promise<void> {
         const startTime = Date.now();
-        StatusLogger.info('[TokenFileLogger] 文件日志系统初始化');
+        StatusLogger.info('[TokenFileLogger] File logging system initialization');
 
         const baseDir = this.pathManager.getBaseDir();
-        StatusLogger.info(`[TokenFileLogger] 基础目录: ${baseDir}`);
+        StatusLogger.info(`[TokenFileLogger] Base directory: ${baseDir}`);
 
-        // 初始化缓存版本时间戳
+        // Initialize cache version timestamp
         await this.initCacheVersionTimestamp();
 
-        // 启动 pendingLogs 清理任务
+        // Start pendingLogs cleanup task
         this.startPendingLogsCleanup();
 
         const elapsed = Date.now() - startTime;
-        StatusLogger.info(`[TokenFileLogger] 文件日志系统初始化完成 (耗时: ${elapsed}ms)`);
+        StatusLogger.info(`[TokenFileLogger] File logging system initialization completed (elapsed: ${elapsed}ms)`);
     }
 
     /**
-     * 初始化缓存版本时间戳
-     * 从 index.json 读取缓存创建时间，若不存在则创建当前时间
-     * 判断逻辑：
-     * - 如果没有版本时间戳（旧缓存），需要重新计算
-     * - 如果版本时间戳 < 代码版本时间，需要重新计算
-     * - 否则使用缓存时间戳判断
+     * Initialize Cache Version Timestamp
+     * Read cache creation time from index.json, create current time if not exists
+     * Judgment Logic:
+     * - If no version timestamp (old cache), recalculation is required
+     * - If version timestamp < code version time, recalculation is required
+     * - Otherwise use cache timestamp for judgment
      */
     private async initCacheVersionTimestamp(): Promise<void> {
-        // 读取 index.json 中存储的时间戳
+        // Read timestamp stored in index.json
         const { versionTimestamp, cacheTimestamp } = await this.indexManager.getCacheTimestamps();
 
-        // 判断是否需要重新创建缓存
-        // 条件：没有版本时间戳（旧缓存）或版本时间戳小于代码版本时间
+        // Determine if cache recreation is needed
+        // Condition: no version timestamp (old cache) or version timestamp less than code version time
         const needsRecreate = !versionTimestamp || versionTimestamp < USAGES_CACHE_VERSION_TIMESTAMP;
 
         if (needsRecreate) {
-            // 创建当前时间作为缓存时间
+            // Create current time as cache time
             const now = Date.now();
             await this.indexManager.setCacheTimestamps(USAGES_CACHE_VERSION_TIMESTAMP, now);
             this.cacheVersionTimestamp = now;
             StatusLogger.debug(
-                `[TokenFileLogger] 已创建新缓存: version=${new Date(USAGES_CACHE_VERSION_TIMESTAMP).toISOString()}, cache=${new Date(this.cacheVersionTimestamp).toISOString()}`
+                `[TokenFileLogger] Created new cache: version=${new Date(USAGES_CACHE_VERSION_TIMESTAMP).toISOString()}, cache=${new Date(this.cacheVersionTimestamp).toISOString()}`
             );
         } else {
-            // 使用存储的缓存时间
+            // Use stored cache time
             this.cacheVersionTimestamp = cacheTimestamp || 0;
             StatusLogger.debug(
-                `[TokenFileLogger] 使用现有缓存: version=${new Date(versionTimestamp).toISOString()}, cache=${new Date(this.cacheVersionTimestamp).toISOString()}`
+                `[TokenFileLogger] Using existing cache: version=${new Date(versionTimestamp).toISOString()}, cache=${new Date(this.cacheVersionTimestamp).toISOString()}`
             );
         }
 
-        // 同步更新 LogStatsManager 中的时间戳
-        // 同时传递代码版本时间戳和缓存创建时间戳
+        // Synchronize update timestamp in LogStatsManager
+        // Pass both code version timestamp and cache creation timestamp
         this.logStatsManager.updateCacheVersionTimestamp(this.cacheVersionTimestamp, USAGES_CACHE_VERSION_TIMESTAMP);
     }
 
     /**
-     * 启动 pendingLogs 清理任务
-     * 定期清除超过 TTL 的待更新日志，防止内存泄漏
+     * Start pendingLogs Cleanup Task
+     * Periodically clear pending logs exceeding TTL to prevent memory leaks
      */
     private startPendingLogsCleanup(): void {
-        // 定期检查并清理过期的 pendingLogs
+        // Regularly check and clean up expired pendingLogs
         this.pendingLogsCleanupTimer = setInterval(() => {
             this.cleanupExpiredPendingLogs();
         }, this.pendingLogsCleanupInterval);
 
         StatusLogger.debug(
-            `[TokenFileLogger] pendingLogs 清理任务已启动 (TTL: ${this.pendingLogsTTL}ms, 检查间隔: ${this.pendingLogsCleanupInterval}ms)`
+            `[TokenFileLogger] pendingLogs cleanup task started (TTL: ${this.pendingLogsTTL}ms, check interval: ${this.pendingLogsCleanupInterval}ms)`
         );
     }
 
     /**
-     * 清理过期的 pendingLogs
+     * Clean Up Expired pendingLogs
      */
     private cleanupExpiredPendingLogs(): void {
         const now = Date.now();
@@ -149,28 +149,28 @@ export class TokenFileLogger {
             for (const requestId of expiredKeys) {
                 this.pendingLogs.delete(requestId);
                 StatusLogger.warn(
-                    `[TokenFileLogger] 清理过期的 pendingLog: ${requestId} (超过 ${this.pendingLogsTTL}ms 未更新)`
+                    `[TokenFileLogger] Cleaned up expired pendingLog: ${requestId} (not updated for ${this.pendingLogsTTL}ms)`
                 );
             }
-            StatusLogger.info(`[TokenFileLogger] 清理了 ${expiredKeys.length} 个过期的 pendingLogs`);
+            StatusLogger.info(`[TokenFileLogger] Cleaned up ${expiredKeys.length} expired pendingLogs`);
         }
     }
 
     /**
-     * 获取存储目录路径
+     * Get Storage Directory Path
      */
     getStorageDir(): string {
         return this.pathManager.getBaseDir();
     }
 
-    // ==================== 写入操作 ====================
+    // ==================== Write Operations ====================
 
     /**
-     * 获取提供商显示名称（处理特殊情况）
-     * 例如：providerKey 为 "kimi" 时，显示名称应为 "Kimi"
+     * Get Provider Display Name (handle special cases)
+     * Example: when providerKey is "kimi", display name should be "Kimi"
      */
     private getProviderDisplayName(providerKey: string, providerName: string): string {
-        // 特殊处理：kimi 显示为 Kimi
+        // Special handling: kimi displays as Kimi
         if (providerKey === 'kimi') {
             return 'Kimi';
         }
@@ -178,7 +178,7 @@ export class TokenFileLogger {
     }
 
     /**
-     * 记录预估token(请求前调用)
+     * Record Estimated Token (call before request)
      */
     async recordEstimatedTokens(params: {
         requestId: string;
@@ -189,11 +189,11 @@ export class TokenFileLogger {
         estimatedInput: number;
         maxInputTokens?: number;
         requestType?: 'chat' | 'completion' | 'fim' | 'nes';
-        timestamp?: number; // 可选: 自定义时间戳(用于测试数据生成)
+        timestamp?: number; // Optional: custom timestamp (for test data generation)
     }): Promise<void> {
         const now = params.timestamp ?? Date.now();
 
-        // 获取显示名称（处理特殊情况）
+        // Get display name (handle special cases)
         const displayName = this.getProviderDisplayName(params.providerKey, params.providerName);
 
         const log: TokenRequestLog = {
@@ -211,62 +211,62 @@ export class TokenFileLogger {
             requestType: params.requestType
         };
 
-        // 暂存到内存
+        // Temporarily store in memory
         this.pendingLogs.set(params.requestId, log);
 
-        // 写入文件
+        // Write to file
         await this.writeManager.appendLog(log);
 
-        // 通知状态栏有新的预估请求
+        // Notify status bar of new estimated request
         this.notifyUpdate();
 
         StatusLogger.info(
-            `[TokenFileLogger] 记录预估token: ${params.requestId}, model=${params.modelName}, tokens=${params.estimatedInput}`
+            `[TokenFileLogger] Recorded estimated token: ${params.requestId}, model=${params.modelName}, tokens=${params.estimatedInput}`
         );
     }
 
     /**
-     * 更新实际token(请求完成后调用)
-     * 只有当前实例在请求完成时才计算统计并保存
+     * Update Actual Token (call after request completes)
+     * Only the current instance calculates and saves statistics when request completes
      */
     async updateActualTokens(params: {
         requestId: string;
         rawUsage?: TokenRequestLog['rawUsage'];
         status: 'completed' | 'failed';
-        /** 流开始时间 (毫秒时间戳) */
+        /** Stream start time (millisecond timestamp) */
         streamStartTime?: number;
-        /** 流结束时间 (毫秒时间戳) */
+        /** Stream end time (millisecond timestamp) */
         streamEndTime?: number;
     }): Promise<void> {
         const pendingLog = this.pendingLogs.get(params.requestId);
 
         if (!pendingLog) {
-            StatusLogger.warn(`[TokenFileLogger] 未找到待更新的日志: ${params.requestId}`);
+            StatusLogger.warn(`[TokenFileLogger] Pending log not found for update: ${params.requestId}`);
             return;
         }
 
-        // 更新时间戳逻辑:
-        // - 如果当前时间与原始记录时间相同（毫秒级），则在原始时间戳基础上+1毫秒
-        // - 否则使用当前时间戳
-        // 这样可以确保相同毫秒内的多次更新能保持顺序，不同时刻的更新使用准确的当前时间
+        // Timestamp update logic:
+        // - If current time matches original record time (millisecond level), add +1ms to original timestamp
+        // - Otherwise use current timestamp
+        // This ensures multiple updates within the same millisecond maintain order, while updates at different times use accurate current time
         const now = Date.now();
         const originalTimestamp = pendingLog.timestamp;
         const isSameTime = now === originalTimestamp;
         if (isSameTime) {
-            // 同一毫秒内，+1ms保持顺序
+            // Within same millisecond, +1ms to maintain order
             pendingLog.timestamp = originalTimestamp + 1;
         } else {
-            // 不同时刻，使用当前时间
+            // At different time, use current time
             pendingLog.timestamp = now;
         }
 
         pendingLog.isoTime = new Date(pendingLog.timestamp).toISOString();
 
-        // 更新日志对象
+        // Update log object
         pendingLog.rawUsage = params.rawUsage ?? null;
         pendingLog.status = params.status;
 
-        // 更新流时间信息（如果提供）
+        // Update stream time info (if provided)
         if (params.streamStartTime !== undefined) {
             pendingLog.streamStartTime = params.streamStartTime;
         }
@@ -274,28 +274,28 @@ export class TokenFileLogger {
             pendingLog.streamEndTime = params.streamEndTime;
         }
 
-        // 写入文件(追加新行,形成流水记录)
+        // Write to file (append new line, form sequential record)
         await this.writeManager.appendLog(pendingLog);
 
-        // 从内存移除
+        // Remove from memory
         this.pendingLogs.delete(params.requestId);
 
-        // 只有当前实例在请求完成时立即计算统计
-        // 这样可以避免多实例同时计算的问题
+        // Only the current instance immediately calculates statistics when request completes
+        // This avoids issues with multiple instances calculating simultaneously
         await this.refreshCurrentStats();
 
-        // 通知本实例的监听者
+        // Notify listeners of this instance
         this.notifyUpdate();
 
         StatusLogger.info(
-            `[TokenFileLogger] 更新实际token: ${params.requestId}, status=${params.status}, rawUsage=${params.rawUsage ? '已记录' : '未记录'}`
+            `[TokenFileLogger] Updated actual token: ${params.requestId}, status=${params.status}, rawUsage=${params.rawUsage ? 'recorded' : 'not recorded'}`
         );
     }
 
-    // ==================== 读取和统计操作 ====================
+    // ==================== Read and Statistics Operations ====================
 
     /**
-     * 获取今日统计
+     * Get Today's Statistics
      */
     async getTodayStats(): Promise<TokenUsageStatsFromFile> {
         const dateStr = DateUtils.getTodayDateString();
@@ -303,143 +303,143 @@ export class TokenFileLogger {
     }
 
     /**
-     * 获取指定日期的统计
-     * 优先从缓存读取
+     * Get Statistics for Specified Date
+     * Prioritize reading from cache
      */
     async getDateStats(dateStr: string): Promise<TokenUsageStatsFromFile> {
         return this.logStatsManager.getDateStats(dateStr);
     }
 
     /**
-     * 获取指定日期的统计(直接计算，忽略缓存)
-     * 适用于详情界面,确保显示最新的准确数据
+     * Get Statistics for Specified Date (direct calculation, ignore cache)
+     * Suitable for detail views, ensuring display of latest accurate data
      */
     async getDateStatsFromFile(dateStr: string): Promise<TokenUsageStatsFromFile> {
         return this.logStatsManager.getDateStats(dateStr, true);
     }
 
     /**
-     * 获取指定日期的所有小时统计
+     * Get All Hour Statistics for Specified Date
      */
     async getAllHourStats(dateStr: string): Promise<TokenUsageStatsFromFile | null> {
-        // 尝试从持久化的统计文件读取完整的日期统计（包含所有小时）
+        // Attempt to read complete date statistics from persistent stats file (includes all hours)
         const saved = await this.logStatsManager.getDateStats(dateStr);
         if (saved && saved.hourly && Object.keys(saved.hourly).length > 0) {
             StatusLogger.debug(
-                `[TokenFileLogger] 从缓存读取所有小时统计: ${dateStr}, 小时数=${Object.keys(saved.hourly).length}`
+                `[TokenFileLogger] Read all hour statistics from cache: ${dateStr}, hour count=${Object.keys(saved.hourly).length}`
             );
             return saved;
         }
-        // 如果没有持久化的统计文件，返回 null，让调用方决定是否需要计算
+        // If no persistent stats file exists, return null, letting caller decide if calculation is needed
         return null;
     }
 
     /**
-     * 检查并重新生成过期的统计数据
-     * 在打开统计页面时调用，确保所有日期的 stats.json 都是最新的
-     * @returns 成功重新生成的日期统计
+     * Check and Regenerate Expired Statistics
+     * Called when opening statistics page, ensuring all dates' stats.json are up to date
+     * @returns Successfully regenerated date statistics
      */
     async regenerateOutdatedStats(): Promise<Record<string, TokenUsageStatsFromFile>> {
         return this.logStatsManager.regenerateOutdatedStats();
     }
 
     /**
-     * 读取指定日期的原始日志
+     * Read Original Logs for Specified Date
      */
     async readDateLogs(dateStr: string): Promise<TokenRequestLog[]> {
         return this.readManager.readDateLogs(dateStr);
     }
 
     /**
-     * 获取请求详情列表(每个requestId的最终状态)
-     * 用于详情页面展示
+     * Get Request Details List (final status for each requestId)
+     * Used for detail page display
      */
     async getRequestDetails(dateStr: string): Promise<TokenRequestLog[]> {
         return this.readManager.getRequestDetails(dateStr);
     }
 
     /**
-     * 获取最近的请求详情（性能优化版本）
-     * 仅读取最近 N 条请求，避免在有大量日志时加载整个日期的数据
-     * 用于状态栏等需要快速响应的场景
+     * Get Recent Request Details (performance optimized version)
+     * Only reads the most recent N requests, avoiding loading entire date data when there arelogs logs
+     * Used for status bar and other scenarios requiring fast response
      */
     async getRecentRequestDetails(dateStr: string, limit: number = 100): Promise<TokenRequestLog[]> {
         return this.readManager.getRecentRequestDetails(dateStr, limit);
     }
 
     /**
-     * 获取还在进行中的 pending 日志（内存中的请求）
-     * 这些请求已记录预估值但还未完成
+     * Get Pending Logs Still in Progress (requests in memory)
+     * These requests have recorded estimates but are not yet completed
      */
     getPendingLogs(): TokenRequestLog[] {
         return Array.from(this.pendingLogs.values());
     }
 
     /**
-     * 获取所有日期的摘要信息
-     * 用于日期列表显示，避免加载完整的 stats.json
+     * Get Summary Information for All Dates
+     * Used for date list display, avoiding loading complete stats.json
      */
     async getIndex(): Promise<Record<string, DateIndexEntry>> {
         return this.indexManager.getIndex();
     }
 
-    // ==================== 清理操作 ====================
+    // ==================== Cleanup Operations ====================
 
     /**
-     * 清理过期日志和统计(保留最近N天)
+     * Clean Up Expired Logs and Statistics (retain most recent N days)
      */
     async cleanupExpiredLogs(retentionDays: number): Promise<number> {
         return this.cleanupManager.cleanupExpiredLogs(retentionDays);
     }
 
-    // ==================== 管理操作 ====================
+    // ==================== Management Operations ====================
 
     /**
-     * 刷新写入队列
+     * Flush Write Queue
      */
     async flush(): Promise<void> {
         await this.writeManager.flush();
     }
 
     /**
-     * 销毁日志系统
+     * Destroy Logging System
      */
     async dispose(): Promise<void> {
         try {
-            // 停止 pendingLogs 清理任务
+            // Stop pendingLogs cleanup task
             if (this.pendingLogsCleanupTimer) {
                 clearInterval(this.pendingLogsCleanupTimer);
                 this.pendingLogsCleanupTimer = null;
-                StatusLogger.debug('[TokenFileLogger] pendingLogs 清理任务已停止');
+                StatusLogger.debug('[TokenFileLogger] pendingLogs cleanup task stopped');
             }
 
-            // 检查是否有待处理的日志
+            // Check if there are pending logs
             const pendingLogCount = this.pendingLogs.size;
             if (pendingLogCount > 0) {
                 StatusLogger.warn(
-                    `[TokenFileLogger] 销毁时发现 ${pendingLogCount} 个待处理的日志记录，这些记录可能包含未完成的请求`
+                    `[TokenFileLogger] Found ${pendingLogCount} pending log records during destruction, these records may contain incomplete requests`
                 );
-                // 清理待处理日志
+                // Clean up pending logs
                 this.pendingLogs.clear();
             }
 
-            // 清理事件监听器
+            // Clean up event listeners
             this.eventEmitter.removeAllListeners();
-            StatusLogger.debug('[TokenFileLogger] 事件监听器已清理');
+            StatusLogger.debug('[TokenFileLogger] Event listeners cleaned up');
 
-            // 等待写入队列完成并销毁
+            // Wait for write queue to complete and destroy
             await this.writeManager.dispose();
-            StatusLogger.debug('[TokenFileLogger] 写入管理器已销毁');
+            StatusLogger.debug('[TokenFileLogger] Write manager destroyed');
 
-            StatusLogger.info('[TokenFileLogger] 文件日志系统已销毁');
+            StatusLogger.info('[TokenFileLogger] File logging system destroyed');
         } catch (error) {
-            StatusLogger.error('[TokenFileLogger] 销毁日志系统时出错:', error);
+            StatusLogger.error('[TokenFileLogger] Error occurred while destroying logging system:', error);
             throw error;
         }
     }
 
     /**
-     * 监听统计更新事件
+     * Listen for Statistics Update Events
      */
     onStatsUpdate(listener: () => void): vscode.Disposable {
         this.eventEmitter.on('update', listener);
@@ -451,7 +451,7 @@ export class TokenFileLogger {
     }
 
     /**
-     * 通知统计更新
+     * Notify Statistics Update
      */
     private notifyUpdate(): void {
         this.eventEmitter.emit('update');
@@ -460,31 +460,31 @@ export class TokenFileLogger {
     // ==================== Private Helper Methods ====================
 
     /**
-     * 刷新当前日期的统计（请求结束后立即调用）
-     * 确保统计是最新的，缓存由上层调用者(usagesStatusBar)维护
+     * Refresh Current Date Statistics (call immediately after request ends)
+     * Ensures statistics are up to date, cache maintained by upper-level caller (usagesStatusBar)
      */
     private async refreshCurrentStats(): Promise<void> {
         const dateStr = DateUtils.getTodayDateString();
 
         try {
-            // 等待写入队列完成
+            // Wait for write queue to complete
             await this.writeManager.flush();
 
-            // 计算并保存统计（getDateStats 会自动处理增量更新和保存）
+            // Calculate and save statistics (getDateStats automatically handles incremental updates and saving)
             await this.logStatsManager.getDateStats(dateStr, true);
 
-            // 通知本实例的监听者
+            // Notify listeners of this instance
             this.notifyUpdate();
 
-            StatusLogger.debug(`[TokenFileLogger] 已刷新小时统计: ${dateStr}`);
+            StatusLogger.debug(`[TokenFileLogger] Hourly statistics refreshed: ${dateStr}`);
         } catch (err) {
-            StatusLogger.warn('[TokenFileLogger] 刷新统计失败:', err);
+            StatusLogger.warn('[TokenFileLogger] Failed to refresh statistics:', err);
         }
     }
 }
 
-// 导出类型
+// Export types
 export type { TokenRequestLog, TokenUsageStatsFromFile } from './types';
 
-// 导出统计计算器
+// Export StatsCalculator
 export { StatsCalculator } from './statsCalculator';

@@ -1,7 +1,7 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  兼容提供商状态栏项
- *  继承 BaseStatusBarItem，复用通用状态栏逻辑
- *  此状态栏管理多个内置供应商查询，各提供商缓存独立
+ *  Compatible Provider Status Bar Item
+ *  Extends BaseStatusBarItem, reuses common status bar logic
+ *  This status bar manages multiple built-in vendor queries, each provider cache is independent
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -13,76 +13,76 @@ import { ApiKeyManager } from '../utils/apiKeyManager';
 import { KnownProviders } from '../utils/knownProviders';
 
 /**
- * Compatible 提供商余额信息
+ * Compatible provider balance information
  */
 export interface CompatibleProviderBalance {
-    /** 提供商标识符 */
+    /** Provider identifier */
     providerId: string;
-    /** 提供商显示名称 */
+    /** Provider display name */
     providerName: string;
-    /** 已支付余额 */
+    /** Paid balance */
     paid?: number;
-    /** 赠送余额 */
+    /** Granted balance */
     granted?: number;
-    /** 可用余额 */
+    /** Available balance */
     balance: number;
-    /** 货币符号 */
+    /** Currency symbol */
     currency: string;
-    /** 最后更新时间 */
+    /** Last update time */
     lastUpdated: Date;
-    /** 查询是否成功 */
+    /** Whether query was successful */
     success: boolean;
-    /** 错误信息（如果查询失败） */
+    /** Error message (if query failed) */
     error?: string;
 }
 
 /**
- * 兼容状态栏数据
+ * Compatible status bar data
  */
 export interface CompatibleStatusData {
-    /** 所有提供商的余额信息 */
+    /** Balance information for all providers */
     providers: CompatibleProviderBalance[];
-    /** 查询成功的提供商数量 */
+    /** Number of providers queried successfully */
     successCount: number;
-    /** 总提供商数量 */
+    /** Total number of providers */
     totalCount: number;
 }
 
 /**
- * 单个提供商的缓存数据
+ * Cache data for a single provider
  */
 interface ProviderCacheData {
-    /** 提供商余额信息 */
+    /** Provider balance information */
     balance: CompatibleProviderBalance;
-    /** 缓存时间戳 */
+    /** Cache timestamp */
     timestamp: number;
 }
 
 /**
- * 兼容提供商状态栏项
- * 显示多个兼容提供商的余额信息，包括：
- * - 各提供商的余额
- * - 总余额（相同货币累加）
- * - 查询状态
+ * Compatible provider status bar item
+ * Displays balance information for multiple compatible providers, including:
+ * - Each provider's balance
+ * - Total balance (same currency accumulated)
+ * - Query status
  *
- * 继承 BaseStatusBarItem，复用通用状态栏逻辑：
- * - 生命周期管理
- * - 刷新机制
- * - 缓存管理
- * - 防抖逻辑
+ * Extends BaseStatusBarItem, reusing common status bar logic:
+ * - Lifecycle management
+ * - Refresh mechanism
+ * - Cache management
+ * - Debounce logic
  *
- * 特殊逻辑：
- * - 管理多个内置供应商的查询
- * - 各提供商缓存独立
+ * Special logic:
+ * - Manages queries for multiple built-in vendors
+ * - Each provider cache is independent
  */
 export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData> {
-    /** 各提供商独立缓存 */
+    /** Independent cache for each provider */
     private providerCaches = new Map<string, ProviderCacheData>();
 
-    /** 各提供商的最后延时更新时间戳 */
+    /** Last delayed update timestamp for each provider */
     private providerLastDelayedUpdateTimes = new Map<string, number>();
 
-    /** 支持延时更新的提供商列表 */
+    /** List of providers supporting delayed update */
     private static readonly SUPPORTED_DELAYED_UPDATE_PROVIDERS = ['aihubmix', 'openrouter'];
 
     constructor() {
@@ -90,27 +90,27 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
             id: 'ccmp.statusBar.compatible',
             name: 'CCMP: Compatible Balance',
             alignment: vscode.StatusBarAlignment.Right,
-            priority: 10, // 优先级取一个低值，靠右显示
+            priority: 10, // Priority set to a low value, displayed on the right
             refreshCommand: 'ccmp.compatible.refreshBalance',
             cacheKeyPrefix: 'compatible',
-            logPrefix: 'Compatible状态栏',
+            logPrefix: 'Compatible StatusBar',
             icon: '$(ccmp-compatible)'
         };
         super(config);
     }
 
-    // ==================== 实现基类抽象方法 ====================
+    // ==================== Implement base class abstract methods ====================
 
     /**
-     * 检查是否应该显示状态栏
-     * 通过检查是否有配置支持的兼容提供商且该提供商有 API Key 来决定
-     * 逐个检查，找到第一个有效 API Key 就立即返回 true
+     * Check if status bar should be displayed
+     * Determined by checking if there are configured compatible providers with API Key
+     * Check one by one, return true immediately when first valid API Key is found
      */
     protected async shouldShowStatusBar(): Promise<boolean> {
         const models = CompatibleModelManager.getModels();
         const supportedProviders = new Set(BalanceQueryManager.getRegisteredProviders());
 
-        // 收集所有需要检查的提供商(去重)
+        // Collect all providers that need to be checked (deduplicated)
         const providersToCheck = new Set<string>();
         for (const model of models) {
             if (model.provider && supportedProviders.has(model.provider)) {
@@ -122,7 +122,7 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
             return false;
         }
 
-        // 逐个检查提供商的 API Key，找到第一个有效的就立即返回 true
+        // Check each provider's API Key one by one, return true immediately when first valid one is found
         for (const provider of providersToCheck) {
             const hasApiKey = await ApiKeyManager.hasValidApiKey(provider);
             if (hasApiKey) {
@@ -134,7 +134,7 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
     }
 
     /**
-     * 获取显示文本
+     * Get display text
      */
     protected getDisplayText(data: CompatibleStatusData): string {
         const { successCount, totalCount, providers } = data;
@@ -142,7 +142,7 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
             return `${this.config.icon} Compatible`;
         }
 
-        // 只显示成功的提供商的金额
+        // Only show amounts for successful providers
         const balanceTexts: string[] = [];
         const successfulProviders = providers.filter(p => p.success);
         const sortedProviders = successfulProviders.sort((a, b) => a.providerId.localeCompare(b.providerId));
@@ -153,10 +153,10 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
                 continue;
             }
             if (provider.balance === Number.MIN_SAFE_INTEGER) {
-                balanceTexts.push('耗尽');
+                balanceTexts.push('Depleted');
                 continue;
             }
-            // 默认货币为CNY，除非明确指定为USD
+            // Default currency is CNY unless explicitly specified as USD
             const currencySymbol = provider.currency === 'USD' ? '$' : '¥';
             balanceTexts.push(`${currencySymbol}${provider.balance.toFixed(2)}`);
         }
@@ -169,21 +169,21 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
     }
 
     /**
-     * 生成 Tooltip 内容
+     * Generate tooltip content
      */
     protected generateTooltip(data: CompatibleStatusData): vscode.MarkdownString {
         const md = new vscode.MarkdownString();
         md.supportHtml = true;
-        md.appendMarkdown('#### Compatible 提供商余额信息\n\n');
+        md.appendMarkdown('#### Compatible Provider Balance Information\n\n');
 
         if (data.providers.length === 0) {
-            md.appendMarkdown('暂无配置的 Compatible 提供商\n');
+            md.appendMarkdown('No Compatible providers configured\n');
             md.appendMarkdown('\n---\n');
-            md.appendMarkdown('点击状态栏可手动刷新\n');
+            md.appendMarkdown('Click status bar to manually refresh\n');
             return md;
         }
 
-        md.appendMarkdown('| 提供商 | 充值余额 | 赠金余额 | 可用余额 |\n');
+        md.appendMarkdown('| Provider | Paid Balance | Granted Balance | Available Balance |\n');
         md.appendMarkdown('| :--- |---: | ---: | ---: |\n');
 
         const sortedProviders = [...data.providers].sort((a, b) => a.providerId.localeCompare(b.providerId));
@@ -195,30 +195,30 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
                     provider.granted !== undefined ? `${currencySymbol}${provider.granted.toFixed(2)}` : '-';
                 let availableBalance = `${currencySymbol}${provider.balance.toFixed(2)}`;
                 if (provider.balance === Number.MAX_SAFE_INTEGER) {
-                    availableBalance = '无限制';
+                    availableBalance = 'Unlimited';
                 } else if (provider.balance === Number.MIN_SAFE_INTEGER) {
-                    availableBalance = '已耗尽';
+                    availableBalance = 'Depleted';
                 }
 
                 md.appendMarkdown(
                     `| ${provider.providerName} | ${paidBalance} | ${grantedBalance} | ${availableBalance} |\n`
                 );
             } else {
-                md.appendMarkdown(`| ${provider.providerName} |  - | - | 查询失败 |\n`);
+                md.appendMarkdown(`| ${provider.providerName} |  - | - | Query Failed |\n`);
             }
         }
 
         md.appendMarkdown('\n---\n');
-        md.appendMarkdown('点击状态栏可手动刷新\n');
+        md.appendMarkdown('Click status bar to manually refresh\n');
         return md;
     }
 
     /**
-     * 执行 API 查询
-     * 查询所有兼容提供商的余额信息
-     * 使用各提供商独立缓存，只查询缓存过期的提供商
-     * 手动刷新时强制查询所有提供商，忽略缓存
-     * 只查询已设置 API Key 的提供商
+     * Execute API query
+     * Query balance information for all compatible providers
+     * Use each provider's independent cache, only query providers with expired cache
+     * When manually refreshing, force query all providers, ignore cache
+     * Only query providers that have API Key set
      */
     protected async performApiQuery(
         isManualRefresh = false
@@ -228,45 +228,45 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
             const supportedProviders = new Set(BalanceQueryManager.getRegisteredProviders());
             const providerMap = new Map<string, CompatibleProviderBalance>();
 
-            // 按提供商分组模型，只处理支持的提供商
+            // Group models by provider, only process supported providers
             for (const model of models) {
                 if (!model.provider || !supportedProviders.has(model.provider)) {
                     continue;
                 }
 
-                // 检查提供商是否有有效的 API Key，没有则跳过
+                // Check if provider has valid API Key, skip if not
                 const hasApiKey = await ApiKeyManager.hasValidApiKey(model.provider);
                 if (!hasApiKey) {
-                    StatusLogger.debug(`[${this.config.logPrefix}] 跳过未配置 API Key 的提供商: ${model.provider}`);
+                    StatusLogger.debug(`[${this.config.logPrefix}] Skipping provider without API Key configured: ${model.provider}`);
                     continue;
                 }
 
                 if (!providerMap.has(model.provider)) {
                     const knownProvider = KnownProviders[model.provider];
 
-                    // 手动刷新时强制查询所有提供商，忽略缓存
+                    // When manually refreshing, force query all providers, ignore cache
                     if (isManualRefresh) {
                         providerMap.set(model.provider, {
                             providerId: model.provider,
                             providerName: knownProvider?.displayName || model.provider,
                             balance: 0,
-                            currency: 'CNY', // 默认货币
+                            currency: 'CNY', // Default currency
                             lastUpdated: new Date(),
                             success: false
                         });
                     } else {
-                        // 自动刷新时，首先尝试从独立缓存加载
+                        // When auto-refreshing, first try loading from independent cache
                         const cachedProvider = this.providerCaches.get(model.provider);
                         if (cachedProvider && !this.isProviderCacheExpired(model.provider)) {
-                            // 使用缓存数据
+                            // Use cached data
                             providerMap.set(model.provider, cachedProvider.balance);
                         } else {
-                            // 需要查询的提供商
+                            // Provider that needs to be queried
                             providerMap.set(model.provider, {
                                 providerId: model.provider,
                                 providerName: knownProvider?.displayName || model.provider,
                                 balance: 0,
-                                currency: 'CNY', // 默认货币
+                                currency: 'CNY', // Default currency
                                 lastUpdated: new Date(),
                                 success: false
                             });
@@ -275,20 +275,20 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
                 }
             }
 
-            // 找出需要查询的提供商
+            // Find providers that need to be queried
             const providersToQuery = Array.from(providerMap.values()).filter(
                 provider =>
                     !provider.success || (isManualRefresh ? true : this.isProviderCacheExpired(provider.providerId))
             );
 
             StatusLogger.debug(
-                `[${this.config.logPrefix}] ${isManualRefresh ? '手动刷新' : '自动刷新'}：需要查询 ${providersToQuery.length}/${providerMap.size} 个提供商`
+                `[${this.config.logPrefix}] ${isManualRefresh ? 'Manual refresh' : 'Auto refresh'}: ${providersToQuery.length}/${providerMap.size} providers need to be queried`
             );
 
-            // 并行查询需要更新的提供商
+            // Parallel query providers that need to be updated
             const queryPromises = providersToQuery.map(async provider => {
                 try {
-                    // 使用余额查询管理器查询余额
+                    // Use balance query manager to query balance
                     const balanceInfo = await BalanceQueryManager.queryBalance(provider.providerId);
 
                     provider.paid = balanceInfo.paid;
@@ -298,11 +298,11 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
                     provider.lastUpdated = new Date();
                     provider.success = true;
 
-                    // 保存到独立缓存
+                    // Save to independent cache
                     await this.saveProviderCache(provider.providerId, provider);
                 } catch (error) {
-                    StatusLogger.error(`[${this.config.logPrefix}] 查询提供商 ${provider.providerId} 余额失败`, error);
-                    provider.error = typeof error === 'string' ? error : '查询失败';
+                    StatusLogger.error(`[${this.config.logPrefix}] Failed to query provider ${provider.providerId} balance`, error);
+                    provider.error = typeof error === 'string' ? error : 'Query failed';
                     provider.success = false;
                 }
             });
@@ -319,30 +319,30 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
 
             return { success: true, data: statusData };
         } catch (error) {
-            StatusLogger.error(`[${this.config.logPrefix}] 查询兼容提供商余额失败`, error);
-            return { success: false, error: typeof error === 'string' ? error : '查询失败' };
+            StatusLogger.error(`[${this.config.logPrefix}] Failed to query compatible provider balance`, error);
+            return { success: false, error: typeof error === 'string' ? error : 'Query failed' };
         }
     }
 
     /**
-     * 检查是否需要高亮警告
-     * 如果有提供商查询失败，则高亮警告
+     * Check if highlight warning is needed
+     * Highlight warning if any provider query fails
      */
     protected shouldHighlightWarning(data: CompatibleStatusData): boolean {
         return data.successCount < data.totalCount;
     }
 
     /**
-     * 检查是否需要刷新
-     * 检查是否有任何提供商的缓存过期
+     * Check if refresh is needed
+     * Check if any provider's cache has expired
      */
     protected shouldRefresh(): boolean {
-        // 检查总体缓存是否存在
+        // Check if overall cache exists
         if (!this.lastStatusData) {
             return true;
         }
 
-        // 检查是否有任何提供商缓存过期
+        // Check if any provider cache has expired
         const models = CompatibleModelManager.getModels();
         const providerIds = new Set<string>();
         for (const model of models) {
@@ -353,7 +353,7 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
 
         for (const providerId of providerIds) {
             if (this.isProviderCacheExpired(providerId)) {
-                StatusLogger.debug(`[${this.config.logPrefix}] 缓存时间超过5分钟固定过期时间，触发API刷新`);
+                StatusLogger.debug(`[${this.config.logPrefix}] Cache time exceeds 5-minute fixed expiry time, triggering API refresh`);
                 return true;
             }
         }
@@ -361,65 +361,65 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
         return false;
     }
 
-    // ==================== 重写基类钩子方法 ====================
+    // ==================== Override base class hook methods ====================
 
     /**
-     * 初始化后钩子
-     * 加载提供商缓存并监听模型变更事件
+     * Post-initialization hook
+     * Load provider caches and listen for model change events
      */
     protected override async onInitialized(): Promise<void> {
-        // 加载各提供商的独立缓存
+        // Load independent caches for each provider
         this.loadProviderCaches();
 
-        // 监听兼容模型变更事件
+        // Listen for compatible model change events
         if (this.context) {
             const disposable = CompatibleModelManager.onDidChangeModels(() => {
-                StatusLogger.debug(`[${this.config.logPrefix}] 兼容模型配置变更，触发状态更新`);
-                this.delayedUpdate(1000); // 延迟1秒更新，避免频繁调用
+                StatusLogger.debug(`[${this.config.logPrefix}] Compatible model configuration changed, triggering status update`);
+                this.delayedUpdate(1000); // Delay update by 1 second to avoid frequent calls
             });
             this.context.subscriptions.push(disposable);
         }
     }
 
     /**
-     * 销毁前钩子
-     * 清理提供商缓存
+     * Pre-disposal hook
+     * Clean up provider caches
      */
     protected override async onDispose(): Promise<void> {
         this.providerCaches.clear();
         this.providerLastDelayedUpdateTimes.clear();
     }
 
-    // ==================== 重写基类方法 ====================
+    // ==================== Override base class methods ====================
 
     /**
-     * 延时更新指定提供商的余额（重载基类方法）
-     * 包含防抖机制，避免频繁请求
-     * @param providerId 提供商标识符
-     * @param delayMs 延时时间（毫秒）
+     * Delayed update for specified provider's balance (overload base class method)
+     * Includes debounce mechanism to avoid frequent requests
+     * @param providerId Provider identifier
+     * @param delayMs Delay time (milliseconds)
      */
     override delayedUpdate(delayMs?: number): void;
     override delayedUpdate(providerId: string, delayMs?: number): void;
     override delayedUpdate(providerId?: string | number, delayMs = 2000): void {
-        // 如果没有提供 providerId 或者 providerId 不是字符串，调用基类实现
+        // If providerId is not provided or providerId is not a string, call base class implementation
         if (!providerId || typeof providerId !== 'string') {
             super.delayedUpdate(typeof providerId === 'number' ? providerId : delayMs);
             return;
         }
 
-        // 检查提供商是否在支持列表中
+        // Check if provider is in supported list
         const supportedProviders = new Set(BalanceQueryManager.getRegisteredProviders());
         if (!CompatibleStatusBar.SUPPORTED_DELAYED_UPDATE_PROVIDERS.includes(providerId)) {
-            // 只在已知支持查询的列表中才输出此日志
+            // Only output this log for providers known to support querying
             if (supportedProviders.has(providerId)) {
                 StatusLogger.debug(
-                    `[${this.config.logPrefix}] 提供商 ${providerId} 无需延时更新，由定时器统一刷新管理`
+                    `[${this.config.logPrefix}] Provider ${providerId} does not need delayed update, managed by timer for unified refresh`
                 );
             }
             return;
         }
 
-        // 清除之前的防抖定时器
+        // Clear previous debounce timer
         if (this.updateDebouncer) {
             clearTimeout(this.updateDebouncer);
         }
@@ -428,24 +428,24 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
         const lastUpdateTime = this.providerLastDelayedUpdateTimes.get(providerId) || 0;
         const timeSinceLastUpdate = now - lastUpdateTime;
 
-        // 如果距离上次更新不足阈值，则等到满阈值再执行
+        // If time since last update is less than threshold, wait until threshold is met before executing
         const finalDelayMs =
             timeSinceLastUpdate < this.MIN_DELAYED_UPDATE_INTERVAL
                 ? this.MIN_DELAYED_UPDATE_INTERVAL - timeSinceLastUpdate
                 : delayMs;
 
         StatusLogger.debug(
-            `[${this.config.logPrefix}] 设置延时更新提供商 ${providerId}，将在 ${finalDelayMs / 1000} 秒后执行`
+            `[${this.config.logPrefix}] Setting delayed update for provider ${providerId}, will execute in ${finalDelayMs / 1000} seconds`
         );
 
-        // 设置新的防抖定时器
+        // Set new debounce timer
         this.updateDebouncer = setTimeout(async () => {
             try {
-                StatusLogger.debug(`[${this.config.logPrefix}] 执行延时更新提供商 ${providerId}`);
+                StatusLogger.debug(`[${this.config.logPrefix}] Executing delayed update for provider ${providerId}`);
                 this.providerLastDelayedUpdateTimes.set(providerId, Date.now());
                 await this.performProviderUpdate(providerId);
             } catch (error) {
-                StatusLogger.error(`[${this.config.logPrefix}] 延时更新提供商 ${providerId} 失败`, error);
+                StatusLogger.error(`[${this.config.logPrefix}] Failed to delayed update provider ${providerId}`, error);
             } finally {
                 this.updateDebouncer = undefined;
             }
@@ -453,34 +453,34 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
     }
 
     /**
-     * 重写基类的 executeApiQuery 方法
-     * 手动刷新时始终执行查询，不受基类缓存限制
-     * 部分提供商查询失败时不显示 ERR，只显示成功的提供商信息
+     * Override base class executeApiQuery method
+     * Always execute query when manually refreshing, not subject to base class cache limits
+     * When some provider queries fail, do not display ERR, only show successful provider information
      */
     protected override async executeApiQuery(isManualRefresh = false): Promise<void> {
-        // 防止并发执行
+        // Prevent concurrent execution
         if (this.isLoading) {
-            StatusLogger.debug(`[${this.config.logPrefix}] 正在执行查询，跳过重复调用`);
+            StatusLogger.debug(`[${this.config.logPrefix}] Query in progress, skipping duplicate call`);
             return;
         }
 
-        // 手动刷新时跳过基类的缓存检查，直接执行查询
+        // When manually refreshing, skip base class cache check and execute query directly
         if (isManualRefresh) {
-            StatusLogger.debug(`[${this.config.logPrefix}] 手动刷新，跳过缓存检查`);
+            StatusLogger.debug(`[${this.config.logPrefix}] Manual refresh, skipping cache check`);
         } else {
-            // 自动刷新时，检查缓存是否在 5 秒内有效，有效则跳过本次加载
+            // When auto-refreshing, check if cache is valid within 5 seconds, skip if valid
             if (this.lastStatusData) {
                 try {
                     const dataAge = Date.now() - this.lastStatusData.timestamp;
                     if (dataAge >= 0 && dataAge < 5000) {
                         StatusLogger.debug(
-                            `[${this.config.logPrefix}] 数据在 5 秒内有效 (${(dataAge / 1000).toFixed(1)}秒前)，跳过本次自动刷新`
+                            `[${this.config.logPrefix}] Data is valid within 5 seconds (${(dataAge / 1000).toFixed(1)}s ago), skipping this auto refresh`
                         );
                         return;
                     }
                 } catch {
-                    // 旧版本数据格式不兼容，忽略错误继续执行刷新
-                    StatusLogger.debug(`[${this.config.logPrefix}] 缓存数据格式不兼容，继续执行刷新`);
+                    // Old version data format incompatible, ignore error and continue refresh
+                    StatusLogger.debug(`[${this.config.logPrefix}] Cache data format incompatible, continuing refresh`);
                 }
             }
         }
@@ -488,7 +488,7 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
         this.isLoading = true;
 
         try {
-            StatusLogger.debug(`[${this.config.logPrefix}] 开始执行余额查询...`);
+            StatusLogger.debug(`[${this.config.logPrefix}] Starting balance query...`);
 
             const result = await this.performApiQuery(isManualRefresh);
 
@@ -496,75 +496,75 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
                 if (this.statusBarItem) {
                     const data = result.data;
 
-                    // 检查是否有任何查询结果
+                    // Check if there are any query results
                     if (data.providers.length === 0) {
-                        // 没有任何提供商可以查询，隐藏状态栏
+                        // No providers can be queried, hide status bar
                         this.statusBarItem.hide();
-                        StatusLogger.debug(`[${this.config.logPrefix}] 没有支持查询的提供商，隐藏状态栏`);
+                        StatusLogger.debug(`[${this.config.logPrefix}] No providers supporting query, hiding status bar`);
                         return;
                     }
 
-                    // 检查是否有成功的查询结果
+                    // Check if there are successful query results
                     if (data.successCount === 0) {
-                        // 所有提供商都查询失败，显示 ERR
+                        // All providers query failed, display ERR
                         this.statusBarItem.text = `${this.config.icon} ERR`;
-                        this.statusBarItem.tooltip = '所有提供商查询失败';
-                        StatusLogger.warn(`[${this.config.logPrefix}] 所有提供商查询失败`);
+                        this.statusBarItem.tooltip = 'All provider queries failed';
+                        StatusLogger.warn(`[${this.config.logPrefix}] All provider queries failed`);
                         return;
                     }
 
-                    // 保存完整的状态数据
+                    // Save complete status data
                     this.lastStatusData = {
                         data: data,
                         timestamp: Date.now()
                     };
 
-                    // 保存到全局状态
+                    // Save to global state
                     if (this.context) {
                         this.context.globalState.update(this.getCacheKey('statusData'), this.lastStatusData);
                     }
 
-                    // 更新状态栏 UI
+                    // Update status bar UI
                     this.updateStatusBarUI(data);
 
                     StatusLogger.info(
-                        `[${this.config.logPrefix}] 余额检查成功 (${data.successCount}/${data.totalCount})`
+                        `[${this.config.logPrefix}] Balance check successful (${data.successCount}/${data.totalCount})`
                     );
                 }
             } else {
-                // 查询完全失败，显示 ERR
-                const errorMsg = result.error || '未知错误';
+                // Query completely failed, display ERR
+                const errorMsg = result.error || 'Unknown error';
                 if (this.statusBarItem) {
                     this.statusBarItem.text = `${this.config.icon} ERR`;
-                    this.statusBarItem.tooltip = `查询失败: ${errorMsg}`;
+                    this.statusBarItem.tooltip = `Query failed: ${errorMsg}`;
                 }
-                StatusLogger.warn(`[${this.config.logPrefix}] 余额查询失败: ${errorMsg}`);
+                StatusLogger.warn(`[${this.config.logPrefix}] Balance query failed: ${errorMsg}`);
             }
         } catch (error) {
-            StatusLogger.error(`[${this.config.logPrefix}] 更新状态栏失败`, error);
+            StatusLogger.error(`[${this.config.logPrefix}] Failed to update status bar`, error);
 
-            // 查询异常，显示 ERR
+            // Query exception, display ERR
             if (this.statusBarItem) {
                 this.statusBarItem.text = `${this.config.icon} ERR`;
-                this.statusBarItem.tooltip = `获取失败: ${error instanceof Error ? error.message : '未知错误'}`;
+                this.statusBarItem.tooltip = `Failed to get: ${error instanceof Error ? error.message : 'Unknown error'}`;
             }
         } finally {
-            // 一定要在最后重置加载状态
+            // Must reset loading state at the end
             this.isLoading = false;
         }
     }
 
-    // ==================== 私有方法：提供商缓存管理 ====================
+    // ==================== Private methods: Provider cache management ====================
 
     /**
-     * 获取提供商独立缓存键名
+     * Get provider independent cache key name
      */
     private getProviderCacheKey(providerId: string): string {
         return `${this.config.cacheKeyPrefix}.provider.${providerId}`;
     }
 
     /**
-     * 加载各提供商的独立缓存
+     * Load independent caches for each provider
      */
     private loadProviderCaches(): void {
         if (!this.context) {
@@ -578,19 +578,19 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
                 const cacheKey = this.getProviderCacheKey(providerId);
                 const cached = this.context.globalState.get<ProviderCacheData>(cacheKey);
                 if (cached) {
-                    // 直接使用缓存数据，无需修复 Date 对象序列化问题
+                    // Use cached data directly, no need to fix Date object serialization issue
                     this.providerCaches.set(providerId, cached);
                 }
             }
 
-            StatusLogger.debug(`[${this.config.logPrefix}] 已加载 ${this.providerCaches.size} 个提供商缓存`);
+            StatusLogger.debug(`[${this.config.logPrefix}] Loaded ${this.providerCaches.size} provider caches`);
         } catch (error) {
-            StatusLogger.error(`[${this.config.logPrefix}] 加载提供商缓存失败`, error);
+            StatusLogger.error(`[${this.config.logPrefix}] Failed to load provider cache`, error);
         }
     }
 
     /**
-     * 保存提供商独立缓存
+     * Save provider independent cache
      */
     private async saveProviderCache(providerId: string, balance: CompatibleProviderBalance): Promise<void> {
         if (!this.context) {
@@ -608,14 +608,14 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
             const cacheKey = this.getProviderCacheKey(providerId);
             await this.context.globalState.update(cacheKey, cacheData);
 
-            StatusLogger.debug(`[${this.config.logPrefix}] 已保存提供商 ${providerId} 缓存`);
+            StatusLogger.debug(`[${this.config.logPrefix}] Saved provider ${providerId} cache`);
         } catch (error) {
-            StatusLogger.error(`[${this.config.logPrefix}] 保存提供商 ${providerId} 缓存失败`, error);
+            StatusLogger.error(`[${this.config.logPrefix}] Failed to save provider ${providerId} cache`, error);
         }
     }
 
     /**
-     * 检查提供商缓存是否过期
+     * Check if provider cache has expired
      */
     private isProviderCacheExpired(providerId: string): boolean {
         const cached = this.providerCaches.get(providerId);
@@ -623,53 +623,53 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
             return true;
         }
 
-        const PROVIDER_CACHE_EXPIRY = (5 * 60 - 10) * 1000; // 缓存过期阈值 5 分钟
+        const PROVIDER_CACHE_EXPIRY = (5 * 60 - 10) * 1000; // Cache expiry threshold 5 minutes
 
         const now = Date.now();
         const cacheAge = now - cached.timestamp;
         return cacheAge > PROVIDER_CACHE_EXPIRY;
     }
 
-    // ==================== 私有方法：单提供商更新 ====================
+    // ==================== Private methods: Single provider update ====================
 
     /**
-     * 执行单个提供商的余额查询并更新状态栏
-     * @param providerId 提供商标识符
+     * Execute single provider balance query and update status bar
+     * @param providerId Provider identifier
      */
     private async performProviderUpdate(providerId: string): Promise<void> {
-        // 防止并发执行
+        // Prevent concurrent execution
         if (this.isLoading) {
-            StatusLogger.debug(`[${this.config.logPrefix}] 正在执行查询，跳过提供商 ${providerId} 的更新`);
+            StatusLogger.debug(`[${this.config.logPrefix}] Query in progress, skipping update for provider ${providerId}`);
             return;
         }
 
-        // 检查提供商是否支持
+        // Check if provider is supported
         const supportedProviders = new Set(BalanceQueryManager.getRegisteredProviders());
         if (!supportedProviders.has(providerId)) {
-            StatusLogger.warn(`[${this.config.logPrefix}] 提供商 ${providerId} 不支持余额查询`);
+            StatusLogger.warn(`[${this.config.logPrefix}] Provider ${providerId} does not support balance query`);
             return;
         }
 
         this.isLoading = true;
 
         try {
-            StatusLogger.debug(`[${this.config.logPrefix}] 开始查询提供商 ${providerId} 的余额...`);
+            StatusLogger.debug(`[${this.config.logPrefix}] Starting to query provider ${providerId} balance...`);
 
-            // 获取提供商信息
+            // Get provider information
             const knownProvider = KnownProviders[providerId];
             const providerName = knownProvider?.displayName || providerId;
 
-            // 创建提供商余额信息对象
+            // Create provider balance information object
             const providerBalance: CompatibleProviderBalance = {
                 providerId,
                 providerName,
                 balance: 0,
-                currency: 'CNY', // 默认货币
+                currency: 'CNY', // Default currency
                 lastUpdated: new Date(),
                 success: false
             };
 
-            // 查询余额
+            // Query balance
             try {
                 const balanceInfo = await BalanceQueryManager.queryBalance(providerId);
 
@@ -680,55 +680,55 @@ export class CompatibleStatusBar extends BaseStatusBarItem<CompatibleStatusData>
                 providerBalance.lastUpdated = new Date();
                 providerBalance.success = true;
 
-                // 保存到独立缓存
+                // Save to independent cache
                 await this.saveProviderCache(providerId, providerBalance);
 
-                StatusLogger.info(`[${this.config.logPrefix}] 提供商 ${providerId} 余额查询成功`);
+                StatusLogger.info(`[${this.config.logPrefix}] Provider ${providerId} balance query successful`);
             } catch (error) {
-                StatusLogger.error(`[${this.config.logPrefix}] 查询提供商 ${providerId} 余额失败`, error);
-                providerBalance.error = typeof error === 'string' ? error : '查询失败';
+                StatusLogger.error(`[${this.config.logPrefix}] Failed to query provider ${providerId} balance`, error);
+                providerBalance.error = typeof error === 'string' ? error : 'Query failed';
                 providerBalance.success = false;
             }
 
-            // 更新状态数据
+            // Update status data
             if (this.lastStatusData && this.lastStatusData.data) {
-                // 查找并更新现有提供商数据
+                // Find and update existing provider data
                 const existingProviderIndex = this.lastStatusData.data.providers.findIndex(
                     p => p.providerId === providerId
                 );
 
                 if (existingProviderIndex >= 0) {
-                    // 更新现有提供商
+                    // Update existing provider
                     this.lastStatusData.data.providers[existingProviderIndex] = providerBalance;
                 } else {
-                    // 添加新提供商
+                    // Add new provider
                     this.lastStatusData.data.providers.push(providerBalance);
                     this.lastStatusData.data.totalCount++;
                 }
 
-                // 更新成功计数
+                // Update success count
                 this.lastStatusData.data.successCount = this.lastStatusData.data.providers.filter(
                     p => p.success
                 ).length;
 
-                // 更新时间戳
+                // Update timestamp
                 this.lastStatusData.timestamp = Date.now();
 
-                // 保存到全局状态
+                // Save to global state
                 if (this.context) {
                     this.context.globalState.update(this.getCacheKey('statusData'), this.lastStatusData);
                 }
 
-                // 更新状态栏 UI
+                // Update status bar UI
                 this.updateStatusBarUI(this.lastStatusData.data);
             } else {
-                // 如果没有现有数据，执行 checkAndShowStatus 进行完整更新
+                // If no existing data, execute checkAndShowStatus for complete update
                 await this.checkAndShowStatus();
             }
         } catch (error) {
-            StatusLogger.error(`[${this.config.logPrefix}] 更新提供商 ${providerId} 余额失败`, error);
+            StatusLogger.error(`[${this.config.logPrefix}] Failed to update provider ${providerId} balance`, error);
         } finally {
-            // 一定要在最后重置加载状态
+            // Must reset loading state at the end
             this.isLoading = false;
         }
     }

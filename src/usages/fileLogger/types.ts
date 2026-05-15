@@ -1,16 +1,16 @@
 /*---------------------------------------------------------------------------------------------
- *  Token文件日志系统 - 类型定义
- *  补充 globalState 存储,提供详细的请求日志记录
+ *  Token File Logging System - Type Definitions
+ *  Supplement globalState storage, provide detailed request log records
  *--------------------------------------------------------------------------------------------*/
 
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 
 /**
- * 通用的 Token 使用数据格式 - 支持多个 SDK
+ * Generic Token Usage Data Format - Supports Multiple SDKs
  */
 export interface GenericUsageData {
-    // === OpenAI 格式 ===
+    // === OpenAI Format ===
     prompt_tokens?: number;
     completion_tokens?: number;
     total_tokens?: number;
@@ -25,12 +25,12 @@ export interface GenericUsageData {
         audio_tokens?: number;
         [key: string]: number | undefined;
     };
-    // === Anthropic/Claude 格式 ===
+    // === Anthropic/Claude Format ===
     input_tokens?: number;
     output_tokens?: number;
     cache_creation_input_tokens?: number;
     cache_read_input_tokens?: number;
-    // === Responses API 格式 ===
+    // === Responses API Format ===
     input_tokens_details?: {
         cached_tokens?: number;
         [key: string]: number | undefined;
@@ -40,8 +40,8 @@ export interface GenericUsageData {
         [key: string]: number | undefined;
     };
 
-    // === Gemini usageMetadata（HTTP/SSE 网关返回）===
-    // 不同网关字段名可能不同：有的用 responseTokenCount，有的用 candidatesTokenCount（都表示输出 token 数）。
+    // === Gemini usageMetadata (HTTP/SSE gateway returns) ===
+    // Different gateways may have different field names: some use responseTokenCount, some use candidatesTokenCount (both represent output token count).
     promptTokenCount?: number;
     responseTokenCount?: number;
     candidatesTokenCount?: number;
@@ -50,85 +50,85 @@ export interface GenericUsageData {
     promptTokensDetails?: Array<{ modality?: string; tokenCount?: number }>;
     cacheTokensDetails?: Array<{ modality?: string; tokenCount?: number }>;
     candidatesTokensDetails?: Array<{ modality?: string; tokenCount?: number }>;
-    // === 其他字段 ===
+    // === Other Fields ===
     [key: string]: number | undefined | object;
 }
 
 /**
- * 原始 Token 使用数据 - 支持多个 SDK 的格式
- * 用于统一处理 Anthropic、OpenAI 等不同供应商的 usage 对象
+ * Raw Token Usage Data - Supports Multiple SDK Formats
+ * Used to uniformly handle usage objects from different providers like Anthropic, OpenAI, etc.
  */
 export type RawUsageData = Anthropic.Messages.Usage | OpenAI.Completions.CompletionUsage | GenericUsageData;
 
 /**
- * Token请求日志条目
- * 每行一个JSON对象,记录一次完整的API请求
+ * Token Request Log Entry
+ * One JSON object per line, recording a complete API request
  */
 export interface TokenRequestLog {
-    /** 请求ID */
+    /** Request ID */
     requestId: string;
-    /** 时间戳 (毫秒) */
+    /** Timestamp (milliseconds) */
     timestamp: number;
-    /** ISO时间字符串 */
+    /** ISO time string */
     isoTime: string;
-    /** 提供商Key */
+    /** Provider Key */
     providerKey: string;
-    /** 提供商显示名 */
+    /** Provider Display Name */
     providerName: string;
-    /** 模型ID */
+    /** Model ID */
     modelId: string;
-    /** 模型名称 */
+    /** Model Name */
     modelName: string;
-    /** 预估输入token */
+    /** Estimated Input Tokens */
     estimatedInput: number;
-    /** 原始 usage 对象 (请求完成时存储，支持多种提供商格式) */
+    /** Raw usage object (stored when request completes, supports multiple provider formats) */
     rawUsage: GenericUsageData | null;
-    /** 请求状态 */
+    /** Request Status */
     status: 'estimated' | 'completed' | 'failed';
-    /** 最大输入token(上下文窗口大小) */
+    /** Maximum Input Tokens (context window size) */
     maxInputTokens?: number;
-    /** 请求类型 */
+    /** Request Type */
     requestType?: 'chat' | 'completion' | 'fim' | 'nes';
-    /** 流开始时间 (毫秒时间戳) */
+    /** Stream Start Time (millisecond timestamp) */
     streamStartTime?: number;
-    /** 流结束时间 (毫秒时间戳) */
+    /** Stream End Time (millisecond timestamp) */
     streamEndTime?: number;
 }
 
 /**
- * 文件路径信息
+ * File Path Information
  */
 export interface LogFilePath {
-    /** 日期字符串 (YYYY-MM-DD) */
+    /** Date String (YYYY-MM-DD) */
     date: string;
-    /** 小时 (0-23) */
+    /** Hour (0-23) */
     hour: number;
-    /** 日期文件夹路径 */
+    /** Date Folder Path */
     dateFolder: string;
-    /** 小时文件名 (HH.jsonl) */
+    /** Hour File Name (HH.jsonl) */
     hourFileName: string;
-    /** 完整文件路径 */
+    /** Full File Path */
     fullPath: string;
 }
 
 /**
- * 基础统计数据（通用字段）
+ * Base Statistics Data (Common Fields)
  */
 export interface BaseStats {
     estimatedInput: number;
     actualInput: number;
     cacheTokens: number;
-    /** 平均首 Token 延迟(毫秒) - 已聚合后的结果，写入缓存文件 */
+    /** Average First Token Latency (milliseconds) - Aggregated result, written to cache file */
     firstTokenLatency?: number;
-    /** 平均输出速度 (tokens/s) - 已聚合后的结果，写入缓存文件 */
+    /** Average Output Speed (tokens/s) - Aggregated result, written to cache file */
     outputSpeeds?: number;
     outputTokens: number;
     requests: number;
 }
 
 /**
- * Token 统计数据（总计）
- * 扩展基础统计，添加完成/失败状态
+ * Token Statistics Data (Total)
+ * Extends base statistics, adds completed/failed status
  */
 export interface TokenStats extends BaseStats {
     completedRequests: number;
@@ -136,17 +136,17 @@ export interface TokenStats extends BaseStats {
 }
 
 /**
- * FileLogger 内部使用的模型统计
- * 扩展基础统计，添加模型名称
+ * Model Statistics Used Internally by FileLogger
+ * Extends base statistics, adds model name
  */
 export interface FileLoggerModelStats extends BaseStats {
     modelName: string;
 }
 
 /**
- * FileLogger 内部使用的提供商统计
- * 扩展基础统计，添加提供商名称和模型分组
- * 注意：providerKey 已作为 Record 的 key，无需在对象内重复存储
+ * Provider Statistics Used Internally by FileLogger
+ * Extends base statistics, adds provider name and model grouping
+ * Note: providerKey is already used as Record key, no need to store repeatedly within object
  */
 export interface FileLoggerProviderStats extends TokenStats {
     providerName: string;
@@ -154,33 +154,33 @@ export interface FileLoggerProviderStats extends TokenStats {
 }
 
 /**
- * 每小时统计（用于 hourly）
- * 包含总计、提供商和模型的统计信息，用于差分计算的缓存
+ * Hourly Statistics (used for hourly)
+ * Contains total, provider and model statistics, used as cache for differential calculation
  */
 export interface HourlyStats extends TokenStats {
-    /** 日志文件修改时间戳 (用于缓存验证) */
+    /** Log File Modification Timestamp (used for cache validation) */
     modifiedTime: number;
-    /** 按提供商分组 (直接使用 providerId 作为 key) */
+    /** Grouped by Provider (use providerId directly as key) */
     providers: Record<string, FileLoggerProviderStats>;
 }
 
 /**
- * 统计结果(从文件读取后计算)
- * 也是 stats.json 的文件结构
+ * Statistics Result (calculated after reading from file)
+ * Also the file structure of stats.json
  */
 export interface TokenUsageStatsFromFile {
-    /** 代码版本时间戳 - 用于判断缓存是否由当前版本代码生成 */
+    /** Code Version Timestamp - Used to determine if cache was generated by current version code */
     versionTimestamp?: number;
-    /** 总计 */
+    /** Total */
     total: TokenStats;
-    /** 按提供商分组 (直接使用 providerId 作为 key) */
+    /** Grouped by Provider (use providerId directly as key) */
     providers: Record<string, FileLoggerProviderStats>;
-    /** 每小时合计 (仅日期统计包含此字段) */
+    /** Hourly Totals (only date statistics include this field) */
     hourly?: Record<string, HourlyStats>;
 }
 
 /**
- * 日期索引条目（用于 index.json）
+ * Date Index Entry (used for index.json)
  */
 export interface DateIndexEntry {
     total_input: number;
@@ -190,13 +190,13 @@ export interface DateIndexEntry {
 }
 
 /**
- * 日期索引文件结构
- * 用于快速浏览日期列表，无需加载每个日期的完整统计
+ * Date Index File Structure
+ * Used for quickly browsing date list without loading complete statistics for each date
  */
 export interface DateIndex {
-    /** 代码版本时间戳 - 用于判断缓存是否由当前版本代码生成 */
+    /** Code Version Timestamp - Used to determine if cache was generated by current version code */
     versionTimestamp?: number;
-    /** 缓存创建时间戳 - 用于判断缓存是否比日志文件更新 */
+    /** Cache Creation Timestamp - Used to determine if cache is newer than log files */
     cacheTimestamp?: number;
     dates: Record<string, DateIndexEntry>;
 }

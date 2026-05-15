@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  提示词服务
- *  生成完整的 AI 提示词
+ *  Prompt Service
+ *  Generates complete AI prompts
  *--------------------------------------------------------------------------------------------*/
 
 import { CommitFormat, CommitLanguage } from './types';
@@ -8,14 +8,14 @@ import { ConfigManager } from '../utils';
 import { getTemplate } from './templates';
 
 /**
- * 提示词服务
- * 负责生成完整的 AI 提示词
+ * Prompt Service
+ * Responsible for generating complete AI prompts
  */
 export class PromptService {
     /**
-     * 生成最终提交消息提示词。
-     * 注意：diff 片段、历史上下文等内容已在上游以“单独消息/附件”形式传递，
-     * 这里仅生成最终指令（尽量保持简短）。
+     * Generate final commit message prompt.
+     * Note: diff snippets, historical context etc. have been passed upstream in "separate message/attachment" format,
+     * here we only generate the final instructions (keep as short as possible).
      */
     static generateCommitPrompt(): string {
         const commit = ConfigManager.getCommitConfig();
@@ -23,25 +23,25 @@ export class PromptService {
         const customInstructions = commit.customInstructions;
         const language = commit.language;
 
-        // 自定义（custom）模式：以用户指令为主，但仍追加上下文（片段/历史）
+        // Custom mode: primarily user instructions, but still append context (snippets/history)
         if (format === 'custom' && customInstructions.trim()) {
             return this.generateCustomPrompt(customInstructions);
         }
 
-        // auto：不在扩展侧做任何推断。
-        // 上游会把“最近提交历史”以单独的用户消息提供给模型，模型应自行归纳仓库风格。
+        // auto: do not make any inferences on the extension side.
+        // Upstream will provide "recent commit history" to the model as a separate user message, the model should infer repository style on its own.
         if (format === 'auto') {
             return this.generateAutoPrompt(language);
         }
 
-        // custom 但未提供自定义指令：回退为 plain
+        // custom but no custom instructions provided: fallback to plain
         const effectiveFormat = format === 'custom' ? 'plain' : format;
         return this.generateStandardPrompt(effectiveFormat, language);
     }
 
     /**
-     * auto 模式：让模型根据“最近提交历史”自行归纳仓库的提交规范，并以同样风格输出。
-     * 注意：历史内容由上游以单独消息形式提供。
+     * Auto mode: let the model independently infer the repository's commit conventions based on "recent commit history", and output in the same style.
+     * Note: historical content is provided by upstream in separate message format.
      */
     private static generateAutoPrompt(language: CommitLanguage): string {
         const fallbackLanguage = language === 'chinese' ? 'Chinese' : 'English';
@@ -66,7 +66,7 @@ IMPORTANT: Please provide ONLY the commit message, without any additional text, 
     }
 
     /**
-     * 生成自定义指令提示词
+     * Generate custom instruction prompt
      */
     private static generateCustomPrompt(customInstructions: string): string {
         let prompt = customInstructions;
@@ -78,7 +78,7 @@ Please provide ONLY the commit message, without any additional text, explanation
     }
 
     /**
-     * 生成标准模板提示词
+     * Generate standard template prompt
      */
     private static generateStandardPrompt(format: CommitFormat, language: CommitLanguage): string {
         const languagePrompt = this.getLanguagePrompt(language);
@@ -86,7 +86,7 @@ Please provide ONLY the commit message, without any additional text, explanation
 
         let prompt = template;
 
-        // 保持空白符可预测，避免缩进意外渗入提示词内容。
+        // Keep whitespace predictable, avoid indentation accidentally seeping into prompt content.
         prompt += `\n\n${languagePrompt}\n`;
 
         prompt += `
@@ -96,12 +96,12 @@ IMPORTANT: Please provide ONLY the commit message, without any additional text, 
     }
 
     /**
-     * 获取语言提示
+     * Get language prompt
      */
     static getLanguagePrompt(language: CommitLanguage): string {
         switch (language) {
             case 'chinese':
-                // 提示词指令保持英文；仅通过指令要求输出语言发生变化。
+                // Prompt instructions remain in English; only the output language requirement changes.
                 return 'Please write the commit message in Chinese.';
             case 'english':
             default:
@@ -110,26 +110,26 @@ IMPORTANT: Please provide ONLY the commit message, without any additional text, 
     }
 
     /**
-     * 生成 commit 场景的 System Role 消息。
-     * 部分模型要求首条消息为 system role，用于设定基本行为约束。
+     * Generate System Role message for commit scenarios.
+     * Some models require the first message to be system role, used to set basic behavior constraints.
      */
     static generateCommitSystemMessage(): string {
         return 'You are an expert at writing concise, accurate git commit messages. Analyze the provided diffs and generate a single commit message that summarizes the changes.';
     }
 
     /**
-     * 规范化模型输出的提交消息。
+     * Normalize commit message output from model.
      */
     static normalizeCommitMessage(message: string): string {
         let cleaned = (message ?? '').trim();
 
-        // 仅移除“整体被一个代码围栏（fenced code block）包裹”的情况，避免误删正文中的 ```。
+        // Only remove the case where "the entire content is wrapped in a fenced code block", to avoid accidentally deleting ``` in the body.
         const fenced = cleaned.match(/^```[a-zA-Z0-9_-]*\r?\n([\s\S]*?)\r?\n```\s*$/);
         if (fenced) {
             cleaned = fenced[1].trim();
         }
 
-        // 移除多余的空行
+        // Remove excess blank lines
         cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
         return cleaned.trim();
     }

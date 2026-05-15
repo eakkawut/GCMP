@@ -1,10 +1,10 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  提交模块类型定义
- *  提交消息生成功能的类型定义
+ *  Commit Module Type Definitions
+ *  Type definitions for commit message generation feature
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * 提交消息格式
+ * Commit message format
  */
 export type CommitFormat =
     | 'auto'
@@ -20,42 +20,42 @@ export type CommitFormat =
     | 'atom';
 
 /**
- * 提交消息语言
+ * Commit message language
  */
 export type CommitLanguage = 'english' | 'chinese';
 
 /**
- * 生成的提交消息结果
+ * Generated commit message result
  */
 export interface CommitMessage {
-    /** 生成的提交消息 */
+    /** Generated commit message */
     message: string;
-    /** 使用的模型 */
+    /** Model used */
     model: string;
 }
 
 /**
- * 进度报告器接口
+ * Progress reporter interface
  */
 export interface ProgressReporter {
     report(value: { message?: string; increment?: number }): void;
 }
 
 /**
- * 提交模块配置键
+ * Commit module configuration key
  */
 /**
- * 提交消息生成使用的模型选择
+ * Model selection for commit message generation
  */
 export interface CommitModelSelection {
-    /** 语言模型提供商（providerKey，例如：zhipu / compatible） */
+    /** Language model provider (providerKey, e.g.: zhipu / compatible) */
     provider: string;
-    /** 模型 ID（对应 LanguageModelChatInformation.id） */
+    /** Model ID (corresponds to LanguageModelChatInformation.id) */
     model: string;
 }
 
 /**
- * 自定义错误类型
+ * Custom error types
  */
 export class UserCancelledError extends Error {
     constructor(message = 'User cancelled the operation') {

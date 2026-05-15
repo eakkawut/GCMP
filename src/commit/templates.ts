@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  提交消息模板系统
- *  定义各种提交消息格式的模板
+ *  Commit Message Template System
+ *  Defines templates for various commit message formats
  *--------------------------------------------------------------------------------------------*/
 
 import { CommitFormat } from './types';
@@ -8,7 +8,7 @@ import { CommitFormat } from './types';
 type TemplateCommitFormat = Exclude<CommitFormat, 'custom' | 'auto'>;
 
 /**
- * Plain 模板：一句话描述
+ * Plain template: one-sentence description
  */
 const plainTemplate = `Generate a commit message as a single plain sentence.
 
@@ -23,7 +23,7 @@ Improve commit message generation defaults
 Fix configuration fallback for invalid formats`;
 
 /**
- * Conventional Commits 模板
+ * Conventional Commits template
  */
 const conventionalTemplate = `Generate a commit message following the Conventional Commits format:
 <type>[optional scope]: <description>
@@ -67,7 +67,7 @@ feat(auth): add user authentication
 - Added session management`;
 
 /**
- * Angular 风格模板
+ * Angular style template
  */
 const angularTemplate = `Generate a commit message following Angular commit format:
 <type>(<scope>): <short summary>
@@ -81,7 +81,7 @@ Scope: component or module affected
 Summary: imperative, present tense, lowercase, no period`;
 
 /**
- * Karma 风格模板
+ * Karma style template
  */
 const karmaTemplate = `Generate a commit message following Karma format:
 <type>(<scope>): <message>
@@ -89,7 +89,7 @@ const karmaTemplate = `Generate a commit message following Karma format:
 Single line format. Types: feat, fix, docs, style, refactor, test, chore`;
 
 /**
- * Semantic 风格模板
+ * Semantic style template
  */
 const semanticTemplate = `Generate a commit message following Semantic format:
 <type>: <message>
@@ -97,7 +97,7 @@ const semanticTemplate = `Generate a commit message following Semantic format:
 Simple format without scope. Types: feat, fix, docs, style, refactor, perf, test, chore`;
 
 /**
- * Emoji 风格模板
+ * Emoji style template
  */
 const emojiTemplate = `Generate a commit message using emoji prefix:
 <emoji> <message>
@@ -115,7 +115,7 @@ Emoji mapping:
 🔧 chore: maintenance`;
 
 /**
- * EmojiKarma 风格模板
+ * EmojiKarma style template
  */
 const emojiKarmaTemplate = `Generate a commit message combining emoji and Karma format:
 <emoji> <type>(<scope>): <message>
@@ -125,7 +125,7 @@ Example: ✨ feat(auth): add user login
 Emoji: ✨ feat, 🐛 fix, 📝 docs, 💄 style, ♻️ refactor, ⚡ perf, ✅ test`;
 
 /**
- * Google 风格模板
+ * Google style template
  */
 const googleTemplate = `Generate a commit message following Google style:
 <Type>: <Description>
@@ -137,7 +137,7 @@ const googleTemplate = `Generate a commit message following Google style:
 Type starts with capital letter. Types: Feat, Fix, Docs, Style, Refactor, Perf, Test, Build, Ci, Chore`;
 
 /**
- * Atom 风格模板
+ * Atom style template
  */
 const atomTemplate = `Generate a commit message following Atom style:
 :<emoji>: <message>
@@ -151,7 +151,7 @@ Use colon-wrapped emoji shortcodes. Examples:
 :zap: improve performance`;
 
 /**
- * 模板注册表
+ * Template registry
  */
 const templates = {
     plain: plainTemplate,
@@ -166,14 +166,14 @@ const templates = {
 } satisfies Record<TemplateCommitFormat, string>;
 
 /**
- * 验证格式是否有效
+ * Validate if format is valid
  */
 function isValidFormat(format: string): format is TemplateCommitFormat {
     return Object.keys(templates).includes(format);
 }
 
 /**
- * 获取模板
+ * Get template
  */
 export function getTemplate(format: CommitFormat): string {
     let validFormat: TemplateCommitFormat = 'plain';
@@ -184,6 +184,6 @@ export function getTemplate(format: CommitFormat): string {
         console.warn(`Invalid format "${format}", falling back to plain`);
     }
 
-    // 模板内容仅定义英文提示词；具体输出语言由后续指令单独控制。
+    // Template content only defines English prompts; specific output language is controlled separately by subsequent instructions.
     return templates[validFormat];
 }

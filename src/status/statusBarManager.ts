@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  状态栏管理器
- *  全局静态管理器，统一管理所有状态栏项的生命周期和操作
+ *  Status Bar Manager
+ *  Global static manager, unified management of all status bar item lifecycle and operations
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -16,7 +16,7 @@ import { ContextUsageStatusBar } from './contextUsageStatusBar';
 import { TokenUsageStatusBar } from './tokenUsageStatusBar';
 
 /**
- * 状态栏项接口
+ * Status bar item interface
  */
 interface IStatusBar {
     initialize(context: vscode.ExtensionContext): Promise<void>;
@@ -31,90 +31,90 @@ interface ICompatibleStatusBar extends IStatusBar {
 }
 
 /**
- * 状态栏管理器
- * 全局静态类，统一管理所有状态栏项的生命周期和操作
- * 所有状态栏实例都作为公共成员提供访问
+ * Status bar manager
+ * Global static class, unified management of all status bar item lifecycle and operations
+ * All status bar instances are accessible as public members
  */
 export class StatusBarManager {
-    // ==================== 公共状态栏实例 ====================
-    /** MiniMax Coding Plan 状态栏 */
+    // ==================== Public status bar instances ====================
+    /** MiniMax Coding Plan status bar */
     static minimax: IStatusBar | undefined;
-    /** Kimi For Coding 状态栏 */
+    /** Kimi For Coding status bar */
     static kimi: IStatusBar | undefined;
-    /** DeepSeek 余额查询状态栏 */
+    /** DeepSeek balance query status bar */
     static deepseek: IStatusBar | undefined;
-    /** Moonshot 余额查询状态栏 */
+    /** Moonshot balance query status bar */
     static moonshot: IStatusBar | undefined;
-    /** 智谱AI用量状态栏 */
+    /** ZhipuAI usage status bar */
     static zhipu: IStatusBar | undefined;
-    /** Codex 用量查询状态栏 */
+    /** Codex usage query status bar */
     static codex: IStatusBar | undefined;
-    /** Compatible 提供商状态栏 */
+    /** Compatible provider status bar */
     static compatible: ICompatibleStatusBar | undefined;
-    /** 模型上下文窗口占用情况状态栏 */
+    /** Model context window usage status bar */
     static contextUsage: IStatusBar | undefined;
-    /** Token 用量统计状态栏 */
+    /** Token usage statistics status bar */
     static tokenUsage: IStatusBar | undefined;
 
-    // ==================== 私有成员 ====================
+    // ==================== Private members ====================
     private static statusBars: Map<string, IStatusBar> = new Map<string, IStatusBar>();
     private static initialized = false;
 
     /**
-     * 注册所有内置状态栏
-     * 在初始化时自动创建和注册所有状态栏实例
+     * Register all built-in status bars
+     * Automatically create and register all status bar instances during initialization
      */
     private static registerBuiltInStatusBars(context: vscode.ExtensionContext): void {
-        // 创建并注册 MiniMax 状态栏
+        // Create and register MiniMax status bar
         const miniMaxStatusBar = new MiniMaxStatusBar();
         this.registerStatusBar('minimax', miniMaxStatusBar);
 
-        // 创建并注册 Zhipu 状态栏
+        // Create and register Zhipu status bar
         const zhipuStatusBar = new ZhipuStatusBar();
         this.registerStatusBar('zhipu', zhipuStatusBar);
 
-        // 创建并注册 Kimi 状态栏
+        // Create and register Kimi status bar
         const kimiStatusBar = new KimiStatusBar();
         this.registerStatusBar('kimi', kimiStatusBar);
 
-        // 创建并注册 DeepSeek 状态栏
+        // Create and register DeepSeek status bar
         const deepseekStatusBar = new DeepSeekStatusBar();
         this.registerStatusBar('deepseek', deepseekStatusBar);
 
-        // 创建并注册 Moonshot 状态栏
+        // Create and register Moonshot status bar
         const moonshotStatusBar = new MoonshotStatusBar();
         this.registerStatusBar('moonshot', moonshotStatusBar);
 
-        // 创建并注册 Codex 状态栏
+        // Create and register Codex status bar
         const chatgptStatusBar = new ChatGPTStatusBar();
         this.registerStatusBar('codex', chatgptStatusBar);
 
-        // 创建并注册 Compatible 提供商状态栏
+        // Create and register Compatible provider status bar
         const compatibleStatusBar = new CompatibleStatusBar();
         this.registerStatusBar('compatible', compatibleStatusBar);
 
-        // 创建并注册 模型上下文窗口占用情况 状态栏
+        // Create and register Model context window usage status bar
         const contextUsageStatusBar = new ContextUsageStatusBar();
         this.registerStatusBar('contextUsage', contextUsageStatusBar);
 
-        // 创建并注册 Token 用量统计 状态栏
+        // Create and register Token usage statistics status bar
         const tokenUsageStatusBar = new TokenUsageStatusBar(context);
         this.registerStatusBar('tokenUsage', tokenUsageStatusBar);
     }
 
     /**
-     * 注册状态栏项
-     * 用于初始化时注册所有状态栏
-     * @param key 状态栏项的唯一标识
-     * @param statusBar 状态栏项实例
+     * Register status bar item
+     * Used to register all status bars during initialization
+     * @param key Unique identifier for status bar item
+     * @param statusBar Status bar item instance
      */
     static registerStatusBar(key: string, statusBar: IStatusBar): void {
         if (this.statusBars.has(key)) {
-            StatusLogger.warn(`[StatusBarManager] 状态栏项 ${key} 已存在，覆盖注册`);
+            StatusLogger.warn(`[StatusBarManager] Status bar item ${key} already exists, overriding registration`);
         }
         this.statusBars.set(key, statusBar);
 
-        // 将状态栏实例关联到公共成员
+        // Associate status bar instance with public members
         switch (key) {
             case 'minimax':
                 this.minimax = statusBar;
@@ -149,8 +149,8 @@ export class StatusBarManager {
     }
 
     /**
-     * 获取指定的状态栏项
-     * @param key 状态栏项的唯一标识
+     * Get specified status bar item
+     * @param key Unique identifier for status bar item
      */
     static getStatusBar(key: 'compatible'): ICompatibleStatusBar | undefined;
     static getStatusBar(key: string): IStatusBar | undefined;
@@ -159,43 +159,43 @@ export class StatusBarManager {
     }
 
     /**
-     * 初始化所有已注册的状态栏项
-     * 批量加载并初始化所有状态栏
-     * @param context 扩展上下文
+     * Initialize all registered status bar items
+     * Batch load and initialize all status bars
+     * @param context Extension context
      */
     static async initializeAll(context: vscode.ExtensionContext): Promise<void> {
         if (this.initialized) {
-            StatusLogger.warn('[StatusBarManager] 状态栏管理器已初始化，跳过重复初始化');
+            StatusLogger.warn('[StatusBarManager] Status bar manager already initialized, skipping duplicate initialization');
             return;
         }
 
-        // 第一步：注册所有内置状态栏
+        // Step 1: Register all built-in status bars
         this.registerBuiltInStatusBars(context);
 
-        StatusLogger.info(`[StatusBarManager] 开始初始化 ${this.statusBars.size} 个状态栏项`);
+        StatusLogger.info(`[StatusBarManager] Starting to initialize ${this.statusBars.size} status bar items`);
 
-        // 并行初始化所有状态栏,并记录每个的耗时
+        // Parallel initialization of all status bars, recording elapsed time for each
         const initPromises = Array.from(this.statusBars.entries()).map(async ([key, statusBar]) => {
             const startTime = Date.now();
             try {
                 await statusBar.initialize(context);
                 const duration = Date.now() - startTime;
-                StatusLogger.debug(`[StatusBarManager] 状态栏项 ${key} 初始化成功 (耗时: ${duration}ms)`);
+                StatusLogger.debug(`[StatusBarManager] Status bar item ${key} initialization successful (elapsed: ${duration}ms)`);
             } catch (error) {
                 const duration = Date.now() - startTime;
-                StatusLogger.error(`[StatusBarManager] 状态栏项 ${key} 初始化失败 (耗时: ${duration}ms)`, error);
+                StatusLogger.error(`[StatusBarManager] Status bar item ${key} initialization failed (elapsed: ${duration}ms)`, error);
             }
         });
 
         await Promise.all(initPromises);
 
         this.initialized = true;
-        StatusLogger.info('[StatusBarManager] 所有状态栏项初始化完成');
+        StatusLogger.info('[StatusBarManager] All status bar items initialization complete');
     }
 
     /**
-     * 检查并显示指定的状态栏项
-     * @param key 状态栏项的唯一标识
+     * Check and display specified status bar item
+     * @param key Unique identifier for status bar item
      */
     static async checkAndShowStatus(key: string): Promise<void> {
         const statusBar = this.getStatusBar(key);
@@ -203,43 +203,43 @@ export class StatusBarManager {
             try {
                 await statusBar.checkAndShowStatus();
             } catch (error) {
-                StatusLogger.error(`[StatusBarManager] 检查并显示状态栏 ${key} 失败`, error);
+                StatusLogger.error(`[StatusBarManager] Failed to check and display status bar ${key}`, error);
             }
         } else {
-            StatusLogger.warn(`[StatusBarManager] 未找到状态栏项 ${key}`);
+            StatusLogger.warn(`[StatusBarManager] Status bar item ${key} not found`);
         }
     }
 
     /**
-     * 延时更新指定的状态栏项
-     * @param key 状态栏项的唯一标识
-     * @param delayMs 延时时间（毫秒）
+     * Delayed update for specified status bar item
+     * @param key Unique identifier for status bar item
+     * @param delayMs Delay time (milliseconds)
      */
     static delayedUpdate(key: string, delayMs?: number): void {
         const statusBar = this.getStatusBar(key);
         if (statusBar) {
             statusBar.delayedUpdate(delayMs);
         } else {
-            StatusLogger.warn(`[StatusBarManager] 未找到状态栏项 ${key}`);
+            StatusLogger.warn(`[StatusBarManager] Status bar item ${key} not found`);
         }
     }
 
     /**
-     * 销毁所有状态栏项
+     * Destroy all status bar items
      */
     static disposeAll(): void {
         for (const [key, statusBar] of this.statusBars) {
             try {
                 statusBar.dispose();
-                StatusLogger.debug(`[StatusBarManager] 状态栏项 ${key} 已销毁`);
+                StatusLogger.debug(`[StatusBarManager] Status bar item ${key} destroyed`);
             } catch (error) {
-                StatusLogger.error(`[StatusBarManager] 销毁状态栏项 ${key} 失败`, error);
+                StatusLogger.error(`[StatusBarManager] Failed to destroy status bar item ${key}`, error);
             }
         }
         this.statusBars.clear();
         this.initialized = false;
 
-        // 清除公共实例引用
+        // Clear public instance references
         this.minimax = undefined;
         this.zhipu = undefined;
         this.kimi = undefined;
@@ -252,14 +252,14 @@ export class StatusBarManager {
     }
 
     /**
-     * 获取所有已注册的状态栏项列表
+     * Get list of all registered status bar items
      */
     static getRegisteredKeys(): string[] {
         return Array.from(this.statusBars.keys());
     }
 
     /**
-     * 获取初始化状态
+     * Get initialization status
      */
     static isInitialized(): boolean {
         return this.initialized;

@@ -1,7 +1,7 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  日志读取管理器
- *  读取JSONL格式的日志文件,负责所有文件 I/O 操作
- *  统计计算逻辑已迁移到 StatsCalculator
+ *  Log Read Manager
+ *  Reads JSONL format log files, responsible for all file I/O operations
+ *  Statistics calculation logic has been migrated to StatsCalculator
  *--------------------------------------------------------------------------------------------*/
 
 import * as fs from 'fs/promises';
@@ -14,8 +14,8 @@ import { StatsCalculator } from './statsCalculator';
 import type { TokenRequestLog } from './types';
 
 /**
- * 日志读取管理器
- * 只负责文件 I/O，统计计算委托给 StatsCalculator
+ * Log Read Manager
+ * Only responsible for file I/O, statistics calculation delegated to StatsCalculator
  */
 export class LogReadManager {
     private readonly pathManager: LogPathManager;
@@ -25,7 +25,7 @@ export class LogReadManager {
     }
 
     /**
-     * 读取指定小时的所有日志
+     * Read All Logs for Specified Hour
      */
     async readHourLogs(dateStr: string, hour: number): Promise<TokenRequestLog[]> {
         const filePath = this.pathManager.getHourFilePath(dateStr, hour);
@@ -37,14 +37,14 @@ export class LogReadManager {
             const content = await fs.readFile(filePath, 'utf-8');
             return this.parseJsonlContent(content);
         } catch (err) {
-            StatusLogger.error(`[LogReadManager] 读取小时日志失败: ${filePath}`, err);
+            StatusLogger.error(`[LogReadManager] Failed to read hourly logs: ${filePath}`, err);
             return [];
         }
     }
 
     /**
-     * 读取指定日期的所有日志
-     * 优化：使用 Promise.all 并行读取所有小时文件
+     * Read All Logs for Specified Date
+     * Optimization: Use Promise.all to read all hour files in parallel
      */
     async readDateLogs(dateStr: string): Promise<TokenRequestLog[]> {
         const dateFolder = this.pathManager.getDateFolderPath(dateStr);
@@ -55,14 +55,14 @@ export class LogReadManager {
         try {
             const files = await fs.readdir(dateFolder);
             const hourFiles = files.filter(f => f.endsWith('.jsonl')).sort();
-            // 并行读取所有文件
+            // Read all files in parallel
             const readPromises = hourFiles.map(file => {
                 const filePath = path.join(dateFolder, file);
                 return fs
                     .readFile(filePath, 'utf-8')
                     .then(content => this.parseJsonlContent(content))
                     .catch(err => {
-                        StatusLogger.warn(`[LogReadManager] 读取小时日志失败: ${filePath}`, err);
+                        StatusLogger.warn(`[LogReadManager] Failed to read hourly logs: ${filePath}`, err);
                         return [];
                     });
             });
@@ -74,29 +74,29 @@ export class LogReadManager {
             }
             return allLogs;
         } catch (err) {
-            StatusLogger.error(`[LogReadManager] 读取日期日志失败: ${dateFolder}`, err);
+            StatusLogger.error(`[LogReadManager] Failed to read date logs: ${dateFolder}`, err);
             return [];
         }
     }
 
     /**
-     * 获取请求详情列表(合并后的最终状态)
-     * 用于详情页面展示
+     * Get Request Details List (merged final status)
+     * Used for detail page display
      */
     async getRequestDetails(dateStr: string): Promise<TokenRequestLog[]> {
         const logs = await this.readDateLogs(dateStr);
         const mergedMap = StatsCalculator.mergeLogsByRequestId(logs);
-        // 转换为数组并按时间戳倒序排序(最新的在前)
+        // Convert to array and sort by timestamp in descending order (newest first)
         const details = Array.from(mergedMap.values());
         details.sort((a, b) => b.timestamp - a.timestamp);
         return details;
     }
 
     /**
-     * 获取最近的请求详情（性能优化版本）
-     * 只读取最近的 N 条请求，避免在有大量日志时加载整个日期的数据
-     * 用于状态栏等需要快速响应的场景
-     * 优化策略：从最新的小时开始反向读取，找到足够的记录就停止
+     * Get Recent Request Details (performance optimized version)
+     * Only reads the most recent N requests, avoiding loading entire date data when there arelogs logs
+     * Used for status bar and other scenarios requiring fast response
+     * Optimization strategy: read backwards from the latest hour, stop when enough records are found
      */
     async getRecentRequestDetails(dateStr: string, limit: number = 100): Promise<TokenRequestLog[]> {
         const now = new Date();
@@ -104,8 +104,8 @@ export class LogReadManager {
         const today = DateUtils.getTodayDateString();
         const isToday = dateStr === today;
 
-        // 获取需要检查的小时范围
-        // 如果是今天，从当前小时开始；否则从 23 小时开始
+        // Get hour range to check
+        // If today, start from current hour; otherwise start from hour 23
         const startHour = isToday ? currentHour : 23;
         const logs: TokenRequestLog[] = [];
         const dateFolder = this.pathManager.getDateFolderPath(dateStr);
@@ -114,37 +114,37 @@ export class LogReadManager {
         }
 
         try {
-            // 从最新的小时开始反向读取
+            // Read backwards from the latest hour
             for (let hour = startHour; hour >= 0 && logs.length < limit; hour--) {
                 const hourLogs = await this.readHourLogs(dateStr, hour);
                 if (hourLogs.length === 0) {
                     continue;
                 }
 
-                // 合并日志
+                // Merge logs
                 const mergedMap = StatsCalculator.mergeLogsByRequestId(hourLogs);
                 const hourDetails = Array.from(mergedMap.values());
-                // 合并到结果中
+                // Merge into results
                 logs.push(...hourDetails);
-                // 如果已经收集了足够多的记录，提前结束
+                // If enough records have been collected, end early
                 if (logs.length >= limit) {
                     break;
                 }
             }
 
-            // 按时间戳倒序排序（最新的在前）
+            // Sort by timestamp in descending order (newest first)
             logs.sort((a, b) => b.timestamp - a.timestamp);
-            // 只返回最近的 limit 条
+            // Return only the most recent limit entries
             return logs.slice(0, limit);
         } catch (err) {
-            StatusLogger.error(`[LogReadManager] 获取最近请求详情失败: ${dateStr}`, err);
+            StatusLogger.error(`[LogReadManager] Failed to get recent request details: ${dateStr}`, err);
             return [];
         }
     }
 
     /**
-     * 获取小时日志文件的修改时间戳（毫秒）
-     * 如果文件不存在，返回 0
+     * Get Hourly Log File Modification Timestamp (milliseconds)
+     * Returns 0 if file does not exist
      */
     async getHourFileModifiedTime(dateStr: string, hour: number): Promise<number> {
         const filePath = this.pathManager.getHourFilePath(dateStr, hour);
@@ -156,14 +156,14 @@ export class LogReadManager {
             const stats = await fs.stat(filePath);
             return stats.mtime.getTime();
         } catch (err) {
-            StatusLogger.warn(`[LogReadManager] 获取文件修改时间失败: ${filePath}`, err);
+            StatusLogger.warn(`[LogReadManager] Failed to get file modification time: ${filePath}`, err);
             return 0;
         }
     }
 
     /**
-     * 解析JSONL内容
-     * 同一requestId可能有多条记录,返回所有流水记录
+     * Parse JSONL Content
+     * Multiple records may exist for the same requestId, return all sequential records
      */
     private parseJsonlContent(content: string): TokenRequestLog[] {
         const lines = content.split('\n').filter(line => line.trim());
@@ -173,7 +173,7 @@ export class LogReadManager {
                 const log = JSON.parse(line) as TokenRequestLog;
                 logs.push(log);
             } catch {
-                // StatusLogger.warn('[LogReadManager] 解析日志行失败,跳过', err);
+                // StatusLogger.warn('[LogReadManager] Failed to parse log line, skipping', err);
             }
         }
         return logs;

@@ -1,6 +1,6 @@
 /**
- * 小时统计组件
- * 负责渲染每小时的使用统计，包含提供商和模型详情
+ * Hourly Statistics Component
+ * Responsible for rendering hourly usage statistics, including provider and model details
  */
 
 import type { HourlyStats, ModelData, ProviderData } from '../types';
@@ -12,19 +12,19 @@ import {
     getProviderDisplayName
 } from '../utils';
 
-// ============= 类型定义 =============
+// ============= Type Definitions =============
 
 type ViewMode = 'hour' | 'provider' | 'model';
 
-// 保存当前选择的视图模式
+// Save the currently selected view mode
 let currentViewMode: ViewMode = 'hour';
 
-// ============= 辅助函数 =============
+// ============= Helper Functions =============
 
 /**
- * 创建统计单元格
- * @param value 单元格值
- * @param isBold 是否加粗
+ * Create a statistics cell
+ * @param value Cell value
+ * @param isBold Whether to make bold
  * @returns HTMLTableCellElement
  */
 function createStatCell(value: string, isBold: boolean = false): HTMLTableCellElement {
@@ -38,10 +38,10 @@ function createStatCell(value: string, isBold: boolean = false): HTMLTableCellEl
 }
 
 /**
- * 为行添加统计单元格（输入、缓存、输出、总计、请求次数、延迟、速度）
- * @param row 表格行
- * @param stats 统计数据
- * @param isBold 是否加粗
+ * Append statistics cells to a row (input, cache, output, total, requests, latency, speed)
+ * @param row Table row
+ * @param stats Statistics data
+ * @param isBold Whether to make bold
  */
 function appendStatCells(
     row: HTMLTableRowElement,
@@ -58,10 +58,10 @@ function appendStatCells(
     row.appendChild(createStatCell(calculateAverageSpeed(stats), isBold));
 }
 
-// ============= 组件渲染 =============
+// ============= Component Rendering =============
 
 /**
- * 创建小时明细行（用于提供商/模型模式下显示某小时的数据）
+ * Create hour detail row (used in provider/model mode to display data for a specific hour)
  */
 function createHourDetailRow(
     hour: string,
@@ -81,7 +81,7 @@ function createHourDetailRow(
 }
 
 /**
- * 渲染表格内容
+ * Render table content
  */
 function renderTable(
     tableContainer: HTMLElement,
@@ -94,7 +94,7 @@ function renderTable(
     const thead = createElement('thead');
     const headerRow = createElement('tr');
 
-    const headers = ['时间', '输入Tokens', '缓存命中', '输出Tokens', '消耗Tokens', '请求次数', '平均延迟', '平均速度'];
+    const headers = ['Time', 'Input Tokens', 'Cache Hit', 'Output Tokens', 'Consumed Tokens', 'Requests', 'Avg Latency', 'Avg Speed'];
     headers.forEach(h => {
         const th = createElement('th');
         th.textContent = h;
@@ -106,7 +106,7 @@ function renderTable(
     const tbody = createElement('tbody');
 
     if (mode === 'hour') {
-        // 模式1: 按小时列表
+        // Mode 1: Hourly list
         Object.entries(hourlyStats)
             .sort(([a], [b]) => Number(a) - Number(b))
             .forEach(([hour, stats]) => {
@@ -125,7 +125,7 @@ function renderTable(
                 tbody.appendChild(row);
             });
     } else if (mode === 'provider') {
-        // 模式2: 按提供商分组
+        // Mode 2: Group by provider
         providers.forEach(provider => {
             if (provider.requests === 0) {
                 return;
@@ -140,16 +140,16 @@ function renderTable(
 
             tbody.appendChild(providerRow);
 
-            // 收集该提供商的所有小时数据
+            // Collect all hourly data for this provider
             const providerHourlyData: Array<[string, ProviderData]> = [];
             Object.entries(hourlyStats).forEach(([hour, stats]) => {
                 if (!stats.providers) {
                     return;
                 }
-                // 使用 providerKey 查找
+                // Lookup using providerKey
                 const providerInHour = provider.providerKey ? stats.providers[provider.providerKey] : undefined;
                 if (providerInHour && providerInHour.requests > 0) {
-                    // 添加 providerKey 字段，转换为 ProviderData 类型
+                    // Add providerKey field to convert to ProviderData type
                     providerHourlyData.push([hour, { ...providerInHour, providerKey: provider.providerKey }]);
                 }
             });
@@ -161,7 +161,7 @@ function renderTable(
             });
         });
     } else if (mode === 'model') {
-        // 模式3: 按提供商→模型分组
+        // Mode 3: Group by provider -> model
         providers.forEach(provider => {
             if (provider.requests === 0) {
                 return;
@@ -232,19 +232,19 @@ function renderTable(
 }
 
 /**
- * 创建小时统计区域
- * 如果容器已存在，只更新数据；否则创建新组件
+ * Create hourly statistics section
+ * If container already exists, only update data; otherwise create a new component
  */
 export function createHourlyStats(
     providers: ProviderData[],
     hourlyStats: Record<string, HourlyStats>,
     existingContainer?: HTMLElement
 ): HTMLElement {
-    // 如果传入了已存在的容器，只更新数据
+    // If an existing container is provided, only update data
     if (existingContainer) {
         const tableContainer = existingContainer.querySelector('.table-container') as HTMLElement;
         if (tableContainer) {
-            // 容器存在，只更新表格数据
+            // Container exists, only update table data
             setTimeout(() => {
                 renderTable(tableContainer, providers, hourlyStats, currentViewMode);
             }, 0);
@@ -252,42 +252,42 @@ export function createHourlyStats(
         }
     }
 
-    // 创建新容器
+    // Create new container
     const section = createElement('section', 'hourly-stats-section');
 
     const h2 = createElement('h2');
-    h2.textContent = '各小时用量';
+    h2.textContent = 'Hourly Usage';
     section.appendChild(h2);
 
     if (!hourlyStats || Object.keys(hourlyStats).length === 0) {
         const empty = createElement('div', 'empty-message');
-        empty.textContent = '暂无小时统计数据';
+        empty.textContent = 'No hourly statistics data available';
         section.appendChild(empty);
         return section;
     }
 
-    // 创建切换按钮
+    // Create toggle buttons
     const toggleContainer = createElement('div', 'stats-toggle-container');
     const hourButton = createElement('button', 'stats-toggle-button active');
-    hourButton.textContent = '📊 小时';
+    hourButton.textContent = '📊 Hourly';
     const providerButton = createElement('button', 'stats-toggle-button');
-    providerButton.textContent = '📦 提供商';
+    providerButton.textContent = '📦 Provider';
     const modelButton = createElement('button', 'stats-toggle-button');
-    modelButton.textContent = '🔧 模型';
+    modelButton.textContent = '🔧 Model';
     toggleContainer.appendChild(hourButton);
     toggleContainer.appendChild(providerButton);
     toggleContainer.appendChild(modelButton);
     section.appendChild(toggleContainer);
 
-    // 创建表格容器
+    // Create table container
     const tableContainer = createElement('div', 'table-container');
 
-    // 初始渲染（使用保存的模式）
+    // Initial render (using saved mode)
     renderTable(tableContainer, providers, hourlyStats, currentViewMode);
 
     section.appendChild(tableContainer);
 
-    // 添加切换事件
+    // Add toggle events
     setTimeout(() => {
         hourButton.onclick = () => {
             currentViewMode = 'hour';

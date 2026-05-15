@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  Token Usage Status Bar
- *  Token 用量状态栏 - 显示今日 Token 用量
+ *  Token usage status bar - displays today's token usage
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -11,8 +11,8 @@ import { UserActivityService } from './userActivityService';
 import type { TokenUsageStatsFromFile } from '../usages/fileLogger/types';
 
 /**
- * Token 用量状态栏
- * 显示今日 Token 用量，点击打开详细视图
+ * Token usage status bar
+ * Displays today's token usage, click to open detailed view
  */
 export class TokenUsageStatusBar {
     private statusBarItem: vscode.StatusBarItem | undefined;
@@ -20,46 +20,46 @@ export class TokenUsageStatusBar {
     private updateDisposable: vscode.Disposable | undefined;
     private updateTimer: NodeJS.Timeout | undefined;
     private lastUpdateTime = 0;
-    private readonly UPDATE_INTERVAL = 30000; // 30秒更新一次
-    private readonly UPDATE_COOLDOWN = 10000; // 最近更新后10秒内不重复更新
+    private readonly UPDATE_INTERVAL = 30000; // Update every 30 seconds
+    private readonly UPDATE_COOLDOWN = 10000; // No duplicate updates within 10 seconds after recent update
 
     constructor(private context: vscode.ExtensionContext) {
         this.usagesManager = TokenUsagesManager.instance;
     }
 
     /**
-     * 初始化状态栏
+     * Initialize status bar
      */
     async initialize(): Promise<void> {
         this.statusBarItem = vscode.window.createStatusBarItem(
             'ccmp.statusBar.tokenUsage',
             vscode.StatusBarAlignment.Right,
-            11 // 优先级设置在 contextUsage(12) 之前
+            11 // Priority set before contextUsage (12)
         );
 
         this.statusBarItem.name = 'CCMP: Token Usage';
         this.statusBarItem.command = 'ccmp.tokenUsage.showDetails';
 
-        // 初始更新显示
+        // Initial update display
         this.updateDisplay().then(() => {
             this.statusBarItem?.show();
         });
 
-        // 监听文件日志系统的统计更新事件
+        // Listen for statistics update events from file log system
         const fileLogger = this.usagesManager.getFileLogger();
         this.updateDisposable = fileLogger.onStatsUpdate(async () => {
             await this.updateDisplay();
         });
 
-        // 启动定时更新
+        // Start periodic update
         this.startPeriodicUpdate();
 
         this.context.subscriptions.push(this.statusBarItem);
-        StatusLogger.debug('[Token统计状态栏] 初始化完成');
+        StatusLogger.debug('[Token statistics status bar] Initialization complete');
     }
 
     /**
-     * 启动定时更新
+     * Start periodic update
      */
     private startPeriodicUpdate(): void {
         if (this.updateTimer) {
@@ -70,44 +70,44 @@ export class TokenUsageStatusBar {
             await this.periodicUpdate();
         }, this.UPDATE_INTERVAL);
 
-        StatusLogger.debug(`[Token统计状态栏] 启动定时更新，间隔: ${this.UPDATE_INTERVAL}ms`);
+        StatusLogger.debug(`[Token statistics status bar] Started periodic update, interval: ${this.UPDATE_INTERVAL}ms`);
     }
 
     /**
-     * 停止定时更新
+     * Stop periodic update
      */
     private stopPeriodicUpdate(): void {
         if (this.updateTimer) {
             clearInterval(this.updateTimer);
             this.updateTimer = undefined;
-            StatusLogger.debug('[Token统计状态栏] 停止定时更新');
+            StatusLogger.debug('[Token statistics status bar] Stopped periodic update');
         }
     }
 
     /**
-     * 周期性更新回调
+     * Periodic update callback
      */
     private async periodicUpdate(): Promise<void> {
-        // 检查用户是否活跃
+        // Check if user is active
         if (!UserActivityService.isUserActive()) {
-            StatusLogger.trace('[Token统计状态栏] 用户不活跃，跳过更新');
+            StatusLogger.trace('[Token statistics status bar] User inactive, skipping update');
             return;
         }
 
-        // 检查是否在冷却期内
+        // Check if in cooldown period
         const now = Date.now();
         const timeSinceLastUpdate = now - this.lastUpdateTime;
         if (timeSinceLastUpdate < this.UPDATE_COOLDOWN) {
-            StatusLogger.trace(`[Token统计状态栏] 距离上次更新仅 ${timeSinceLastUpdate}ms，等待下个周期`);
+            StatusLogger.trace(`[Token statistics status bar] Only ${timeSinceLastUpdate}ms since last update, waiting for next cycle`);
             return;
         }
 
-        // 执行更新
+        // Execute update
         await this.updateDisplay();
     }
 
     /**
-     * 更新显示
+     * Update display
      */
     async updateDisplay(): Promise<void> {
         if (!this.statusBarItem) {
@@ -118,7 +118,7 @@ export class TokenUsageStatusBar {
             const today = DateUtils.getTodayDateString();
             const todayStats = await this.usagesManager.getDateStats(today);
 
-            // 计算今日总 token
+            // Calculate today's total tokens
             let totalInputTokens = 0;
             let totalOutputTokens = 0;
             let totalRequests = 0;
@@ -131,59 +131,59 @@ export class TokenUsageStatusBar {
 
             const totalTokens = totalInputTokens + totalOutputTokens;
 
-            // 更新状态栏文本
+            // Update status bar text
             if (totalRequests === 0) {
                 this.statusBarItem.text = '$(pulse)';
             } else {
                 this.statusBarItem.text = `$(pulse) ${this.formatTokens(totalTokens)}`;
             }
 
-            // 更新 Tooltip (异步生成)
+            // Update Tooltip (asynchronously generated)
             this.statusBarItem.tooltip = await this.generateTooltip(todayStats);
 
-            // 更新最后更新时间
+            // Update last update time
             this.lastUpdateTime = Date.now();
         } catch (err) {
-            StatusLogger.error('[Token统计状态栏] 更新显示失败:', err);
+            StatusLogger.error('[Token statistics status bar] Failed to update display:', err);
             this.statusBarItem.text = '$(pulse)';
         }
     }
 
     /**
-     * 生成 Tooltip（显示今日分提供商统计 + 最近历史记录）
+     * Generate Tooltip (displays today's per-provider statistics + recent history)
      */
     private async generateTooltip(stats: TokenUsageStatsFromFile): Promise<vscode.MarkdownString> {
         const md = new vscode.MarkdownString();
         md.supportHtml = false;
         md.isTrusted = true;
 
-        md.appendMarkdown('**CCMP: 今日 Token 消耗统计**\n\n');
+        md.appendMarkdown('**CCMP: Today Token Consumption Statistics**\n\n');
         md.appendMarkdown('\n---\n');
 
         const providers = Object.values(stats.providers);
         if (providers.length === 0) {
-            md.appendMarkdown('暂无使用记录');
-            md.appendMarkdown('\n\n---\n\n点击查看详情');
+            md.appendMarkdown('No usage records');
+            md.appendMarkdown('\n\n---\n\nClick to view details');
             return md;
         }
 
-        // ========== 今日用量表格 ==========
-        // 按提供商统计（按总 token 排序）
+        // ========== Today's usage table ==========
+        // Statistics by provider (sorted by total tokens)
         const sortedProviders = providers.sort((a, b) => {
             const totalA = a.actualInput + a.outputTokens;
             const totalB = b.actualInput + b.outputTokens;
             return totalB - totalA;
         });
-        // 创建提供商统计表格
+        // Create provider statistics table
         md.appendMarkdown(
-            '| 提供商        | 输入Tokens | 缓存命中 | 输出Tokens | 消耗Tokens | 请求数 | 平均延迟 | 平均速度 |\n'
+            '| Provider        | Input Tokens | Cache Hit | Output Tokens | Consumed Tokens | Requests | Avg Latency | Avg Speed |\n'
         );
         md.appendMarkdown('| :------------ | ------: | ------: | ------: | ------: | ----: | ------: | ------: |\n');
         for (const providerStats of sortedProviders) {
             const providerTotal = providerStats.actualInput + providerStats.outputTokens;
-            // 计算平均输出速度
+            // Calculate average output speed
             const avgSpeed = this.calculateAverageSpeed(providerStats);
-            // 计算平均首Token延迟
+            // Calculate average first Token latency
             const avgLatency = this.calculateAverageFirstTokenLatency(providerStats.firstTokenLatency);
             md.appendMarkdown(
                 `| ${providerStats.providerName} | ${this.formatTokens(providerStats.actualInput)} | ` +
@@ -192,58 +192,58 @@ export class TokenUsageStatusBar {
                 `**${this.formatTokens(providerTotal)}** | ${providerStats.requests} | ${avgLatency} | ${avgSpeed} |\n`
             );
         }
-        // 合计行（仅当有多个提供商时显示）
+        // Total row (only shown when there are multiple providers)
         if (providers.length > 1) {
             const total = stats.total.actualInput + stats.total.outputTokens;
             const avgSpeedTotal = this.calculateAverageSpeed(stats.total);
             const avgLatencyTotal = this.calculateAverageFirstTokenLatency(stats.total.firstTokenLatency);
             md.appendMarkdown(
-                `| **合计** | **${this.formatTokens(stats.total.actualInput)}** | ` +
+                `| **Total** | **${this.formatTokens(stats.total.actualInput)}** | ` +
                 `**${this.formatTokens(stats.total.cacheTokens)}** | ` +
                 `**${this.formatTokens(stats.total.outputTokens)}** | ` +
                 `**${this.formatTokens(total)}** | **${stats.total.requests}** | **${avgLatencyTotal}** | **${avgSpeedTotal}** |\n`
             );
         }
 
-        // ========== 最近请求记录表格 ==========
+        // ========== Recent request records table ==========
         try {
-            const recentRequests = await this.usagesManager.getRecentRecords(3); // 获取最近 3 条
+            const recentRequests = await this.usagesManager.getRecentRecords(3); // Get recent 3 records
 
             if (recentRequests.length > 0) {
                 md.appendMarkdown('\n\n ---- \n\n\n\n');
-                // 创建表格标题
+                // Create table header
                 md.appendMarkdown(
-                    '| 提供商      | 请求时间 | 消耗量 | 状态 | 输入Tokens | 缓存命中 | 输出Tokens | 响应延迟 | 输出速度 |\n'
+                    '| Provider      | Request Time | Consumption | Status | Input Tokens | Cache Hit | Output Tokens | Response Latency | Output Speed |\n'
                 );
                 md.appendMarkdown(
                     '| :----------- | :-----: | -----: | :----: | -----: | -----: | -----: | ------: | -----: |\n'
                 );
 
-                // 反转数组，让最近的请求在最下方显示
+                // Reverse array, show latest requests at the bottom
                 const reversedRequests = [...recentRequests].reverse();
                 for (const req of reversedRequests) {
                     const startTime = new Date(req.timestamp);
-                    // 确定状态图标：仅当有 rawUsage 且状态为 completed 时才显示 ✅
-                    let statusIcon = '⏳'; // 默认为进行中
+                    // Determine status icon: only show when rawUsage exists and status is completed
+                    let statusIcon = '⏳'; // Default is in progress
                     if (req.status === 'completed' && req.rawUsage) {
-                        statusIcon = '✅'; // 真正完成
+                        statusIcon = '✅'; // Truly completed
                     } else if (req.status === 'failed') {
-                        statusIcon = '❌'; // 失败
+                        statusIcon = '❌'; // Failed
                     } else if (req.status === 'estimated') {
-                        statusIcon = '⏳'; // 预估中
+                        statusIcon = '⏳'; // Estimating
                     }
                     const timeStr = startTime.toLocaleTimeString('zh-CN');
 
-                    // 直接访问扩展属性
+                    // Directly access extension properties
                     const actualInput = req.actualInput;
                     const cacheTokens = req.cacheReadTokens;
                     const outputTokens = req.outputTokens;
                     const totalTokens = req.totalTokens;
 
-                    // 格式化输出速度
+                    // Format output speed
                     const speedStr = req.outputSpeed !== undefined ? `${req.outputSpeed.toFixed(1)} t/s` : '-';
 
-                    // 格式化首Token延迟
+                    // Format first Token latency
                     let latencyStr = '-';
                     if (req.streamStartTime !== undefined && req.timestamp !== undefined) {
                         const latency = req.streamStartTime - req.timestamp;
@@ -256,19 +256,19 @@ export class TokenUsageStatusBar {
                         }
                     }
 
-                    // 根据状态决定显示实际值还是预估值
+                    // Decide whether to show actual or estimated value based on status
                     let inputStr = '-';
                     let cacheStr = '-';
                     let outputStr = '-';
                     let totalStr = '-';
                     if (req.status === 'completed' && req.rawUsage && totalTokens > 0) {
-                        // 完成状态且有实际值：显示实际值
+                        // Completed status with actual values: show actual values
                         inputStr = this.formatTokens(actualInput);
                         cacheStr = cacheTokens > 0 ? this.formatTokens(cacheTokens) : '-';
                         outputStr = outputTokens > 0 ? this.formatTokens(outputTokens) : '-';
                         totalStr = this.formatTokens(totalTokens);
                     } else {
-                        // 预估或失败状态或无实际值：显示预估值（带 ~ 前缀）
+                        // Estimated or failed status or no actual values: show estimated values (with ~ prefix)
                         if (req.estimatedInput !== undefined && req.estimatedInput > 0) {
                             totalStr = inputStr = `~${this.formatTokens(req.estimatedInput)}`;
                         }
@@ -280,20 +280,20 @@ export class TokenUsageStatusBar {
                 }
             }
         } catch (err) {
-            // 忽略错误，不影响基本功能
-            StatusLogger.debug('[Token统计状态栏] 获取请求记录失败:', err);
+            // Ignore errors, does not affect basic functionality
+            StatusLogger.debug('[Token statistics status bar] Failed to get request records:', err);
         }
 
-        md.appendMarkdown('\n---\n\n点击查看详情');
+        md.appendMarkdown('\n---\n\nClick to view details');
 
         return md;
     }
 
     /**
-     * 计算平均输出速度
-     * 优先使用 outputSpeeds（已聚合后的平均速度）
-     * @param stats 统计数据
-     * @returns 格式化的平均速度字符串
+     * Calculate average output speed
+     * Prefer to use outputSpeeds (already aggregated average speed)
+     * @param stats Statistics data
+     * @returns Formatted average speed string
      */
     private calculateAverageSpeed(stats: { outputSpeeds?: number }): string {
         if (stats.outputSpeeds && stats.outputSpeeds > 0) {
@@ -303,9 +303,9 @@ export class TokenUsageStatusBar {
     }
 
     /**
-     * 计算平均首Token延迟
-     * @param firstTokenLatency 平均首 Token 延迟(毫秒)
-     * @returns 格式化后的平均首 Token 延迟字符串
+     * Calculate average first Token latency
+     * @param firstTokenLatency Average first Token latency (milliseconds)
+     * @returns Formatted average first Token latency string
      */
     private calculateAverageFirstTokenLatency(firstTokenLatency?: number): string {
         if (!firstTokenLatency || firstTokenLatency <= 0) {
@@ -319,7 +319,7 @@ export class TokenUsageStatusBar {
     }
 
     /**
-     * 格式化 token 数量
+     * Format token quantity
      */
     private formatTokens(tokens: number): string {
         if (tokens >= 1000000) {
@@ -332,7 +332,7 @@ export class TokenUsageStatusBar {
     }
 
     /**
-     * 检查并显示状态
+     * Check and display status
      */
     async checkAndShowStatus(): Promise<void> {
         if (this.statusBarItem) {
@@ -341,7 +341,7 @@ export class TokenUsageStatusBar {
     }
 
     /**
-     * 延迟更新
+     * Delayed update
      */
     delayedUpdate(delayMs: number = 1000): void {
         setTimeout(() => {
@@ -350,7 +350,7 @@ export class TokenUsageStatusBar {
     }
 
     /**
-     * 销毁状态栏
+     * Destroy status bar
      */
     dispose(): void {
         this.stopPeriodicUpdate();

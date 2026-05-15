@@ -1,18 +1,18 @@
 ﻿/*---------------------------------------------------------------------------------------------
  *  Schema Sanitizer
- *  从 tool inputSchema 中移除 VS Code / JSON Schema UI 专用注解字段，
- *  避免将不被后端 API（Gemini、OpenAI、Anthropic 等）接受的字段透传出去。
+ *  Remove VS Code / JSON Schema UI-specific annotation fields from tool inputSchema,
+ *  to avoid passing fields not accepted by backend APIs (Gemini, OpenAI, Anthropic, etc.).
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * 需要从 tool schema 中递归删除的字段集合，分两类：
+ * Set of fields that need to be recursively removed from tool schema, in two categories:
  *
- * （1）VS Code 扩展注解：仅用于设置编辑器渲染，所有 LLM API 均不接受。
- * （2）标准 JSON Schema 元数据：虽属规范，但各 LLM API（尤其是 Gemini）
- *     明确拒绝这些字段，故统一剔除。
+ * (1) VS Code extension annotations: Only used for setting editor rendering, not accepted by any LLM API.
+ * (2) Standard JSON Schema metadata: Although part of the specification, various LLM APIs (especially Gemini)
+ *     explicitly reject these fields, so they are uniformly removed.
  */
 const droppedKeys = new Set<string>([
-    // ── VS Code 扩展注解字段 ──
+    // ── VS Code extension annotation fields ──
     'enumDescriptions',
     'markdownEnumDescriptions',
     'markdownDescription',
@@ -25,7 +25,7 @@ const droppedKeys = new Set<string>([
     'editPresentation',
     'scope',
     'tags',
-    // ── 标准 JSON Schema 元数据 ──
+    // ── Standard JSON Schema metadata ──
     '$schema',
     '$id',
     '$comment',
@@ -67,28 +67,28 @@ const geminiAllowedKeys = new Set<string>([
 export type ToolSchemaTarget = 'openai' | 'anthropic' | 'gemini';
 
 /**
- * 递归移除 JSON Schema 对象中的 VS Code 扩展注解字段。
+ * Recursively remove VS Code extension annotation fields from JSON Schema objects.
  *
- * - 对基本类型（string / number / boolean / null）直接返回原值。
- * - 对数组递归处理每个元素。
- * - 对对象递归处理每个值，并跳过 `droppedKeys` 中列出的键。
+ * - For primitive types (string / number / boolean / null), return the original value directly.
+ * - For arrays, recursively process each element.
+ * - For objects, recursively process each value and skip keys listed in `droppedKeys`.
  *
- * 关键：`properties` / `$defs` / `definitions` / `patternProperties` 的值
- * 是「名称 → schema」映射，其键是用户自定义的参数名 / 类型名（可能与
- * droppedKeys 重名，例如 `scope`、`deprecated`、`tags` 等），在这一层不做
- * key 过滤，仅对每个 schema 值继续递归过滤。
+ * Key: The values of `properties` / `$defs` / `definitions` / `patternProperties`
+ * are "name → schema" mappings, where the keys are user-defined parameter names / type names (which may
+ * conflict with droppedKeys, such as `scope`, `deprecated`, `tags`, etc.). No key
+ * filtering is done at this level, only recursive filtering on each schema value.
  *
- * 该函数返回的是新对象，不会修改原始输入。
+ * This function returns a new object and does not modify the original input.
  *
- * @param schema - 待清洗的 JSON Schema 对象（或任意值）
+ * @param schema - JSON Schema object to be sanitized (or any value)
  */
 export function sanitizeToolSchema<T>(schema: T): T {
     return sanitizeToolSchemaForTarget(schema, 'openai');
 }
 
 /**
- * 按目标提供商方言生成最终用于工具声明的 schema。
- * 当前 OpenAI / Anthropic 走通用清洗，Gemini 额外做方言降级与字段白名单过滤。
+ * Generate the final schema for tool declarations based on target provider dialect.
+ * Currently OpenAI / Anthropic use generic sanitization, Gemini additionally performs dialect downgrade and field whitelist filtering.
  */
 export function sanitizeToolSchemaForTarget<T>(schema: T, target: ToolSchemaTarget): T {
     const sanitized = sanitizeGenericToolSchema(schema);
@@ -103,8 +103,8 @@ export function sanitizeToolSchemaForTarget<T>(schema: T, target: ToolSchemaTarg
 }
 
 /**
- * 按目标 SDK 生成最终会发往模型请求体中的 schema。
- * Gemini 额外做方言转换与字段白名单过滤，保证发送链路与 token 统计一致。
+ * Generate the final schema that will be sent to the model request body based on target SDK.
+ * Gemini additionally performs dialect conversion and field whitelist filtering to ensure consistency between the sending chain and token statistics.
  */
 export function sanitizeToolSchemaForSdkMode<T>(schema: T, sdkMode?: string): T {
     return sanitizeToolSchemaForTarget(schema, resolveToolSchemaTargetFromSdkMode(sdkMode));
@@ -139,17 +139,17 @@ function sanitizeGenericToolSchema<T>(schema: T, insidePropertyMap = false): T {
 
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(schema as Record<string, unknown>)) {
-        // 当处于「名称 → schema」映射层时（properties / $defs 等的值），
-        // key 是参数名或类型名，不是 schema 注解字段，不可过滤。
+        // When in the "name → schema" mapping layer (values of properties / $defs etc.),
+        // key is the parameter name or type name, not a schema annotation field, cannot be filtered.
         if (!insidePropertyMap && droppedKeys.has(key)) {
             continue;
         }
 
-        // 以下关键字的值是「名称 → schema」映射：进入下一层时须跳过 key 过滤。
-        // 关键：仅当当前层本身是 schema 结构层（!insidePropertyMap）时才判断。
-        // 若已处于属性名映射层（insidePropertyMap=true），key 是用户定义的参数名，
-        // 即便参数名恰好为 'properties'/'$defs' 等，其值也是一个普通 schema，
-        // 不应再次标记为属性名映射层，否则该 schema 的注解字段将被漏掉。
+        // The following keywords' values are "name → schema" mappings: when entering the next layer, skip key filtering.
+        // Key: Only judge when the current layer itself is a schema structure layer (!insidePropertyMap).
+        // If already in the property name mapping layer (insidePropertyMap=true), key is the user-defined parameter name,
+        // even if the parameter name happens to be 'properties'/'$defs' etc., its value is also a regular schema,
+        // it should not be marked as property name mapping layer again, otherwise the annotation fields of that schema will be missed.
         const nextInsidePropertyMap = !insidePropertyMap && propertyMapKeywords.has(key);
         result[key] = sanitizeGenericToolSchema(value, nextInsidePropertyMap);
     }
@@ -157,12 +157,12 @@ function sanitizeGenericToolSchema<T>(schema: T, insidePropertyMap = false): T {
 }
 
 /**
- * 将 JSON Schema 转成 Gemini functionDeclaration 可接受的 schema 子集。
- * 规则参考 promptfoo / LiteLLM / Google ADK 的通用做法：
- * - 先展开 $ref
- * - 将 anyOf/oneOf + null 降级为 nullable
- * - 将 type 转为 Gemini 大写枚举
- * - 最后按 Gemini 支持字段递归白名单过滤
+ * Convert JSON Schema to the subset of schema acceptable by Gemini functionDeclaration.
+ * Rules reference common practices from promptfoo / LiteLLM / Google ADK:
+ * - First expand $ref
+ * - Degrade anyOf/oneOf + null to nullable
+ * - Convert type to Gemini uppercase enum
+ * - Finally recursively filter by Gemini supported field whitelist
  */
 export function jsonSchemaToGeminiSchema(
     jsonSchema: unknown,

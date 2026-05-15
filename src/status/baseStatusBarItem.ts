@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------------------------
- *  状态栏项基类
- *  提供状态栏管理的通用逻辑和生命周期管理
- *  此类为最通用的基类，不包含 API Key 相关逻辑
- *  适用于需要管理多个提供商或自定义显示逻辑的状态栏项（如 CompatibleStatusBar）
+ *  Status Bar Item Base Class
+ *  Provides common logic and lifecycle management for status bar management
+ *  This class is the most generic base class, does not contain API Key related logic
+ *  Suitable for status bar items that need to manage multiple providers or custom display logic (e.g., CompatibleStatusBar)
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -10,91 +10,91 @@ import { StatusLogger } from '../utils/statusLogger';
 import { LeaderElectionService } from './leaderElectionService';
 
 /**
- * 缓存数据结构
+ * Cache data structure
  */
 export interface CachedStatusData<T> {
-    /** 状态数据 */
+    /** Status data */
     data: T;
-    /** 缓存时间戳 */
+    /** Cache timestamp */
     timestamp: number;
 }
 
 /**
- * 基础状态栏项配置
- * 不包含 apiKeyProvider，适用于不依赖单个 API Key 的状态栏
+ * Base status bar item configuration
+ * Does not contain apiKeyProvider, suitable for status bars not dependent on a single API Key
  */
 export interface BaseStatusBarItemConfig {
-    /** 状态栏项唯一标识符（用于 VS Code 区分不同状态栏项） */
+    /** Status bar item unique identifier (used by VS Code to distinguish different status bar items) */
     id: string;
-    /** 状态栏项名称（显示在状态栏项菜单中） */
+    /** Status bar item name (displayed in status bar item menu) */
     name: string;
-    /** 状态栏项对齐方式 */
+    /** Status bar item alignment */
     alignment: vscode.StatusBarAlignment;
-    /** 状态栏项优先级 */
+    /** Status bar item priority */
     priority: number;
-    /** 刷新命令ID */
+    /** Refresh command ID */
     refreshCommand: string;
-    /** 缓存键前缀 */
+    /** Cache key prefix */
     cacheKeyPrefix: string;
-    /** 日志前缀 */
+    /** Log prefix */
     logPrefix: string;
-    /** 状态栏图标，如 '$(ccmp-minimax)' */
+    /** Status bar icon, e.g., '$(ccmp-minimax)' */
     icon: string;
 }
 
 /**
- * 扩展的状态栏项配置（包含 API Key 提供商）
- * 适用于单提供商状态栏（如 MiniMaxStatusBar、DeepSeekStatusBar 等）
+ * Extended status bar item configuration (contains API Key provider)
+ * Suitable for single provider status bars (e.g., MiniMaxStatusBar, DeepSeekStatusBar, etc.)
  */
 export interface StatusBarItemConfig extends BaseStatusBarItemConfig {
-    /** API Key 提供商标识 */
+    /** API Key provider identifier */
     apiKeyProvider: string;
 }
 
 /**
- * 状态栏项基类
- * 提供状态栏管理的最通用逻辑，包括：
- * - 生命周期管理（初始化、销毁）
- * - 刷新机制（手动刷新、延时刷新、周期性刷新）
- * - 缓存管理（读取、写入、过期检测）
- * - 防抖逻辑
+ * Status bar item base class
+ * Provides the most common logic for status bar management, including:
+ * - Lifecycle management (initialization, disposal)
+ * - Refresh mechanism (manual refresh, delayed refresh, periodic refresh)
+ * - Cache management (read, write, expiry detection)
+ * - Debounce logic
  *
- * 此类不包含 API Key 相关逻辑，适用于：
- * - 管理多个提供商的状态栏（如 CompatibleStatusBar）
- * - 自定义显示逻辑的状态栏
+ * This class does not contain API Key related logic, suitable for:
+ * - Managing status bars for multiple providers (e.g., CompatibleStatusBar)
+ * - Status bars with custom display logic
  *
- * 对于单提供商状态栏，请使用 ProviderStatusBarItem 子类
+ * For single provider status bars, use ProviderStatusBarItem subclass
  *
- * @template T 状态数据类型
+ * @template T Status data type
  */
 export abstract class BaseStatusBarItem<T> {
-    // ==================== 实例成员 ====================
+    // ==================== Instance members ====================
     protected statusBarItem: vscode.StatusBarItem | undefined;
     protected context: vscode.ExtensionContext | undefined;
     protected readonly config: BaseStatusBarItemConfig;
 
-    // 状态数据
+    // Status data
     protected lastStatusData: CachedStatusData<T> | null = null;
 
-    // 定时器
+    // Timers
     protected updateDebouncer: NodeJS.Timeout | undefined;
     protected cacheUpdateTimer: NodeJS.Timeout | undefined;
 
-    // 时间戳
+    // Timestamps
     protected lastDelayedUpdateTime = 0;
 
-    // 标志位
+    // Flags
     protected isLoading = false;
     protected initialized = false;
 
-    // 常量配置
-    protected readonly MIN_DELAYED_UPDATE_INTERVAL = 30000; // 最小延时更新间隔 30 秒
-    protected readonly CACHE_UPDATE_INTERVAL = 10000; // 缓存加载间隔 10 秒
-    protected readonly HIGH_USAGE_THRESHOLD = 80; // 高使用率阈值 80%
+    // Constant configuration
+    protected readonly MIN_DELAYED_UPDATE_INTERVAL = 30000; // Minimum delayed update interval 30 seconds
+    protected readonly CACHE_UPDATE_INTERVAL = 10000; // Cache update interval 10 seconds
+    protected readonly HIGH_USAGE_THRESHOLD = 80; // High usage threshold 80%
 
     /**
-     * 构造函数
-     * @param config 状态栏项配置
+     * Constructor
+     * @param config Status bar item configuration
      */
     constructor(config: BaseStatusBarItemConfig) {
         this.config = config;
@@ -102,8 +102,8 @@ export abstract class BaseStatusBarItem<T> {
     }
 
     /**
-     * 验证配置参数的有效性
-     * @throws {Error} 当配置无效时抛出错误
+     * Validate configuration parameter validity
+     * @throws {Error} Throws error when configuration is invalid
      */
     private validateConfig(): void {
         const requiredFields: (keyof BaseStatusBarItemConfig)[] = [
@@ -117,98 +117,98 @@ export abstract class BaseStatusBarItem<T> {
 
         for (const field of requiredFields) {
             if (!this.config[field]) {
-                throw new Error(`状态栏配置无效: ${field} 不能为空`);
+                throw new Error(`Invalid status bar configuration: ${field} cannot be empty`);
             }
         }
 
         if (typeof this.config.priority !== 'number') {
-            throw new Error('状态栏配置无效: priority 必须是数字');
+            throw new Error('Invalid status bar configuration: priority must be a number');
         }
     }
 
-    // ==================== 抽象方法（子类必须实现） ====================
+    // ==================== Abstract methods (must be implemented by subclasses) ====================
 
     /**
-     * 获取显示文本
-     * @param data 状态数据
-     * @returns 显示在状态栏的文本
+     * Get display text
+     * @param data Status data
+     * @returns Text displayed in status bar
      */
     protected abstract getDisplayText(data: T): string;
 
     /**
-     * 生成 Tooltip 内容
-     * @param data 状态数据
-     * @returns Tooltip 内容
+     * Generate tooltip content
+     * @param data Status data
+     * @returns Tooltip content
      */
     protected abstract generateTooltip(data: T): vscode.MarkdownString | string;
 
     /**
-     * 执行 API 查询
-     * @returns 查询结果
+     * Execute API query
+     * @returns Query result
      */
     protected abstract performApiQuery(): Promise<{ success: boolean; data?: T; error?: string }>;
 
     /**
-     * 检查是否需要高亮警告
-     * @param data 状态数据
-     * @returns 是否需要高亮
+     * Check if highlight warning is needed
+     * @param data Status data
+     * @returns Whether highlight is needed
      */
     protected abstract shouldHighlightWarning(data: T): boolean;
 
     /**
-     * 检查是否需要刷新缓存
-     * 由子类实现自定义的刷新判断逻辑（包括缓存触发和主实例定时触发）
-     * @returns 是否需要刷新
+     * Check if cache refresh is needed
+     * Subclasses implement custom refresh judgment logic (including cache trigger and main instance periodic trigger)
+     * @returns Whether refresh is needed
      */
     protected abstract shouldRefresh(): boolean;
 
     /**
-     * 检查是否应该显示状态栏
-     * 子类需要根据自身逻辑实现（如检查 API Key 是否存在、是否有配置的提供商等）
-     * @returns 是否应该显示状态栏
+     * Check if status bar should be displayed
+     * Subclasses need to implement based on their own logic (e.g., check if API Key exists, if there are configured providers, etc.)
+     * @returns Whether status bar should be displayed
      */
     protected abstract shouldShowStatusBar(): Promise<boolean>;
 
     /**
-     * 获取缓存键名
-     * @param key 键名后缀
-     * @returns 完整的缓存键名
+     * Get cache key name
+     * @param key Key name suffix
+     * @returns Complete cache key name
      */
     protected getCacheKey(key: string): string {
         return `${this.config.cacheKeyPrefix}.${key}`;
     }
 
-    // ==================== 虚方法（子类可以重写） ====================
+    // ==================== Virtual methods (can be overridden by subclasses) ====================
 
     /**
-     * 在初始化后执行的钩子方法
+     * Hook method executed after initialization
      */
     protected async onInitialized(): Promise<void> {
-        // 默认为空实现，子类可以重写
+        // Default empty implementation, subclasses can override
     }
 
     /**
-     * 在销毁前执行的钩子方法
+     * Hook method executed before disposal
      */
     protected async onDispose(): Promise<void> {
-        // 默认为空实现，子类可以重写
+        // Default empty implementation, subclasses can override
     }
 
-    // ==================== 公共方法 ====================
+    // ==================== Public methods ====================
 
     /**
-     * 初始化状态栏项
-     * @param context 扩展上下文
+     * Initialize status bar item
+     * @param context Extension context
      */
     async initialize(context: vscode.ExtensionContext): Promise<void> {
         if (this.initialized) {
-            StatusLogger.warn(`[${this.config.logPrefix}] 状态栏项已初始化，跳过重复初始化`);
+            StatusLogger.warn(`[${this.config.logPrefix}] Status bar item already initialized, skipping duplicate initialization`);
             return;
         }
 
         this.context = context;
 
-        // 创建 StatusBarItem（使用唯一 id 确保 VS Code 能正确区分不同状态栏项）
+        // Create StatusBarItem (use unique id to ensure VS Code can correctly distinguish different status bar items)
         this.statusBarItem = vscode.window.createStatusBarItem(
             this.config.id,
             this.config.alignment,
@@ -218,22 +218,22 @@ export abstract class BaseStatusBarItem<T> {
         this.statusBarItem.text = this.config.icon;
         this.statusBarItem.command = this.config.refreshCommand;
 
-        // 异步检查是否应该显示状态栏(不阻塞初始化)
-        // 先隐藏,等检查完成后再决定是否显示
+        // Asynchronously check if status bar should be displayed (does not block initialization)
+        // Hide first, then decide whether to show after check is complete
         this.statusBarItem.hide();
         this.shouldShowStatusBar()
             .then(shouldShow => {
                 if (shouldShow && this.statusBarItem) {
                     this.statusBarItem.show();
                 } else {
-                    StatusLogger.trace(`[${this.config.logPrefix}] 不满足显示条件，隐藏状态栏`);
+                    StatusLogger.trace(`[${this.config.logPrefix}] Does not meet display conditions, hiding status bar`);
                 }
             })
             .catch(error => {
-                StatusLogger.error(`[${this.config.logPrefix}] 检查显示条件失败`, error);
+                StatusLogger.error(`[${this.config.logPrefix}] Failed to check display conditions`, error);
             });
 
-        // 注册刷新命令
+        // Register refresh command
         context.subscriptions.push(
             vscode.commands.registerCommand(this.config.refreshCommand, () => {
                 if (!this.isLoading) {
@@ -242,13 +242,13 @@ export abstract class BaseStatusBarItem<T> {
             })
         );
 
-        // 初始更新
+        // Initial update
         this.performInitialUpdate();
 
-        // 启动缓存定时器
+        // Start cache timer
         this.startCacheUpdateTimer();
 
-        // 注册清理逻辑
+        // Register cleanup logic
         context.subscriptions.push({
             dispose: () => {
                 this.dispose();
@@ -257,17 +257,17 @@ export abstract class BaseStatusBarItem<T> {
 
         this.initialized = true;
 
-        // 注册主实例定时刷新任务
+        // Register main instance periodic refresh task
         this.registerLeaderPeriodicTask();
 
-        // 调用初始化钩子
+        // Call initialization hook
         await this.onInitialized();
 
-        StatusLogger.info(`[${this.config.logPrefix}] 状态栏项初始化完成`);
+        StatusLogger.info(`[${this.config.logPrefix}] Status bar item initialization complete`);
     }
 
     /**
-     * 检查并显示状态栏（在满足条件后调用）
+     * Check and display status bar (call after conditions are met)
      */
     async checkAndShowStatus(): Promise<void> {
         if (this.statusBarItem) {
@@ -282,12 +282,12 @@ export abstract class BaseStatusBarItem<T> {
     }
 
     /**
-     * 延时更新状态栏（在 API 请求后调用）
-     * 包含防抖机制，避免频繁请求
-     * @param delayMs 延时时间（毫秒）
+     * Delayed update status bar (call after API request)
+     * Includes debounce mechanism to avoid frequent requests
+     * @param delayMs Delay time (milliseconds)
      */
     delayedUpdate(delayMs = 2000): void {
-        // 清除之前的防抖定时器
+        // Clear previous debounce timer
         if (this.updateDebouncer) {
             clearTimeout(this.updateDebouncer);
         }
@@ -295,22 +295,22 @@ export abstract class BaseStatusBarItem<T> {
         const now = Date.now();
         const timeSinceLastUpdate = now - this.lastDelayedUpdateTime;
 
-        // 如果距离上次更新不足阈值，则等到满阈值再执行
+        // If time since last update is less than threshold, wait until threshold is met before executing
         const finalDelayMs =
             timeSinceLastUpdate < this.MIN_DELAYED_UPDATE_INTERVAL
                 ? this.MIN_DELAYED_UPDATE_INTERVAL - timeSinceLastUpdate
                 : delayMs;
 
-        StatusLogger.debug(`[${this.config.logPrefix}] 设置延时更新，将在 ${finalDelayMs / 1000} 秒后执行`);
+        StatusLogger.debug(`[${this.config.logPrefix}] Setting delayed update, will execute in ${finalDelayMs / 1000} seconds`);
 
-        // 设置新的防抖定时器
+        // Set new debounce timer
         this.updateDebouncer = setTimeout(async () => {
             try {
-                StatusLogger.debug(`[${this.config.logPrefix}] 执行延时更新`);
+                StatusLogger.debug(`[${this.config.logPrefix}] Executing delayed update`);
                 this.lastDelayedUpdateTime = Date.now();
                 await this.performInitialUpdate();
             } catch (error) {
-                StatusLogger.error(`[${this.config.logPrefix}] 延时更新失败`, error);
+                StatusLogger.error(`[${this.config.logPrefix}] Delayed update failed`, error);
             } finally {
                 this.updateDebouncer = undefined;
             }
@@ -318,13 +318,13 @@ export abstract class BaseStatusBarItem<T> {
     }
 
     /**
-     * 销毁状态栏项
+     * Dispose status bar item
      */
     dispose(): void {
-        // 调用销毁钩子
+        // Call disposal hook
         this.onDispose();
 
-        // 清理定时器
+        // Clean up timers
         if (this.updateDebouncer) {
             clearTimeout(this.updateDebouncer);
             this.updateDebouncer = undefined;
@@ -334,28 +334,28 @@ export abstract class BaseStatusBarItem<T> {
             this.cacheUpdateTimer = undefined;
         }
 
-        // 清理内存状态
+        // Clean up memory state
         this.lastStatusData = null;
         this.lastDelayedUpdateTime = 0;
         this.isLoading = false;
         this.context = undefined;
 
-        // 销毁状态栏项
+        // Dispose status bar item
         this.statusBarItem?.dispose();
         this.statusBarItem = undefined;
 
         this.initialized = false;
 
-        StatusLogger.info(`[${this.config.logPrefix}] 状态栏项已销毁`);
+        StatusLogger.info(`[${this.config.logPrefix}] Status bar item disposed`);
     }
 
-    // ==================== 私有方法 ====================
+    // ==================== Private methods ====================
 
     /**
-     * 执行初始更新（后台加载）
+     * Execute initial update (background load)
      */
     private async performInitialUpdate(): Promise<void> {
-        // 检查是否应该显示状态栏
+        // Check if status bar should be displayed
         const shouldShow = await this.shouldShowStatusBar();
 
         if (!shouldShow) {
@@ -365,29 +365,29 @@ export abstract class BaseStatusBarItem<T> {
             return;
         }
 
-        // 确保状态栏显示
+        // Ensure status bar is displayed
         if (this.statusBarItem) {
             this.statusBarItem.show();
         }
 
-        // 执行 API 查询（自动刷新，失败时不显示 ERR）
+        // Execute API query (auto refresh, do not display ERR on failure)
         await this.executeApiQuery(false);
     }
 
     /**
-     * 执行用户刷新（带加载状态）
+     * Execute user refresh (with loading state)
      */
     private async performRefresh(): Promise<void> {
         try {
-            // 显示加载中状态
+            // Display loading state
             if (this.statusBarItem && this.lastStatusData) {
                 const previousText = this.getDisplayText(this.lastStatusData.data);
                 this.statusBarItem.text = `$(loading~spin) ${previousText.replace(this.config.icon, '').trim()}`;
                 this.statusBarItem.backgroundColor = undefined;
-                this.statusBarItem.tooltip = '加载中...';
+                this.statusBarItem.tooltip = 'Loading...';
             }
 
-            // 检查是否应该显示状态栏
+            // Check if status bar should be displayed
             const shouldShow = await this.shouldShowStatusBar();
 
             if (!shouldShow) {
@@ -397,54 +397,54 @@ export abstract class BaseStatusBarItem<T> {
                 return;
             }
 
-            // 确保状态栏显示
+            // Ensure status bar is displayed
             if (this.statusBarItem) {
                 this.statusBarItem.show();
             }
 
-            // 执行 API 查询（手动刷新，失败时显示 ERR）
+            // Execute API query (manual refresh, display ERR on failure)
             await this.executeApiQuery(true);
         } catch (error) {
-            StatusLogger.error(`[${this.config.logPrefix}] 刷新失败`, error);
+            StatusLogger.error(`[${this.config.logPrefix}] Refresh failed`, error);
 
             if (this.statusBarItem) {
                 this.statusBarItem.text = `${this.config.icon} ERR`;
-                this.statusBarItem.tooltip = `获取失败: ${error instanceof Error ? error.message : '未知错误'}`;
+                this.statusBarItem.tooltip = `Failed to get: ${error instanceof Error ? error.message : 'Unknown error'}`;
             }
         }
     }
 
     /**
-     * 执行 API 查询并更新状态栏
-     * @param isManualRefresh 是否为手动刷新（用户点击触发），手动刷新失败时显示 ERR，自动刷新失败时保持原状态
+     * Execute API query and update status bar
+     * @param isManualRefresh Whether it is a manual refresh (triggered by user click), display ERR on manual refresh failure, maintain original state on auto refresh failure
      */
     protected async executeApiQuery(isManualRefresh = false): Promise<void> {
-        // 防止并发执行
+        // Prevent concurrent execution
         if (this.isLoading) {
-            StatusLogger.debug(`[${this.config.logPrefix}] 正在执行查询，跳过重复调用`);
+            StatusLogger.debug(`[${this.config.logPrefix}] Query in progress, skipping duplicate call`);
             return;
         }
 
-        // 非手动刷新时，检查缓存是否在 5 秒内有效，有效则跳过本次加载
+        // When not manual refresh, check if cache is valid within 5 seconds, skip if valid
         if (!isManualRefresh && this.lastStatusData) {
             try {
                 const dataAge = Date.now() - this.lastStatusData.timestamp;
                 if (dataAge >= 0 && dataAge < 5000) {
                     StatusLogger.debug(
-                        `[${this.config.logPrefix}] 数据在 5 秒内有效 (${(dataAge / 1000).toFixed(1)}秒前)，跳过本次自动刷新`
+                        `[${this.config.logPrefix}] Data is valid within 5 seconds (${(dataAge / 1000).toFixed(1)}s ago), skipping this auto refresh`
                     );
                     return;
                 }
             } catch {
-                // 旧版本数据格式不兼容，忽略错误继续执行刷新
-                StatusLogger.debug(`[${this.config.logPrefix}] 缓存数据格式不兼容，继续执行刷新`);
+                // Old version data format incompatible, ignore error and continue refresh
+                StatusLogger.debug(`[${this.config.logPrefix}] Cache data format incompatible, continuing refresh`);
             }
         }
 
         this.isLoading = true;
 
         try {
-            StatusLogger.debug(`[${this.config.logPrefix}] 开始执行用量查询...`);
+            StatusLogger.debug(`[${this.config.logPrefix}] Starting to execute usage query...`);
 
             const result = await this.performApiQuery();
 
@@ -452,73 +452,73 @@ export abstract class BaseStatusBarItem<T> {
                 if (this.statusBarItem) {
                     const data = result.data;
 
-                    // 保存完整的用量数据
+                    // Save complete usage data
                     this.lastStatusData = {
                         data: data,
                         timestamp: Date.now()
                     };
 
-                    // 保存到全局状态
+                    // Save to global state
                     if (this.context) {
                         this.context.globalState.update(this.getCacheKey('statusData'), this.lastStatusData);
                     }
 
-                    // 更新状态栏 UI
+                    // Update status bar UI
                     this.updateStatusBarUI(data);
 
-                    StatusLogger.info(`[${this.config.logPrefix}] 用量查询成功`);
+                    StatusLogger.info(`[${this.config.logPrefix}] Usage query successful`);
                 }
             } else {
-                // 错误处理
-                const errorMsg = result.error || '未知错误';
+                // Error handling
+                const errorMsg = result.error || 'Unknown error';
 
-                // 只有手动刷新时才显示 ERR，自动刷新失败时保持原状态等待下次刷新
+                // Only display ERR for manual refresh, maintain original state on auto refresh failure waiting for next refresh
                 if (isManualRefresh && this.statusBarItem) {
                     this.statusBarItem.text = `${this.config.icon} ERR`;
-                    this.statusBarItem.tooltip = `获取失败: ${errorMsg}`;
+                    this.statusBarItem.tooltip = `Failed to get: ${errorMsg}`;
                 }
 
-                StatusLogger.warn(`[${this.config.logPrefix}] 用量查询失败: ${errorMsg}`);
+                StatusLogger.warn(`[${this.config.logPrefix}] Usage query failed: ${errorMsg}`);
             }
         } catch (error) {
-            StatusLogger.error(`[${this.config.logPrefix}] 更新状态栏失败`, error);
+            StatusLogger.error(`[${this.config.logPrefix}] Failed to update status bar`, error);
 
-            // 只有手动刷新时才显示 ERR，自动刷新失败时保持原状态等待下次刷新
+            // Only display ERR for manual refresh, maintain original state on auto refresh failure waiting for next refresh
             if (isManualRefresh && this.statusBarItem) {
                 this.statusBarItem.text = `${this.config.icon} ERR`;
-                this.statusBarItem.tooltip = `获取失败: ${error instanceof Error ? error.message : '未知错误'}`;
+                this.statusBarItem.tooltip = `Failed to get: ${error instanceof Error ? error.message : 'Unknown error'}`;
             }
         } finally {
-            // 一定要在最后重置加载状态
+            // Must reset loading state at the end
             this.isLoading = false;
         }
     }
 
     /**
-     * 更新状态栏 UI
-     * @param data 状态数据
+     * Update status bar UI
+     * @param data Status data
      */
     protected updateStatusBarUI(data: T): void {
         if (!this.statusBarItem) {
             return;
         }
 
-        // 更新文本
+        // Update text
         this.statusBarItem.text = this.getDisplayText(data);
 
-        // 更新背景颜色（警告高亮）
+        // Update background color (warning highlight)
         if (this.shouldHighlightWarning(data)) {
             this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
         } else {
             this.statusBarItem.backgroundColor = undefined;
         }
 
-        // 更新 Tooltip
+        // Update tooltip
         this.statusBarItem.tooltip = this.generateTooltip(data);
     }
 
     /**
-     * 从缓存读取并更新状态信息
+     * Read from cache and update status information
      */
     private updateFromCache(): void {
         if (!this.context || !this.statusBarItem || this.isLoading) {
@@ -526,41 +526,41 @@ export abstract class BaseStatusBarItem<T> {
         }
 
         try {
-            // 从全局状态读取缓存数据
+            // Read cache data from global state
             const cachedStatusData = this.context.globalState.get<CachedStatusData<T>>(this.getCacheKey('statusData'));
 
             if (cachedStatusData && cachedStatusData.data) {
                 const dataAge = Date.now() - cachedStatusData.timestamp;
 
                 if (dataAge > 30 * 1000) {
-                    // 30秒以上的数据视为无变更，跳过更新
+                    // Data older than 30 seconds is considered unchanged, skip update
                     if (dataAge < 60 * 1000) {
-                        // 30-60秒内的数据视为警告日志
+                        // Data within 30-60 seconds is considered warning log
                         StatusLogger.debug(
-                            `[${this.config.logPrefix}] 缓存数据已过期 (${(dataAge / 1000).toFixed(1)}秒前)，跳过更新`
+                            `[${this.config.logPrefix}] Cache data has expired (${(dataAge / 1000).toFixed(1)}s ago), skipping update`
                         );
                     }
-                    // 超过60秒的数据不再记录日志
+                    // Data exceeding 60 seconds no longer logs
                     return;
                 }
 
-                // 更新内存中的数据
+                // Update data in memory
                 this.lastStatusData = cachedStatusData;
 
-                // 更新状态栏显示
+                // Update status bar display
                 this.updateStatusBarUI(cachedStatusData.data);
 
                 StatusLogger.debug(
-                    `[${this.config.logPrefix}] 从缓存更新状态 (缓存时间: ${(dataAge / 1000).toFixed(1)}秒前)`
+                    `[${this.config.logPrefix}] Updating status from cache (cache age: ${(dataAge / 1000).toFixed(1)}s ago)`
                 );
             }
         } catch (error) {
-            StatusLogger.warn(`[${this.config.logPrefix}] 从缓存更新状态失败`, error);
+            StatusLogger.warn(`[${this.config.logPrefix}] Failed to update status from cache`, error);
         }
     }
 
     /**
-     * 启动缓存更新定时器
+     * Start cache update timer
      */
     private startCacheUpdateTimer(): void {
         if (this.cacheUpdateTimer) {
@@ -571,33 +571,33 @@ export abstract class BaseStatusBarItem<T> {
             this.updateFromCache();
         }, this.CACHE_UPDATE_INTERVAL);
 
-        StatusLogger.debug(`[${this.config.logPrefix}] 缓存更新定时器已启动，间隔: ${this.CACHE_UPDATE_INTERVAL}ms`);
+        StatusLogger.debug(`[${this.config.logPrefix}] Cache update timer started, interval: ${this.CACHE_UPDATE_INTERVAL}ms`);
     }
 
     /**
-     * 注册主实例定时刷新任务
+     * Register main instance periodic refresh task
      */
     private registerLeaderPeriodicTask(): void {
         LeaderElectionService.registerPeriodicTask(async () => {
-            // 只有主实例才会执行此任务
+            // Only the main instance will execute this task
             if (!this.initialized || !this.context || !this.statusBarItem) {
-                StatusLogger.trace(`[${this.config.logPrefix}] 主实例周期任务跳过：未初始化或无上下文`);
+                StatusLogger.trace(`[${this.config.logPrefix}] Main instance periodic task skipped: not initialized or no context`);
                 return;
             }
 
-            // 检查是否需要刷新
+            // Check if refresh is needed
             const needRefresh = this.shouldRefresh();
             StatusLogger.trace(
-                `[${this.config.logPrefix}] 主实例周期任务检查：needRefresh=${needRefresh}, lastStatusData=${!!this.lastStatusData}`
+                `[${this.config.logPrefix}] Main instance periodic task check: needRefresh=${needRefresh}, lastStatusData=${!!this.lastStatusData}`
             );
 
             if (needRefresh) {
-                StatusLogger.debug(`[${this.config.logPrefix}] 主实例触发定时刷新`);
-                // 定时刷新属于自动刷新，失败时不显示 ERR
+                StatusLogger.debug(`[${this.config.logPrefix}] Main instance triggering periodic refresh`);
+                // Periodic refresh is auto refresh, do not display ERR on failure
                 await this.executeApiQuery(false);
             }
         });
 
-        StatusLogger.debug(`[${this.config.logPrefix}] 已注册主实例定时刷新任务`);
+        StatusLogger.debug(`[${this.config.logPrefix}] Registered main instance periodic refresh task`);
     }
 }

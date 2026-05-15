@@ -1,46 +1,46 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  Token Usage 解析工具
- *  统一解析 OpenAI 和 Anthropic 两种格式的 usage 对象
+ *  Token Usage Parser Utility
+ *  Uniformly parses usage objects in both OpenAI and Anthropic formats
  *--------------------------------------------------------------------------------------------*/
 
 import type { TokenRequestLog } from './types';
 
 /**
- * 解析后的 token 统计
+ * Parsed Token Statistics
  */
 export interface ParsedUsageTokens {
-    /** 实际输入token数 */
+    /** Actual Input Token Count */
     actualInput: number;
-    /** 缓存读取token数 */
+    /** Cache Read Token Count */
     cacheReadTokens: number;
-    /** 缓存创建token数 */
+    /** Cache Creation Token Count */
     cacheCreationTokens: number;
-    /** 输出token数 */
+    /** Output Token Count */
     outputTokens: number;
-    /** 总token数 */
+    /** Total Token Count */
     totalTokens: number;
-    /** 流耗时(毫秒) */
+    /** Stream Duration (milliseconds) */
     streamDuration?: number;
-    /** 输出速度(tokens/s) */
+    /** Output Speed (tokens/s) */
     outputSpeed?: number;
 }
 
 /**
- * 扩展的 TokenRequestLog，提供向解析后的 token 统计结果
+ * Extended TokenRequestLog, provides parsed token statistics results
  */
 export type ExtendedTokenRequestLog = TokenRequestLog & ParsedUsageTokens;
 
 /**
- * Token Usage 解析工具类
- * 统一处理不同提供商的 usage 对象格式
+ * Token Usage Parser Utility Class
+ * Uniformly handles usage object formats from different providers
  */
 export class UsageParser {
     /**
-     * 从原始 usage 对象解析 token 统计
-     * 支持 OpenAI、Anthropic 和 Responses API 三种格式
+     * Parse Token Statistics from Raw Usage Object
+     * Supports OpenAI, Anthropic, and Responses API three formats
      */
     static parseRawUsage(rawUsage: TokenRequestLog['rawUsage']): ParsedUsageTokens {
-        // 默认值
+        // Default values
         const defaultResult: ParsedUsageTokens = {
             actualInput: 0,
             cacheReadTokens: 0,
@@ -53,25 +53,25 @@ export class UsageParser {
             return defaultResult;
         }
 
-        // 尝试解析 Anthropic/Claude 格式 / Responses API 格式
+        // Attempt to parse Anthropic/Claude format / Responses API format
         if (rawUsage.input_tokens !== undefined && rawUsage.output_tokens !== undefined) {
             const inputTokens = rawUsage.input_tokens || 0;
             const outputTokens = rawUsage.output_tokens || 0;
 
-            // 检查是否有 cached_tokens 字段
+            // Check for cached_tokens field
             const cachedTokens = rawUsage.input_tokens_details?.cached_tokens || rawUsage.cached_tokens || 0;
 
-            // Anthropic 格式
+            // Anthropic format
             const cacheReadTokens = rawUsage.cache_read_input_tokens || 0;
             const cacheCreationTokens = rawUsage.cache_creation_input_tokens || 0;
 
-            // Responses API: cached_tokens 已包含在 input_tokens 中，无需重复增加
-            // Anthropic API: cache_read_input_tokens 和 cache_creation_input_tokens 不包含在 input_tokens 中
+            // Responses API: cached_tokens already included in input_tokens, no need to add repeatedly
+            // Anthropic API: cache_read_input_tokens and cache_creation_input_tokens not included in input_tokens
             const isResponsesApi = !!rawUsage.input_tokens_details?.cached_tokens;
             const actualCacheReadTokens = isResponsesApi ? cachedTokens : cacheReadTokens;
             const actualCacheCreationTokens = isResponsesApi ? 0 : cacheCreationTokens;
 
-            // Responses API: actualInput = inputTokens (已包含 cached_tokens)
+            // Responses API: actualInput = inputTokens (already includes cached_tokens)
             // Anthropic API: actualInput = inputTokens + cacheReadTokens + cacheCreationTokens
             const actualInput = isResponsesApi
                 ? inputTokens
@@ -86,7 +86,7 @@ export class UsageParser {
             };
         }
 
-        // 优先检测 Gemini 风格的 usageMetadata（有 promptTokenCount 的视为 Gemini）
+        // Prioritize detecting Gemini-style usageMetadata (those with promptTokenCount are considered Gemini)
         if (rawUsage.promptTokenCount !== undefined) {
             const promptTokenCount = rawUsage.promptTokenCount;
             const responseTokenCount = rawUsage.responseTokenCount;
@@ -114,14 +114,14 @@ export class UsageParser {
             }
         }
 
-        // 尝试解析 OpenAI 格式
+        // Attempt to parse OpenAI format
         if (rawUsage.prompt_tokens !== undefined) {
             const promptTokens = rawUsage.prompt_tokens || 0;
             const completionTokens = rawUsage.completion_tokens || 0;
             const cachedTokens = rawUsage.prompt_tokens_details?.cached_tokens || 0;
 
-            // OpenAI: prompt_tokens 包含所有输入，cached_tokens 是其中的缓存命中部分
-            // 未命中缓存的输入会被写入缓存（如果启用了缓存功能）
+            // OpenAI: prompt_tokens includes all inputs, cached_tokens is the cache hit portion within it
+            // Input not hitting cache will be written to cache (if cache functionality is enabled)
             const cacheCreationTokens = promptTokens - cachedTokens;
 
             return {
@@ -133,13 +133,13 @@ export class UsageParser {
             };
         }
 
-        // 未知格式，返回默认值
+        // Unknown format, return default values
         return defaultResult;
     }
 
     /**
-     * 从 TokenRequestLog 解析 token 统计
-     * 如果有 rawUsage 则解析，否则使用 estimatedInput
+     * Parse Token Statistics from TokenRequestLog
+     * If rawUsage exists, parse it; otherwise use estimatedInput
      */
     static parseFromLog(log: TokenRequestLog): ParsedUsageTokens {
         let result: ParsedUsageTokens;
@@ -147,7 +147,7 @@ export class UsageParser {
         if (log.rawUsage) {
             result = this.parseRawUsage(log.rawUsage);
         } else {
-            // 没有 rawUsage，使用预估的输入
+            // No rawUsage, use estimated input
             result = {
                 actualInput: log.estimatedInput,
                 cacheReadTokens: 0,
@@ -157,26 +157,26 @@ export class UsageParser {
             };
         }
 
-        // 计算流耗时
+        // Calculate stream duration
         let duration: number | undefined;
         if (log.streamStartTime && log.streamEndTime) {
             duration = log.streamEndTime - log.streamStartTime;
-            // 如果流耗时小于 10ms，使用整个请求的耗时
+            // If stream duration is less than 10ms, use entire request duration
             if (duration < 10 && log.timestamp) {
                 duration = log.streamEndTime - log.timestamp;
-                log.streamStartTime = undefined; // 不可信，重置流开始时间
+                log.streamStartTime = undefined; // Unreliable, reset stream start time
             }
         } else if (log.streamEndTime) {
-            // 如果只有流结束时间，使用流结束时间和请求时间的差值作为耗时
+            // If only stream end time exists, use difference between stream end time and request time as duration
             duration = log.streamEndTime - log.timestamp;
         }
 
-        // 计算输出速度
+        // Calculate output speed
         if (duration && duration > 0) {
             result.streamDuration = duration;
             if (result.outputTokens > 0) {
                 const speed = (result.outputTokens / duration) * 1000; // tokens/s
-                // 速度 > 1000 认为可能有误，直接抛弃
+                // Speed > 1000 considered potentially erroneous, discard directly
                 if (speed <= 1000) {
                     result.outputSpeed = speed;
                 }
@@ -187,8 +187,8 @@ export class UsageParser {
     }
 
     /**
-     * 扩展 TokenRequestLog，添加便捷访问方法
-     * 让 UI 代码可以继续使用简单的字段访问
+     * Extend TokenRequestLog, Add Convenient Access Methods
+     * Allows UI code to continue using simple field access
      */
     static extendLog(log: TokenRequestLog): ExtendedTokenRequestLog {
         const parsed = this.parseFromLog(log);
@@ -196,7 +196,7 @@ export class UsageParser {
     }
 
     /**
-     * 批量扩展 TokenRequestLog 数组
+     * Batch Extend TokenRequestLog Array
      */
     static extendLogs(logs: TokenRequestLog[]): ExtendedTokenRequestLog[] {
         return logs.map(log => this.extendLog(log));

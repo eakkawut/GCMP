@@ -1,5 +1,5 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  OpenRouter 余额查询器
+ *  OpenRouter Balance Query Handler
  *--------------------------------------------------------------------------------------------*/
 
 import { IBalanceQuery, BalanceQueryResult } from '../balanceQuery';
@@ -8,39 +8,39 @@ import { ApiKeyManager } from '../../../utils/apiKeyManager';
 import { Logger } from '../../../utils';
 
 /**
- * OpenRouter API 响应类型
+ * OpenRouter API response type
  */
 interface OpenRouterBalanceResponse {
-    /** 响应数据 */
+    /** Response data */
     data: {
-        /** 总购买积分 */
+        /** Total purchased credits */
         total_credits: number;
-        /** 总使用积分 */
+        /** Total usage credits */
         total_usage: number;
     };
 }
 
 /**
- * OpenRouter 余额查询器
+ * OpenRouter balance query handler
  */
 export class OpenrouterBalanceQuery implements IBalanceQuery {
     /**
-     * 查询 OpenRouter 余额
-     * @param providerId 提供商标识符
-     * @returns 余额查询结果
+     * Query OpenRouter balance
+     * @param providerId Provider identifier
+     * @returns Balance query result
      */
     async queryBalance(providerId: string): Promise<BalanceQueryResult> {
-        StatusLogger.debug(`[OpenrouterBalanceQuery] 查询提供商 ${providerId} 的余额`);
+        StatusLogger.debug(`[OpenrouterBalanceQuery] Querying balance for provider ${providerId}`);
 
         try {
-            // 获取API密钥
+            // Get API key
             const apiKey = await ApiKeyManager.getApiKey(providerId);
 
             if (!apiKey) {
-                throw new Error(`未找到提供商 ${providerId} 的API密钥`);
+                throw new Error(`API key not found for provider ${providerId}`);
             }
 
-            // 调用OpenRouter余额查询API
+            // Call OpenRouter balance query API
             const response = await fetch('https://openrouter.ai/api/v1/credits', {
                 method: 'GET',
                 headers: {
@@ -50,25 +50,25 @@ export class OpenrouterBalanceQuery implements IBalanceQuery {
             });
 
             if (!response.ok) {
-                throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                throw new Error(`API request failed: ${response.status} ${response.statusText}`);
             }
 
             const result = (await response.json()) as OpenRouterBalanceResponse;
 
-            // 解析余额数据
-            const totalCredits = result.data.total_credits || 0; // 总购买积分
-            const totalUsage = result.data.total_usage || 0; // 总使用积分
-            const balance = totalCredits - totalUsage; // 可用余额
+            // Parse balance data
+            const totalCredits = result.data.total_credits || 0; // Total purchased credits
+            const totalUsage = result.data.total_usage || 0; // Total usage credits
+            const balance = totalCredits - totalUsage; // Available balance
 
-            StatusLogger.debug('[OpenrouterBalanceQuery] 余额查询成功');
+            StatusLogger.debug('[OpenrouterBalanceQuery] Balance query successful');
 
             return {
                 balance,
-                currency: 'USD' // OpenRouter使用美元
+                currency: 'USD' // OpenRouterusing USD
             };
         } catch (error) {
-            Logger.error('[OpenrouterBalanceQuery] 查询余额失败', error);
-            throw new Error(`OpenRouter 余额查询失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error('[OpenrouterBalanceQuery] Failed to query balance', error);
+            throw new Error(`OpenRouter balance query failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 }

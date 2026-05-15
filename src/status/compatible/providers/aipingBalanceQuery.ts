@@ -1,5 +1,5 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  AIPing 余额查询器
+ *  AIPing Balance Query Handler
  *--------------------------------------------------------------------------------------------*/
 
 import { IBalanceQuery, BalanceQueryResult } from '../balanceQuery';
@@ -8,50 +8,50 @@ import { ApiKeyManager } from '../../../utils/apiKeyManager';
 import { Logger } from '../../../utils';
 
 /**
- * AIPing API 响应类型
+ * AIPing API response type
  */
 interface AIPingBalanceResponse {
-    /** 响应状态码 */
+    /** Response status code */
     code: number;
-    /** 响应消息 */
+    /** Response message */
     msg: string;
-    /** 余额数据对象 */
+    /** Balance data object */
     data: AIPingBalanceData;
 }
 
 /**
- * AIPing 余额数据对象
+ * AIPing balance data object
  */
 interface AIPingBalanceData {
-    /** 赠送余额，单位元 */
+    /** Granted balance, in yuan */
     gift_remain: number;
-    /** 充值余额，单位元 */
+    /** Recharged balance, in yuan */
     recharge_remain: number;
-    /** 总余额，单位元 */
+    /** Total balance, in yuan */
     total_remain: number;
 }
 
 /**
- * AIPing 余额查询器
+ * AIPing balance query handler
  */
 export class AiPingBalanceQuery implements IBalanceQuery {
     /**
-     * 查询 AIPing 余额
-     * @param providerId 提供商标识符
-     * @returns 余额查询结果
+     * Query AIPing balance
+     * @param providerId Provider identifier
+     * @returns Balance query result
      */
     async queryBalance(providerId: string): Promise<BalanceQueryResult> {
-        StatusLogger.debug(`[AiPingBalanceQuery] 查询提供商 ${providerId} 的余额`);
+        StatusLogger.debug(`[AiPingBalanceQuery] Querying balance for provider ${providerId}`);
 
         try {
-            // 获取API密钥
+            // Get API key
             const apiKey = await ApiKeyManager.getApiKey(providerId);
 
             if (!apiKey) {
-                throw new Error(`未找到提供商 ${providerId} 的API密钥`);
+                throw new Error(`API key not found for provider ${providerId}`);
             }
 
-            // 调用AIPing余额查询API
+            // Call AIPing balance query API
             const response = await fetch('https://aiping.cn/api/v1/user/remain/points', {
                 method: 'GET',
                 headers: {
@@ -61,23 +61,23 @@ export class AiPingBalanceQuery implements IBalanceQuery {
             });
 
             if (!response.ok) {
-                throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                throw new Error(`API request failed: ${response.status} ${response.statusText}`);
             }
 
             const result = (await response.json()) as AIPingBalanceResponse;
 
-            // 检查API响应状态码
+            // Check API response status code
             if (result.code !== 0) {
-                throw new Error(`API返回错误: ${result.msg || '未知错误'}`);
+                throw new Error(`API returned error: ${result.msg || 'Unknown error'}`);
             }
 
-            // 解析余额数据
+            // Parse balance data
             const data = result.data;
-            const paid = data.recharge_remain || 0; // 充值余额
-            const granted = data.gift_remain || 0; // 赠送余额
-            const balance = data.total_remain || paid + granted; // 总余额
+            const paid = data.recharge_remain || 0; // Recharged balance
+            const granted = data.gift_remain || 0; // Granted balance
+            const balance = data.total_remain || paid + granted; // Total balance
 
-            StatusLogger.debug('[AiPingBalanceQuery] 余额查询成功');
+            StatusLogger.debug('[AiPingBalanceQuery] Balance query successful');
 
             return {
                 paid,
@@ -86,8 +86,8 @@ export class AiPingBalanceQuery implements IBalanceQuery {
                 currency: 'CNY'
             };
         } catch (error) {
-            Logger.error('[AiPingBalanceQuery] 查询余额失败', error);
-            throw new Error(`AIPing 余额查询失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error('[AiPingBalanceQuery] Failed to query balance', error);
+            throw new Error(`AIPing balance query failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 }

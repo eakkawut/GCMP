@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  ChatGPT 用量查询状态栏项
- *  显示 ChatGPT (Codex) 账户的使用量和限额信息
+ *  ChatGPT Usage Query Status Bar Item
+ *  Displays ChatGPT (Codex) account usage and limit information
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -12,104 +12,104 @@ import { CliAuthFactory } from '../cli/auth/cliAuthFactory';
 import { CodexCliAuth } from '../cli/auth/codexCliAuth';
 
 /**
- * 速率限制窗口结构
+ * Rate limit window structure
  */
 interface RateLimitWindow {
-    /** 已使用百分比 */
+    /** Used percentage */
     used_percent: number;
-    /** 限制窗口秒数 */
+    /** Limit window seconds */
     limit_window_seconds: number;
-    /** 剩余重置秒数 */
+    /** Remaining reset seconds */
     reset_after_seconds: number;
-    /** 重置时间戳 */
+    /** Reset timestamp */
     reset_at: number;
 }
 
 /**
- * 速率限制信息结构
+ * Rate limit information structure
  */
 interface RateLimitInfo {
-    /** 是否允许 */
+    /** Whether allowed */
     allowed: boolean;
-    /** 是否达到限制 */
+    /** Whether limit reached */
     limit_reached: boolean;
-    /** 主时间窗口 */
+    /** Primary time window */
     primary_window: RateLimitWindow;
-    /** 备用时间窗口 */
+    /** Secondary time window */
     secondary_window?: RateLimitWindow;
 }
 
 /**
- * ChatGPT 用量信息数据结构（API响应格式）
+ * ChatGPT usage information data structure (API response format)
  */
 export interface ChatGPTUsageResponse {
-    /** 用户 ID */
+    /** User ID */
     user_id: string;
-    /** 账户 ID */
+    /** Account ID */
     account_id: string;
-    /** 邮箱 */
+    /** Email */
     email: string;
-    /** 计划类型：free, plus, pro 等 */
+    /** Plan type: free, plus, pro, etc. */
     plan_type: string;
-    /** 速率限制信息 */
+    /** Rate limit information */
     rate_limit: RateLimitInfo;
-    /** 代码审查速率限制 */
+    /** Code review rate limit */
     code_review_rate_limit?: RateLimitInfo;
-    /** 额外速率限制 */
+    /** Additional rate limits */
     additional_rate_limits: unknown | null;
-    /** 积分/余额信息 */
+    /** Credits/balance information */
     credits: unknown | null;
-    /** 促销信息 */
+    /** Promotional information */
     promo: unknown | null;
 }
 
 /**
- * ChatGPT 状态数据
+ * ChatGPT status data
  */
 export interface ChatGPTStatusData {
-    /** 用户 ID */
+    /** User ID */
     userId: string;
-    /** 账户 ID */
+    /** Account ID */
     accountId: string;
-    /** 邮箱 */
+    /** Email */
     email: string;
-    /** 计划类型 */
+    /** Plan type */
     planType: string;
-    /** 速率限制信息 */
+    /** Rate limit information */
     rateLimit: RateLimitInfo;
-    /** 代码审查已使用百分比 */
+    /** Code review used percentage */
     codeReviewUsedPercent: number;
-    /** 最后更新时间 */
+    /** Last update time */
     lastUpdated: string;
 }
 
 /**
- * 根据 limit_window_seconds 判断窗口类型
- * 只处理 300分钟(5小时) 和 1周 两种情况
+ * Determine window type based on limit_window_seconds
+ * Only handle 300 minutes (5 hours) and 1 week cases
  */
 function getWindowType(limitWindowSeconds: number): { type: string; label: string } {
-    // 300分钟 = 5小时 = 18000 秒
+    // 300 minutes = 5 hours = 18000 seconds
     const FIVE_HOURS = 5 * 60 * 60;
-    // 1周 = 7 * 24 * 60 * 60 = 604800 秒
+    // 1 week = 7 * 24 * 60 * 60 = 604800 seconds
     const WEEK = 7 * 24 * 60 * 60;
 
     if (limitWindowSeconds === FIVE_HOURS) {
-        return { type: 'hourly', label: '300 分钟' };
+        return { type: 'hourly', label: '300 minutes' };
     } else if (limitWindowSeconds === WEEK) {
-        return { type: 'weekly', label: '每周额度' };
+        return { type: 'weekly', label: 'Weekly allowance' };
     } else {
-        // 默认按每周处理
-        return { type: 'weekly', label: '每周额度' };
+        // Default to weekly processing
+        return { type: 'weekly', label: 'Weekly allowance' };
     }
 }
 
 /**
- * ChatGPT 用量查询状态栏项
- * 显示 ChatGPT 账户的用量信息，包括：
- * - 已使用百分比（状态栏显示）
- * - 计划类型（tooltip显示）
- * - 剩余时间（tooltip显示）
- * - 每5分钟自动刷新一次
+ * ChatGPT usage query status bar item
+ * Displays ChatGPT account usage information, including:
+ * - Used percentage (displayed in status bar)
+ * - Plan type (displayed in tooltip)
+ * - Remaining time (displayed in tooltip)
+ * - Auto-refreshes every 5 minutes
  */
 export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
     constructor() {
@@ -121,26 +121,26 @@ export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
             refreshCommand: 'ccmp.chatgpt.refreshUsage',
             apiKeyProvider: 'codex',
             cacheKeyPrefix: 'chatgpt',
-            logPrefix: 'ChatGPT状态栏',
+            logPrefix: 'ChatGPT StatusBar',
             icon: '$(ccmp-openai)'
         };
         super(config);
     }
 
     /**
-     * 获取显示文本
-     * 格式: "$(icon) 85% (92%)" - 括号内是5小时额度，外面是每周额度
-     * 只显示 300分钟 和 每周 两种窗口
+     * Get display text
+     * Format: "$(icon) 85% (92%)" - parentheses contain 5-hour allowance, outside is weekly allowance
+     * Only displays 300 minutes and weekly windows
      */
     protected getDisplayText(data: ChatGPTStatusData): string {
         const primaryWindow = data.rateLimit.primary_window;
         const secondaryWindow = data.rateLimit.secondary_window;
 
-        // 获取窗口类型
+        // Get window types
         const primaryType = getWindowType(primaryWindow.limit_window_seconds);
         const secondaryType = secondaryWindow ? getWindowType(secondaryWindow.limit_window_seconds) : null;
 
-        // 确定哪个是每周，哪个是每小时
+        // Determine which is weekly and which is hourly
         let weeklyRemaining = 0;
         let hourlyRemaining = 0;
 
@@ -156,7 +156,7 @@ export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
             }
         }
 
-        // 括号内是5小时额度，外面是每周额度
+        // Parentheses contain 5-hour allowance, outside is weekly allowance
         if (hourlyRemaining > 0) {
             return `${this.config.icon} ${weeklyRemaining.toFixed(0)}% (${hourlyRemaining.toFixed(0)}%)`;
         }
@@ -165,7 +165,7 @@ export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
     }
 
     /**
-     * 生成 Tooltip 内容
+     * Generate Tooltip content
      */
     protected generateTooltip(data: ChatGPTStatusData): vscode.MarkdownString {
         const md = new vscode.MarkdownString();
@@ -177,7 +177,7 @@ export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
         const primaryType = getWindowType(primaryWindow.limit_window_seconds);
         const secondaryType = secondaryWindow ? getWindowType(secondaryWindow.limit_window_seconds) : null;
 
-        // 计划类型映射
+        // Plan type mapping
         const planTypeMap: Record<string, string> = {
             free: 'Free',
             plus: 'Plus',
@@ -188,13 +188,13 @@ export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
         const planTypeDisplay = planTypeMap[data.planType] || data.planType;
 
         md.appendMarkdown(`#### ChatGPT ${planTypeDisplay}\n\n`);
-        md.appendMarkdown('| 限频类型 | 剩余量 | 重置时间 |\n');
+        md.appendMarkdown('| Rate Limit Type | Remaining | Reset Time |\n');
         md.appendMarkdown('| :----: | ----: | :------: |\n');
 
-        // 主窗口
+        // Primary window
         const primaryRemaining = Math.max(0, 100 - primaryWindow.used_percent);
         const primaryResetDate = new Date(primaryWindow.reset_at * 1000);
-        const primaryResetTimeStr = primaryResetDate.toLocaleString('zh-CN', {
+        const primaryResetTimeStr = primaryResetDate.toLocaleString('en-US', {
             month: 'numeric',
             day: 'numeric',
             hour: '2-digit',
@@ -204,11 +204,11 @@ export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
             `| **${primaryType.label}** | **${primaryRemaining.toFixed(0)}%** | ${primaryResetTimeStr} |\n`
         );
 
-        // 备用窗口（如果是有效类型）
+        // Secondary window (if valid type)
         if (secondaryWindow && secondaryType) {
             const secondaryRemaining = Math.max(0, 100 - secondaryWindow.used_percent);
             const secondaryResetDate = new Date(secondaryWindow.reset_at * 1000);
-            const secondaryResetTimeStr = secondaryResetDate.toLocaleString('zh-CN', {
+            const secondaryResetTimeStr = secondaryResetDate.toLocaleString('en-US', {
                 month: 'numeric',
                 day: 'numeric',
                 hour: '2-digit',
@@ -221,53 +221,53 @@ export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
 
         md.appendMarkdown('\n');
         md.appendMarkdown('---\n');
-        md.appendMarkdown(`**最后更新** ${data.lastUpdated}\n`);
+        md.appendMarkdown(`**Last Updated** ${data.lastUpdated}\n`);
         md.appendMarkdown('\n');
         md.appendMarkdown('---\n');
-        md.appendMarkdown('点击状态栏可手动刷新\n');
+        md.appendMarkdown('Click status bar to manually refresh\n');
 
         return md;
     }
 
     /**
-     * 执行 API 查询
-     * 实现 ChatGPT 用量查询逻辑
+     * Perform API query
+     * Implement ChatGPT usage query logic
      */
     protected async performApiQuery(): Promise<{ success: boolean; data?: ChatGPTStatusData; error?: string }> {
         const USAGE_QUERY_URL = 'https://chatgpt.com/backend-api/wham/usage';
 
         try {
-            // 获取 Codex 认证实例
+            // Get Codex auth instance
             const codexAuth = CliAuthFactory.getInstance('codex') as CodexCliAuth | null;
             if (!codexAuth) {
                 return {
                     success: false,
-                    error: 'Codex CLI 认证未配置，请先完成 Codex CLI 登录'
+                    error: 'Codex CLI authentication not configured, please complete Codex CLI login first'
                 };
             }
 
-            // 确保认证有效（自动刷新令牌）
+            // Ensure authentication is valid (auto-refresh tokens)
             const credentials = await codexAuth.ensureAuthenticated();
             if (!credentials || !credentials.access_token) {
                 return {
                     success: false,
-                    error: 'Codex CLI 认证无效，请重新登录'
+                    error: 'Codex CLI authentication invalid, please login again'
                 };
             }
 
-            // 获取 account_id
+            // Get account_id
             const accountId = await codexAuth.getAccountId();
             if (!accountId) {
                 return {
                     success: false,
-                    error: '无法获取 ChatGPT 账户 ID'
+                    error: 'Unable to get ChatGPT account ID'
                 };
             }
 
-            Logger.debug('触发查询 ChatGPT 用量');
-            StatusLogger.debug(`[${this.config.logPrefix}] 开始查询 ChatGPT 用量...`);
+            Logger.debug('Triggered ChatGPT usage query');
+            StatusLogger.debug(`[${this.config.logPrefix}] Starting ChatGPT usage query...`);
 
-            // 构建请求
+            // Build request
             const requestOptions: RequestInit = {
                 method: 'GET',
                 headers: {
@@ -277,27 +277,27 @@ export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
                 }
             };
 
-            // 发送请求
+            // Send request
             const response = await fetch(USAGE_QUERY_URL, requestOptions);
             const responseText = await response.text();
 
             StatusLogger.debug(
-                `[${this.config.logPrefix}] 用量查询响应状态: ${response.status} ${response.statusText}`
+                `[${this.config.logPrefix}] Usage query response status: ${response.status} ${response.statusText}`
             );
 
-            // 解析响应
+            // Parse response
             let parsedResponse: ChatGPTUsageResponse;
             try {
                 parsedResponse = JSON.parse(responseText);
             } catch (parseError) {
-                Logger.error(`解析响应 JSON 失败: ${parseError}`);
+                Logger.error(`Failed to parse response JSON: ${parseError}`);
                 return {
                     success: false,
-                    error: `响应格式错误: ${responseText.substring(0, 200)}`
+                    error: `Response format error: ${responseText.substring(0, 200)}`
                 };
             }
 
-            // 检查响应状态
+            // Check response status
             if (!response.ok) {
                 let errorMessage = `HTTP ${response.status}`;
                 if (responseText) {
@@ -307,38 +307,38 @@ export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
                             errorMessage = errorData.error.message || errorData.error;
                         }
                     } catch {
-                        // 如果解析错误响应失败，使用默认错误信息
+                        // If parsing error response fails, use default error message
                     }
                 }
-                Logger.error(`用量查询失败: ${errorMessage}`);
+                Logger.error(`Usage query failed: ${errorMessage}`);
                 return {
                     success: false,
-                    error: `查询失败: ${errorMessage}`
+                    error: `Query failed: ${errorMessage}`
                 };
             }
 
-            // 检查必要的字段
+            // Check required fields
             if (!parsedResponse.rate_limit || !parsedResponse.rate_limit.primary_window) {
-                Logger.error('未获取到有效的用量数据');
+                Logger.error('Failed to retrieve valid usage data');
                 return {
                     success: false,
-                    error: '未获取到有效的用量数据'
+                    error: 'Failed to retrieve valid usage data'
                 };
             }
 
             const rateLimit = parsedResponse.rate_limit;
 
-            // 格式化最后更新时间
-            const lastUpdated = new Date().toLocaleString('zh-CN');
+            // Format last update time
+            const lastUpdated = new Date().toLocaleString('en-US');
 
-            // 解析代码审查用量
+            // Parse code review usage
             let codeReviewUsedPercent = 0;
             if (parsedResponse.code_review_rate_limit?.primary_window) {
                 codeReviewUsedPercent = parsedResponse.code_review_rate_limit.primary_window.used_percent;
             }
 
-            // 解析成功响应
-            StatusLogger.debug(`[${this.config.logPrefix}] 用量查询成功`);
+            // Parse successful response
+            StatusLogger.debug(`[${this.config.logPrefix}] Usage query successful`);
 
             return {
                 success: true,
@@ -353,30 +353,30 @@ export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
                 }
             };
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : '未知错误';
-            Logger.error(`用量查询异常: ${errorMessage}`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            Logger.error(`Usage query exception: ${errorMessage}`);
             return {
                 success: false,
-                error: `查询异常: ${errorMessage}`
+                error: `Query exception: ${errorMessage}`
             };
         }
     }
 
     /**
-     * 检查是否需要高亮警告
-     * 当每周使用率超过 80% 时高亮显示
+     * Check if highlight warning is needed
+     * Highlight when weekly usage exceeds 80%
      */
     protected shouldHighlightWarning(data: ChatGPTStatusData): boolean {
         const primaryWindow = data.rateLimit.primary_window;
         const secondaryWindow = data.rateLimit.secondary_window;
 
-        // 检查每周额度的使用率
+        // Check weekly allowance usage rate
         const primaryType = getWindowType(primaryWindow.limit_window_seconds);
         if (primaryType.type === 'weekly') {
             return primaryWindow.used_percent >= this.HIGH_USAGE_THRESHOLD;
         }
 
-        // 如果主窗口不是每周，检查备用窗口
+        // If primary window is not weekly, check secondary window
         if (secondaryWindow) {
             const secondaryType = getWindowType(secondaryWindow.limit_window_seconds);
             if (secondaryType.type === 'weekly') {
@@ -388,8 +388,8 @@ export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
     }
 
     /**
-     * 检查是否需要刷新缓存
-     * 每5分钟固定刷新一次
+     * Check if cache refresh is needed
+     * Fixed refresh every 5 minutes
      */
     protected shouldRefresh(): boolean {
         if (!this.lastStatusData) {
@@ -397,12 +397,12 @@ export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
         }
 
         const dataAge = Date.now() - this.lastStatusData.timestamp;
-        const REFRESH_INTERVAL = (5 * 60 - 10) * 1000; // 缓存过期阈值 5 分钟
+        const REFRESH_INTERVAL = (5 * 60 - 10) * 1000; // Cache expiry threshold 5 minutes
 
-        // 检查是否超过5分钟刷新间隔
+        // Check if exceeds 5 minute refresh interval
         if (dataAge > REFRESH_INTERVAL) {
             StatusLogger.debug(
-                `[${this.config.logPrefix}] 缓存时间(${(dataAge / 1000).toFixed(1)}秒)超过5分钟刷新间隔，触发API刷新`
+                `[${this.config.logPrefix}] Cache time (${(dataAge / 1000).toFixed(1)} seconds) exceeds 5 minute refresh interval, triggering API refresh`
             );
             return true;
         }
@@ -411,24 +411,7 @@ export class ChatGPTStatusBar extends BaseStatusBarItem<ChatGPTStatusData> {
     }
 
     /**
-     * 检查是否应该显示状态栏
-     * 通过检查 Codex CLI 认证是否存在
-     */
-    protected async shouldShowStatusBar(): Promise<boolean> {
-        try {
-            const codexAuth = CliAuthFactory.getInstance('codex') as CodexCliAuth | null;
-            if (!codexAuth) {
-                return false;
-            }
-            const credentials = await codexAuth.loadCredentials();
-            return credentials !== null && credentials.access_token !== undefined;
-        } catch {
-            return false;
-        }
-    }
-
-    /**
-     * 访问器：获取最后的状态数据（用于测试和调试）
+     * Accessor: get last status data (for testing and debugging)
      */
     getLastStatusData(): { data: ChatGPTStatusData; timestamp: number } | null {
         return this.lastStatusData;

@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  Commit 命令系统
- *  注册和处理提交消息生成相关的命令
+ *  Commit Commands System
+ *  Registers and handles commit message generation related commands
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -10,19 +10,19 @@ import { Logger } from '../utils';
 import { Repository } from '../types/git';
 
 /**
- * 注册所有 Commit 相关命令
+ * Registers all Commit related commands
  */
 export function registerCommitCommands(context: vscode.ExtensionContext): vscode.Disposable[] {
     const disposables: vscode.Disposable[] = [];
 
-    // 注册生成提交消息命令
+    // Register generate commit message command
     disposables.push(
         vscode.commands.registerCommand('ccmp.commit.generateMessage', async (sourceControlRepository?: Repository) => {
             await CommitMessage.generateAndSetCommitMessage(sourceControlRepository);
         })
     );
 
-    // 暂存区按钮：强制仅分析 staged 变更
+    // Staged button: force analysis of staged changes only
     disposables.push(
         vscode.commands.registerCommand(
             'ccmp.commit.generateMessageStaged',
@@ -32,7 +32,7 @@ export function registerCommitCommands(context: vscode.ExtensionContext): vscode
         )
     );
 
-    // 变更区按钮：强制分析 working tree（包含 tracked + untracked）
+    // Changes button: force analysis of working tree (includes tracked + untracked)
     disposables.push(
         vscode.commands.registerCommand(
             'ccmp.commit.generateMessageWorkingTree',
@@ -42,14 +42,14 @@ export function registerCommitCommands(context: vscode.ExtensionContext): vscode
         )
     );
 
-    // 注册选择模型命令
+    // Register select model command
     disposables.push(
         vscode.commands.registerCommand('ccmp.commit.selectModel', async () => {
             try {
-                // 1) 先选择提供商（providerKey），再选择该提供商的模型
+                // 1) First select provider (providerKey), then select the provider's model
                 const providers = await GeneratorService.getAvailableCommitProviders();
                 if (providers.length === 0) {
-                    vscode.window.showWarningMessage('没有可用的 CCMP 提供商');
+                    vscode.window.showWarningMessage('No available CCMP providers');
                     return;
                 }
 
@@ -60,7 +60,7 @@ export function registerCommitCommands(context: vscode.ExtensionContext): vscode
                         detail: p.vendor,
                         providerKey: p.providerKey
                     })),
-                    { placeHolder: '选择用于生成提交消息的提供商' }
+                    { placeHolder: 'Select provider for generating commit messages' }
                 );
 
                 if (!providerPick) {
@@ -78,7 +78,7 @@ export function registerCommitCommands(context: vscode.ExtensionContext): vscode
                         modelId: m.id,
                         modelName: m.name
                     })),
-                    { placeHolder: '选择该提供商下用于生成提交消息的模型' }
+                    { placeHolder: 'Select model for generating commit messages under this provider' }
                 );
 
                 if (!modelPick) {
@@ -87,7 +87,7 @@ export function registerCommitCommands(context: vscode.ExtensionContext): vscode
 
                 const { modelId, modelName } = modelPick;
 
-                // 2) 更新配置（保存 provider + model）
+                // 2) Update configuration (save provider + model)
                 const config = vscode.workspace.getConfiguration('ccmp.commit');
                 await config.update(
                     'model',
@@ -97,18 +97,18 @@ export function registerCommitCommands(context: vscode.ExtensionContext): vscode
                     },
                     vscode.ConfigurationTarget.Global
                 );
-                vscode.window.showInformationMessage(`已选择模型: ${providerKey}:${modelName}`);
+                vscode.window.showInformationMessage(`Model selected: ${providerKey}:${modelName}`);
             } catch (error) {
-                Logger.error('[CommitCommands] 选择模型失败:', error);
-                vscode.window.showErrorMessage('选择模型失败');
+                Logger.error('[CommitCommands] Model selection failed:', error);
+                vscode.window.showErrorMessage('Model selection failed');
             }
         })
     );
 
-    // 添加到订阅
+    // Add to subscriptions
     context.subscriptions.push(...disposables);
 
-    Logger.trace('[CommitCommands] Commit 命令已注册');
+    Logger.trace('[CommitCommands] Commit commands registered');
 
     return disposables;
 }

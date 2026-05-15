@@ -1,5 +1,5 @@
 {
-    "displayName": "智谱AI",
+    "displayName": "ZhipuAI",
     "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
     "apiKeyTemplate": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxx",
     "models": [
@@ -8,10 +8,13 @@
             "name": "GLM-5V-Turbo (CodingPlan)",
             "sdkMode": "anthropic",
             "baseUrl": "https://open.bigmodel.cn/api/anthropic",
-            "tooltip": "GLM-5V-Turbo 是智谱首个多模态 Coding 基座模型，面向视觉编程任务打造。能够原生处理图片、视频、文本等多模态输入，同时擅长长程规划、复杂编程和动作执行；深度适配 Agent 工作流，能够与 Claude Code、OpenClaw 等 Agent 深度协同，完成”看懂环境→规划动作→执行任务”的完整闭环。",
+            "tooltip": "GLM-5V-Turbo is Zhipu's first multimodal Coding foundation model, built for visual programming tasks. Capable of natively processing multimodal inputs including images, videos, and text, while excelling at long-range planning, complex programming, and action execution; deeply adapted to Agent workflows, capable of deep collaboration with Claude Code, OpenClaw and other Agents to complete the complete closed loop of 'understanding environment -> planning actions -> executing tasks'.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -22,10 +25,13 @@
             "name": "GLM-5.1 (CodingPlan)",
             "sdkMode": "anthropic",
             "baseUrl": "https://open.bigmodel.cn/api/anthropic",
-            "tooltip": "GLM-5.1 是智谱最新旗舰模型，代码能力大大增强，长程任务显著提升，能够在单次任务中持续、自主地工作长达 8 小时，完成从规划、执行到迭代优化的完整闭环，交付工程级成果。",
+            "tooltip": "GLM-5.1 is Zhipu's latest flagship model, with greatly enhanced code capabilities, significantly improved long-range tasks, capable of working continuously and autonomously for up to 8 hours in a single task, completing the complete closed loop from planning, execution to iterative optimization, delivering engineering-level results.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -36,10 +42,13 @@
             "name": "GLM-5-Turbo (CodingPlan)",
             "sdkMode": "anthropic",
             "baseUrl": "https://open.bigmodel.cn/api/anthropic",
-            "tooltip": "GLM-5-Turbo 是面向 OpenClaw 龙虾场景深度优化的基座模型。 其从训练阶段就针对龙虾任务的核心需求进行专项优化，增强如工具调用、指令遵循、定时与持续性任务、长链路执行等核心能力，使其在复杂、动态、长链路的任务中也真正具备可执行性。",
+            "tooltip": "GLM-5-Turbo is a foundation model deeply optimized for OpenClaw lobster scenarios. Specifically optimized from the training stage for the core needs of lobster tasks, enhancing core capabilities such as tool calling, instruction following, scheduled and persistent tasks, and long-chain execution, making it truly executable in complex, dynamic, and long-chain tasks.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -50,10 +59,13 @@
             "name": "GLM-4.7 (CodingPlan)",
             "sdkMode": "anthropic",
             "baseUrl": "https://open.bigmodel.cn/api/anthropic",
-            "tooltip": "GLM-4.7 是智谱最新旗舰模型，GLM-4.7 面向 Agentic Coding 场景强化了编码能力、长程任务规划与工具协同，并在多个公开基准的当期榜单中取得开源模型中的领先表现。通用能力提升，回复更简洁自然，写作更具沉浸感。在执行复杂智能体任务，在工具调用时指令遵循更强，Artifacts 与 Agentic Coding 的前端美感和长程任务完成效率进一步提升。",
+            "tooltip": "GLM-4.7 is Zhipu's latest flagship model. GLM-4.7 strengthens coding capabilities, long-range task planning, and tool collaboration for Agentic Coding scenarios, and achieves leading performance among open-source models in multiple public benchmark current leaderboards. General capabilities improved, replies more concise and natural, writing more immersive. In executing complex agent tasks, stronger instruction following when tool calling, Artifacts and Agentic Coding frontend aesthetics and long-range task completion efficiency further improved.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -62,10 +74,13 @@
         {
             "id": "glm-4.7-flash",
             "name": "GLM-4.7-Flash",
-            "tooltip": "GLM-4.7-Flash 作为 30B 级 SOTA 模型，提供了一个兼顾性能与效率的新选择。面向 Agentic Coding 场景强化了编码能力、长程任务规划与工具协同，并在多个公开基准的当期榜单中取得同尺寸开源模型中的领先表现。在执行复杂智能体任务，在工具调用时指令遵循更强，Artifacts 与 Agentic Coding 的前端美感和长程任务完成效率进一步提升。",
+            "tooltip": "GLM-4.7-Flash as a 30B-level SOTA model provides a new option balancing performance and efficiency. Strengthens coding capabilities, long-range task planning, and tool collaboration for Agentic Coding scenarios, and achieves leading performance among same-size open-source models in multiple public benchmark current leaderboards. In executing complex agent tasks, stronger instruction following when tool calling, Artifacts and Agentic Coding frontend aesthetics and long-range task completion efficiency further improved.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -74,10 +89,13 @@
         {
             "id": "glm-4.7-flashx",
             "name": "GLM-4.7-FlashX (PayGo)",
-            "tooltip": "GLM-4.7-Flash 作为 30B 级 SOTA 模型，提供了一个兼顾性能与效率的新选择。面向 Agentic Coding 场景强化了编码能力、长程任务规划与工具协同，并在多个公开基准的当期榜单中取得同尺寸开源模型中的领先表现。在执行复杂智能体任务，在工具调用时指令遵循更强，Artifacts 与 Agentic Coding 的前端美感和长程任务完成效率进一步提升。",
+            "tooltip": "GLM-4.7-Flash as a 30B-level SOTA model provides a new option balancing performance and efficiency. Strengthens coding capabilities, long-range task planning, and tool collaboration for Agentic Coding scenarios, and achieves leading performance among same-size open-source models in multiple public benchmark current leaderboards. In executing complex agent tasks, stronger instruction following when tool calling, Artifacts and Agentic Coding frontend aesthetics and long-range task completion efficiency further improved.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -88,10 +106,13 @@
             "name": "GLM-4.6 (CodingPlan)",
             "sdkMode": "anthropic",
             "baseUrl": "https://open.bigmodel.cn/api/anthropic",
-            "tooltip": "GLM-4.6 是智谱的语言模型，其总参数量 355B，激活参数 32B。GLM-4.6 所有核心能力上均完成了对 GLM-4.5 的超越",
+            "tooltip": "GLM-4.6 is Zhipu's language model with 355B total parameters and 32B activated parameters. GLM-4.6 surpasses GLM-4.5 in all core capabilities",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["disabled", "enabled"],
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -102,16 +123,21 @@
             "model": "glm-4.6v",
             "name": "GLM-4.6V (CodingPlan)",
             "baseUrl": "https://open.bigmodel.cn/api/coding/paas/v4",
-            "tooltip": "ZHIPU GLM-4.6V - 智谱最新视觉推理模型，视觉理解精度达同规模 SOTA，全面支持工具调用，支持 128k 超长上下文，并针对 Coding 场景进行了专项优化。",
+            "tooltip": "ZHIPU GLM-4.6V - Zhipu's latest visual reasoning model, visual understanding accuracy reaches same-scale SOTA, fully supports tool calling, supports 128k super long context, and is specially optimized for Coding scenarios.",
             "maxInputTokens": 128000,
             "maxOutputTokens": 16000,
-            "thinking": ["disabled", "enabled"],
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
             },
             "extraBody": {
-                "thinking": { "type": "disabled" }
+                "thinking": {
+                    "type": "disabled"
+                }
             }
         },
         {
@@ -119,10 +145,13 @@
             "name": "GLM-4.5-Air (CodingPlan)",
             "sdkMode": "anthropic",
             "baseUrl": "https://open.bigmodel.cn/api/anthropic",
-            "tooltip": "ZHIPU GLM-4.5-Air - 高性价比模型，轻量级设计，强性能表现",
+            "tooltip": "ZHIPU GLM-4.5-Air - High cost-performance model, lightweight design, strong performance",
             "maxInputTokens": 128000,
             "maxOutputTokens": 96000,
-            "thinking": ["disabled", "enabled"],
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -132,10 +161,13 @@
             "id": "glm-5.1-billing",
             "model": "glm-5.1",
             "name": "GLM-5.1 (PayGo)",
-            "tooltip": "GLM-5.1 是智谱最新旗舰模型，代码能力大大增强，长程任务显著提升，能够在单次任务中持续、自主地工作长达 8 小时，完成从规划、执行到迭代优化的完整闭环，交付工程级成果。",
+            "tooltip": "GLM-5.1 is Zhipu's latest flagship model, with greatly enhanced code capabilities, significantly improved long-range tasks, capable of working continuously and autonomously for up to 8 hours in a single task, completing the complete closed loop from planning, execution to iterative optimization, delivering engineering-level results.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -145,10 +177,13 @@
             "id": "glm-5v-turbo-billing",
             "model": "glm-5v-turbo",
             "name": "GLM-5V-Turbo (PayGo)",
-            "tooltip": "GLM-5V-Turbo 是智谱首个多模态 Coding 基座模型，面向视觉编程任务打造。能够原生处理图片、视频、文本等多模态输入，同时擅长长程规划、复杂编程和动作执行；深度适配 Agent 工作流，能够与 Claude Code、OpenClaw 等 Agent 深度协同，完成”看懂环境→规划动作→执行任务”的完整闭环。",
+            "tooltip": "GLM-5V-Turbo is Zhipu's first multimodal Coding foundation model, built for visual programming tasks. Capable of natively processing multimodal inputs including images, videos, and text, while excelling at long-range planning, complex programming, and action execution; deeply adapted to Agent workflows, capable of deep collaboration with Claude Code, OpenClaw and other Agents to complete the complete closed loop of 'understanding environment -> planning actions -> executing tasks'.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -158,10 +193,13 @@
             "id": "glm-5-turbo-billing",
             "model": "glm-5-turbo",
             "name": "GLM-5-Turbo (PayGo)",
-            "tooltip": "GLM-5-Turbo 是面向 OpenClaw 龙虾场景深度优化的基座模型。 其从训练阶段就针对龙虾任务的核心需求进行专项优化，增强如工具调用、指令遵循、定时与持续性任务、长链路执行等核心能力，使其在复杂、动态、长链路的任务中也真正具备可执行性。",
+            "tooltip": "GLM-5-Turbo is a foundation model deeply optimized for OpenClaw lobster scenarios. Specifically optimized from the training stage for the core needs of lobster tasks, enhancing core capabilities such as tool calling, instruction following, scheduled and persistent tasks, and long-chain execution, making it truly executable in complex, dynamic, and long-chain tasks.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -171,10 +209,13 @@
             "id": "glm-5-billing",
             "model": "glm-5",
             "name": "GLM-5 (PayGo)",
-            "tooltip": "GLM-5 是智谱新一代的旗舰基座模型，面向 Agentic Engineering 打造，能够在复杂系统工程与长程 Agent 任务中提供可靠生产力。在 Coding 与 Agent 能力上，GLM-5 取得开源 SOTA 表现，在真实编程场景的使用体感逼近 Claude Opus 4.5，擅长复杂系统工程与长程 Agent 任务，是通用 Agent 助手的理想基座。",
+            "tooltip": "GLM-5 is Zhipu's new generation flagship foundation model, built for Agentic Engineering, capable of providing reliable productivity in complex engineering systems and long-range Agent tasks. In Coding and Agent capabilities, GLM-5 achieves open-source SOTA performance, with usage experience in real programming scenarios approaching Claude Opus 4.5, excelling in complex engineering systems and long-range Agent tasks, making it an ideal foundation for general Agent assistants.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -184,10 +225,13 @@
             "id": "glm-4.7-billing",
             "model": "glm-4.7",
             "name": "GLM-4.7 (PayGo)",
-            "tooltip": "GLM-4.7 是智谱最新旗舰模型，GLM-4.7 面向 Agentic Coding 场景强化了编码能力、长程任务规划与工具协同，并在多个公开基准的当期榜单中取得开源模型中的领先表现。通用能力提升，回复更简洁自然，写作更具沉浸感。在执行复杂智能体任务，在工具调用时指令遵循更强，Artifacts 与 Agentic Coding 的前端美感和长程任务完成效率进一步提升。",
+            "tooltip": "GLM-4.7 is Zhipu's latest flagship model. GLM-4.7 strengthens coding capabilities, long-range task planning, and tool collaboration for Agentic Coding scenarios, and achieves leading performance among open-source models in multiple public benchmark current leaderboards. General capabilities improved, replies more concise and natural, writing more immersive. In executing complex agent tasks, stronger instruction following when tool calling, Artifacts and Agentic Coding frontend aesthetics and long-range task completion efficiency further improved.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -197,10 +241,13 @@
             "id": "glm-4.6-billing",
             "model": "glm-4.6",
             "name": "GLM-4.6 (PayGo)",
-            "tooltip": "GLM-4.6 是智谱的语言模型，其总参数量 355B，激活参数 32B。GLM-4.6 所有核心能力上均完成了对 GLM-4.5 的超越",
+            "tooltip": "GLM-4.6 is Zhipu's language model with 355B total parameters and 32B activated parameters. GLM-4.6 surpasses GLM-4.5 in all core capabilities",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["disabled", "enabled"],
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -210,10 +257,13 @@
             "id": "glm-4.6v-billing",
             "model": "glm-4.6v",
             "name": "GLM-4.6V (PayGo)",
-            "tooltip": "GLM-4.6V - 智谱最新视觉推理模型，视觉理解精度达同规模 SOTA，全面支持工具调用，支持 128k 超长上下文，并针对 Coding 场景进行了专项优化。",
+            "tooltip": "GLM-4.6V - Zhipu's latest visual reasoning model, visual understanding accuracy reaches same-scale SOTA, fully supports tool calling, supports 128k super long context, and is specially optimized for Coding scenarios.",
             "maxInputTokens": 128000,
             "maxOutputTokens": 16000,
-            "thinking": ["disabled", "enabled"],
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -223,10 +273,13 @@
             "id": "glm-4.5-air-billing",
             "model": "glm-4.5-air",
             "name": "GLM-4.5-Air (PayGo)",
-            "tooltip": "GLM-4.5-Air - 高性价比模型，轻量级设计，强性能表现",
+            "tooltip": "GLM-4.5-Air - High cost-performance model, lightweight design, strong performance",
             "maxInputTokens": 128000,
             "maxOutputTokens": 96000,
-            "thinking": ["disabled", "enabled"],
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": false
@@ -235,10 +288,13 @@
         {
             "id": "glm-4.6v-flash",
             "name": "GLM-4.6V-Flash",
-            "tooltip": "GLM-4.6V-Flash - 全新免费模型，128K上下文，支持深度思考、工具调用和流式输出，具备强大推理能力和稳定代码生成。",
+            "tooltip": "GLM-4.6V-Flash - Brand new free model, 128K context, supports deep thinking, tool calling, and streaming output, with strong reasoning capabilities and stable code generation.",
             "maxInputTokens": 128000,
             "maxOutputTokens": 16000,
-            "thinking": ["disabled", "enabled"],
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true

@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  阿里云百炼 DashScope MCP WebSearch 客户端
- *  使用官方 @modelcontextprotocol/sdk 通过 StreamableHTTP 连接百炼 WebSearch MCP
+ *  Alibaba Cloud DashScope MCP WebSearch Client
+ *  Uses official @modelcontextprotocol/sdk to connect to DashScope WebSearch MCP via StreamableHTTP
  *--------------------------------------------------------------------------------------------*/
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -10,7 +10,7 @@ import { ApiKeyManager } from '../../utils/apiKeyManager';
 import { VersionManager } from '../../utils/versionManager';
 
 /**
- * DashScope 搜索请求参数
+ * DashScope search request parameters
  */
 export interface DashscopeWebSearchRequest {
     query: string;
@@ -18,7 +18,7 @@ export interface DashscopeWebSearchRequest {
 }
 
 /**
- * DashScope 搜索结果页项
+ * DashScope search result page item
  */
 export interface DashscopeSearchPage {
     title: string;
@@ -29,7 +29,7 @@ export interface DashscopeSearchPage {
 }
 
 /**
- * DashScope MCP 原始响应
+ * DashScope MCP raw response
  */
 export interface DashscopeMCPResponse {
     pages: DashscopeSearchPage[];
@@ -39,7 +39,7 @@ export interface DashscopeMCPResponse {
 }
 
 /**
- * DashScope MCP WebSearch 客户端
+ * DashScope MCP WebSearch client
  */
 export class DashscopeMCPWebSearchClient {
     private static clientCache = new Map<string, DashscopeMCPWebSearchClient>();
@@ -63,17 +63,17 @@ export class DashscopeMCPWebSearchClient {
     static async getInstance(apiKey?: string): Promise<DashscopeMCPWebSearchClient> {
         const key = apiKey || (await ApiKeyManager.getApiKey('dashscope'));
         if (!key) {
-            throw new Error('DashScope API密钥未设置，请先运行命令"CCMP: 设置 DashScope API密钥"');
+            throw new Error('DashScope API key not set, please run command "CCMP: Set DashScope API Key" first');
         }
 
         let instance = DashscopeMCPWebSearchClient.clientCache.get(key);
         if (!instance) {
-            Logger.debug(`📦 [DashScope MCP] 创建新的客户端实例 (API key: ${key.substring(0, 8)}...)`);
+            Logger.debug(`📦 [DashScope MCP] Creating new client instance (API key: ${key.substring(0, 8)}...)`);
             instance = new DashscopeMCPWebSearchClient();
             instance.currentApiKey = key;
             DashscopeMCPWebSearchClient.clientCache.set(key, instance);
         } else {
-            Logger.debug(`♻️ [DashScope MCP] 复用已缓存的客户端实例 (API key: ${key.substring(0, 8)}...)`);
+            Logger.debug(`♻️ [DashScope MCP] Reusing cached client instance (API key: ${key.substring(0, 8)}...)`);
         }
 
         await instance.ensureConnected();
@@ -86,15 +86,15 @@ export class DashscopeMCPWebSearchClient {
             if (instance) {
                 await instance.cleanup();
                 DashscopeMCPWebSearchClient.clientCache.delete(apiKey);
-                Logger.info(`🗑️ [DashScope MCP] 已清除 API key ${apiKey.substring(0, 8)}... 的缓存`);
+                Logger.info(`🗑️ [DashScope MCP] Cleared cache for API key ${apiKey.substring(0, 8)}...`);
             }
         } else {
             for (const [key, instance] of DashscopeMCPWebSearchClient.clientCache.entries()) {
                 await instance.cleanup();
-                Logger.info(`🗑️ [DashScope MCP] 已清除 API key ${key.substring(0, 8)}... 的缓存`);
+                Logger.info(`🗑️ [DashScope MCP] Cleared cache for API key ${key.substring(0, 8)}...`);
             }
             DashscopeMCPWebSearchClient.clientCache.clear();
-            Logger.info('🗑️ [DashScope MCP] 已清除所有客户端缓存');
+            Logger.info('🗑️ [DashScope MCP] Cleared all client caches');
         }
     }
 
@@ -128,17 +128,17 @@ export class DashscopeMCPWebSearchClient {
         this.cancelPendingCleanup();
 
         if (this.cleanupPromise) {
-            Logger.debug('⏳ [DashScope MCP] 等待连接清理完成...');
+            Logger.debug('⏳ [DashScope MCP] Waiting for connection cleanup to complete...');
             await this.cleanupPromise;
         }
 
         if (this.isConnected()) {
-            Logger.debug('✅ [DashScope MCP] 客户端已连接');
+            Logger.debug('✅ [DashScope MCP] Client connected');
             return;
         }
 
         if (this.isConnecting && this.connectionPromise) {
-            Logger.debug('⏳ [DashScope MCP] 等待连接完成...');
+            Logger.debug('⏳ [DashScope MCP] Waiting for connection to complete...');
             return this.connectionPromise;
         }
 
@@ -153,18 +153,18 @@ export class DashscopeMCPWebSearchClient {
 
     private async initializeClient(): Promise<void> {
         if (this.client && this.transport) {
-            Logger.debug('✅ [DashScope MCP] 客户端已初始化');
+            Logger.debug('✅ [DashScope MCP] Client initialized');
             return;
         }
 
         const apiKey = this.currentApiKey || (await ApiKeyManager.getApiKey('dashscope'));
         if (!apiKey) {
-            throw new Error('DashScope API密钥未设置');
+            throw new Error('DashScope API key not set');
         }
 
         this.currentApiKey = apiKey;
 
-        Logger.info('🔗 [DashScope MCP] 初始化 MCP 客户端...');
+        Logger.info('🔗 [DashScope MCP] Initializing MCP client...');
 
         try {
             this.client = new Client(
@@ -186,14 +186,14 @@ export class DashscopeMCPWebSearchClient {
                 },
                 reconnectionOptions: {
                     maxRetries: 2,
-                    initialReconnectionDelay: 300, // 30秒初始重连延迟
-                    maxReconnectionDelay: 120000, // 最大2分钟
+                    initialReconnectionDelay: 300, // 30 seconds initial reconnection delay
+                    maxReconnectionDelay: 120000, // Max 2 minutes
                     reconnectionDelayGrowFactor: 2.0
                 }
             });
 
             await this.client.connect(this.transport);
-            Logger.info('✅ [DashScope MCP] 使用 StreamableHTTP 传输连接成功');
+            Logger.info('✅ [DashScope MCP] Connected successfully using StreamableHTTP transport');
         } catch (error) {
             let errorDetail = error instanceof Error ? error.message : String(error);
             let cause: unknown = error instanceof Error ? error.cause : undefined;
@@ -201,14 +201,14 @@ export class DashscopeMCPWebSearchClient {
                 errorDetail += ` | cause: ${cause instanceof Error ? cause.message : String(cause)}`;
                 cause = cause instanceof Error ? cause.cause : undefined;
             }
-            Logger.error(`❌ [DashScope MCP] 客户端初始化失败 ${errorDetail}`);
+            Logger.error(`❌ [DashScope MCP] Client initialization failed ${errorDetail}`);
             await this.internalCleanup();
-            throw new Error(`MCP 客户端连接失败: ${errorDetail}`);
+            throw new Error(`MCP client connection failed: ${errorDetail}`);
         }
     }
 
     async search(params: DashscopeWebSearchRequest): Promise<DashscopeSearchPage[]> {
-        Logger.info(`🔍 [DashScope MCP] 开始搜索: "${params.query}"`);
+        Logger.info(`🔍 [DashScope MCP] Starting search: "${params.query}"`);
 
         this.cancelPendingCleanup();
         this.activeSearchCount++;
@@ -217,16 +217,16 @@ export class DashscopeMCPWebSearchClient {
 
         if (!this.client) {
             this.activeSearchCount = Math.max(0, this.activeSearchCount - 1);
-            throw new Error('MCP 客户端未初始化');
+            throw new Error('MCP client not initialized');
         }
 
         try {
             const tools = await this.client.listTools();
-            Logger.debug(`📋 [DashScope MCP] 可用工具: ${tools.tools.map(t => t.name).join(', ')}`);
+            Logger.debug(`📋 [DashScope MCP] Available tools: ${tools.tools.map(t => t.name).join(', ')}`);
 
             const webSearchTool = tools.tools.find(t => t.name === 'bailian_web_search');
             if (!webSearchTool) {
-                throw new Error('未找到 bailian_web_search 工具，请确认已开通百炼联网搜索 MCP 服务');
+                throw new Error('bailian_web_search tool not found, please confirm that DashScope web search MCP service is enabled');
             }
 
             const result = await this.client.callTool({
@@ -244,20 +244,20 @@ export class DashscopeMCPWebSearchClient {
                 }
                 const response = JSON.parse(text) as DashscopeMCPResponse;
                 const pages = response.pages || [];
-                Logger.info(`✅ [DashScope MCP] 搜索完成: 找到 ${pages.length} 个结果`);
+                Logger.info(`✅ [DashScope MCP] Search completed: found ${pages.length} results`);
                 return pages;
             }
-            Logger.debug('📊 [DashScope MCP] 工具调用结束: 无结果');
+            Logger.debug('📊 [DashScope MCP] Tool invocation ended: no results');
             return [];
         } catch (error) {
-            Logger.error('❌ [DashScope MCP] 搜索失败', error instanceof Error ? error : undefined);
+            Logger.error('❌ [DashScope MCP] Search failed', error instanceof Error ? error : undefined);
 
-            if (error instanceof Error && (error.message.includes('连接') || error.message.includes('connect'))) {
-                Logger.warn('⚠️ [DashScope MCP] 检测到连接错误，将在下次搜索时自动重连');
+            if (error instanceof Error && (error.message.includes('connect') || error.message.includes('Connection') || error.message.includes('connection'))) {
+                Logger.warn('⚠️ [DashScope MCP] Detected connection error, will auto-reconnect on next search');
                 await this.internalCleanup();
             }
 
-            throw new Error(`搜索失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            throw new Error(`Search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             this.activeSearchCount = Math.max(0, this.activeSearchCount - 1);
             this.scheduleCleanupAfterIdle();
@@ -274,7 +274,7 @@ export class DashscopeMCPWebSearchClient {
     }
 
     private async internalCleanup(): Promise<void> {
-        Logger.debug('🔌 [DashScope MCP] 清理客户端连接...');
+        Logger.debug('🔌 [DashScope MCP] Cleaning up client connection...');
 
         try {
             if (this.transport) {
@@ -282,9 +282,9 @@ export class DashscopeMCPWebSearchClient {
                 this.transport = null;
             }
             this.client = null;
-            Logger.debug('✅ [DashScope MCP] 客户端连接已清理');
+            Logger.debug('✅ [DashScope MCP] Client connection cleaned up');
         } catch (error) {
-            Logger.error('❌ [DashScope MCP] 连接清理失败', error instanceof Error ? error : undefined);
+            Logger.error('❌ [DashScope MCP] Connection cleanup failed', error instanceof Error ? error : undefined);
         }
     }
 
@@ -300,7 +300,7 @@ export class DashscopeMCPWebSearchClient {
             return;
         }
 
-        // 延迟到事件循环的下一拍再清理，避免并发搜索共享实例时互相关闭连接。
+        // Delay cleanup to next iteration of event loop to avoid concurrent searches sharing instance closing connections.
         this.cleanupTimer = setTimeout(() => {
             this.cleanupTimer = null;
             void this.cleanupIfIdle();
@@ -314,7 +314,7 @@ export class DashscopeMCPWebSearchClient {
 
         this.cleanupPromise = (async () => {
             await this.internalCleanup();
-            Logger.debug('🔌 [DashScope MCP] 空闲后已关闭连接');
+            Logger.debug('🔌 [DashScope MCP] Connection closed after idle');
         })().finally(() => {
             this.cleanupPromise = null;
         });

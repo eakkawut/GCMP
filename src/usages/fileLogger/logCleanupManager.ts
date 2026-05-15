@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  日志清理管理器
- *  负责日志文件的删除和清理操作
+ *  Log Cleanup Manager
+ *  Responsible for deletion and cleanup operations of log files
  *--------------------------------------------------------------------------------------------*/
 
 import * as fs from 'fs/promises';
@@ -11,8 +11,8 @@ import { LogIndexManager } from './logIndexManager';
 import { DateUtils } from './dateUtils';
 
 /**
- * 日志清理管理器
- * 负责日志文件的删除和过期清理
+ * Log Cleanup Manager
+ * Responsible for log file deletion and expired cleanup
  */
 export class LogCleanupManager {
     private readonly pathManager: LogPathManager;
@@ -23,7 +23,7 @@ export class LogCleanupManager {
     }
 
     /**
-     * 获取所有日期列表
+     * Get All Date List
      */
     async getAllDates(): Promise<string[]> {
         const baseDir = this.pathManager.getBaseDir();
@@ -38,16 +38,16 @@ export class LogCleanupManager {
                 .map(entry => entry.name)
                 .filter(name => /^\d{4}-\d{2}-\d{2}$/.test(name))
                 .sort()
-                .reverse(); // 倒序(最新的在前)
+                .reverse(); // Descending order (newest first)
             return dates;
         } catch (err) {
-            StatusLogger.error('[LogCleanupManager] 获取日期列表失败', err);
+            StatusLogger.error('[LogCleanupManager] Failed to get date list', err);
             return [];
         }
     }
 
     /**
-     * 删除指定日期的所有日志文件
+     * Delete All Log Files for Specified Date
      */
     async deleteDateLogs(dateStr: string): Promise<number> {
         const dateFolder = this.pathManager.getDateFolderPath(dateStr);
@@ -58,26 +58,26 @@ export class LogCleanupManager {
         try {
             const files = await fs.readdir(dateFolder);
             const count = files.length;
-            // 删除整个文件夹
+            // Delete entire folder
             await fs.rm(dateFolder, { recursive: true, force: true });
 
-            // 从索引中删除该日期
+            // Remove this date from index
             await this.indexManager.removeDate(dateStr);
 
-            StatusLogger.info(`[LogCleanupManager] 已删除过期记录: ${dateStr} (${count} 个文件)`);
+            StatusLogger.info(`[LogCleanupManager] Deleted expired records: ${dateStr} (${count} files)`);
             return count;
         } catch (err) {
-            StatusLogger.error(`[LogCleanupManager] 删除过期记录失败: ${dateStr}`, err);
+            StatusLogger.error(`[LogCleanupManager] Failed to delete expired records: ${dateStr}`, err);
             throw err;
         }
     }
 
     /**
-     * 清理过期日志(保留最近N天)
+     * Clean Up Expired Logs (retain most recent N days)
      */
     async cleanupExpiredLogs(retentionDays: number): Promise<number> {
         if (retentionDays === 0) {
-            return 0; // 永久保留
+            return 0; // Permanent retention
         }
 
         const allDates = await this.getAllDates();

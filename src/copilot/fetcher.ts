@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  Copilot Fetcher - HTTP 请求处理
- *  实现 IFetcher 接口，处理 API 请求
+ *  Copilot Fetcher - HTTP Request Handling
+ *  Implements IFetcher interface for API request handling
  *--------------------------------------------------------------------------------------------*/
 
 import { VersionManager } from '../utils/versionManager';
@@ -18,12 +18,12 @@ import { configProviders } from '../providers/config';
 import { getCompletionLogger, getApiKeyManager, getConfigManager } from './singletons';
 
 // ============================================================================
-// Fetcher - 实现 IFetcher 接口
-// 参考: nesProvider.spec.ts 中的 TestFetcher
+// Fetcher - Implements IFetcher Interface
+// Reference: TestFetcher in nesProvider.spec.ts
 // ============================================================================
 
 /**
- * 自定义 Fetcher 实现
+ * Custom Fetcher Implementation
  */
 export class Fetcher implements IFetcher {
     getUserAgentLibrary(): string {
@@ -35,14 +35,14 @@ export class Fetcher implements IFetcher {
     }
 
     async fetch(url: string, options: FetchOptions): Promise<Response> {
-        // 优先使用 globalThis 中的单例实例（确保跨 bundle 的单例性）
+        // Priority from singleton instance in globalThis (ensure cross-bundle singleton)
         const logger = getCompletionLogger();
         const keyManager = getApiKeyManager();
 
         if (options?.method === 'GET' && url.endsWith('/models')) {
-            // 返回一个空模型列表的响应
+            // Return a response with empty model list
             const emptyModelsResponse = '{"object":"list","data":[]}';
-            // 创建符合 IHeaders 接口的 headers 对象
+            // Create headers object conforming to IHeaders interface
             const headers: IHeaders = {
                 get: (name: string) => {
                     if (name.toLowerCase() === 'content-type') {
@@ -61,8 +61,8 @@ export class Fetcher implements IFetcher {
             throw new Error('Not Support Request');
         }
 
-        let isFimRequest = false; // FIM /completions (非 /chat/completions)
-        let dashscopeStopChunk = false; // 只截取 stop 表示的 chunk, 阿里云百炼补全接口
+        let isFimRequest = false; // FIM /completions (not /chat/completions)
+        let dashscopeStopChunk = false; // Only capture chunks until stop, Aliyun Bailian completion API
 
         let fimSseBuffer = '';
         const fimDecoder = new TextDecoder();
@@ -83,14 +83,14 @@ export class Fetcher implements IFetcher {
         if (url.endsWith('/chat/completions')) {
             modelConfig = ConfigManager.getNESConfig().modelConfig;
             if (!modelConfig || !modelConfig.baseUrl) {
-                logger.error('[Fetcher] NES 模型配置缺失');
+                logger.error('[Fetcher] NES model configuration missing');
                 throw new Error('NES model configuration is missing');
             }
             url = `${modelConfig.baseUrl}/chat/completions`;
         } else if (url.endsWith('/completions')) {
             modelConfig = ConfigManager.getFIMConfig().modelConfig;
             if (!modelConfig || !modelConfig.baseUrl) {
-                logger.error('[Fetcher] FIM 模型配置缺失');
+                logger.error('[Fetcher] FIM model configuration missing');
                 throw new Error('FIM model configuration is missing');
             }
             isFimRequest = true;
@@ -100,7 +100,7 @@ export class Fetcher implements IFetcher {
                 if (prompt && suffix) {
                     dashscopeStopChunk = true;
                     delete requestBody.suffix;
-                    requestBody.prompt = `<|fim_prefix|>${prompt}<|fim_suffix|>${suffix}<|fim_middle|>`;
+                    requestBody.prompt = `${prompt}${suffix}`;
                 }
             }
         } else {
@@ -112,7 +112,7 @@ export class Fetcher implements IFetcher {
         try {
             const apiKey = await keyManager.getApiKey(provider);
             if (!apiKey) {
-                logger.error(`[Fetcher] ${provider} API key 未配置`);
+                logger.error(`[Fetcher] ${provider} API key not configured`);
                 throw new Error('API key not configured');
             }
 
@@ -137,12 +137,12 @@ export class Fetcher implements IFetcher {
             //     const messages = requestBody.messages;
             //     const promptAddition =
             //         '\n IMPORTANT: Do NOT use markdown code blocks (```). Output ONLY the raw code. Do not explain.';
-            //     // 尝试添加到 system message
+            //     // Try adding to system message
             //     const systemMessage = messages.find(m => m.role === 'system');
             //     if (systemMessage) {
             //         systemMessage.content = (systemMessage.content || '') + promptAddition;
             //     }
-            //     CompletionLogger.trace('[Fetcher] 已注入 Prompt 指令以禁止 Markdown');
+            //     CompletionLogger.trace('[Fetcher] Injected Prompt directive to prohibit Markdown');
             // }
 
             const fetchOptions: RequestInit = {
@@ -156,16 +156,16 @@ export class Fetcher implements IFetcher {
                 signal: options.signal as AbortSignal | undefined
             };
 
-            logger.info(`[Fetcher] 发送请求: ${url}`);
+            logger.info(`[Fetcher] Sending request: ${url}`);
             const response = await fetch(url, fetchOptions);
-            logger.debug(`[Fetcher] 收到响应 - 状态码: ${response.status} ${response.statusText}`);
+            logger.debug(`[Fetcher] Received response - Status: ${response.status} ${response.statusText}`);
 
-            // 从 fetch response 获取 Web ReadableStream
+            // Get Web ReadableStream from fetch response
             if (!response.body) {
                 throw new Error('Response body is null');
             }
 
-            // 将 Web ReadableStream 转换为 Web ReadableStream<Uint8Array>
+            // Convert Web ReadableStream to Web ReadableStream<Uint8Array>
             const reader = response.body.getReader();
             const encoder = new TextEncoder();
             const enqueueFimLine = (controller: ReadableStreamDefaultController<Uint8Array>, rawLine: string): void => {
@@ -195,7 +195,7 @@ export class Fetcher implements IFetcher {
                         return;
                     }
 
-                    // 将 delta.content 转换为 text（部分 FIM 接口返回 chat completion chunk 格式）
+                    // Convert delta.content to text (some FIM APIs return chat completion chunk format)
                     if (choice && 'delta' in choice) {
                         const delta = choice.delta as Record<string, unknown> | undefined;
                         if (delta && 'content' in delta) {
@@ -255,14 +255,14 @@ export class Fetcher implements IFetcher {
                 response.headers as unknown as IHeaders,
                 bodyStream,
                 'node-http',
-                () => {},
+                () => { },
                 '',
                 ''
             );
         } catch (error) {
-            // 如果是请求中止，不记录错误日志
+            // If request aborted, do not log error
             if (!this.isAbortError(error)) {
-                logger.error('[Fetcher] 异常:', error);
+                logger.error('[Fetcher] Exception:', error);
             }
             throw error;
         } finally {

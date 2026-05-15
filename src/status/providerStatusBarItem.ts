@@ -1,32 +1,32 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  单提供商状态栏项基类
- *  继承 BaseStatusBarItem，添加 API Key 相关逻辑
- *  适用于依赖单个 API Key 的提供商状态栏（如 MiniMax、DeepSeek、Kimi、Moonshot 等）
+ *  Base Class for Single Provider Status Bar Item
+ *  Inherits BaseStatusBarItem, adds API Key related logic
+ *  Suitable for provider status bars that depend on a single API Key (e.g., MiniMax, DeepSeek, Kimi, Moonshot)
  *--------------------------------------------------------------------------------------------*/
 
 import { BaseStatusBarItem, StatusBarItemConfig } from './baseStatusBarItem';
 import { ApiKeyManager } from '../utils/apiKeyManager';
 
-// 重新导出 StatusBarItemConfig 以便子类使用
+// Re-export StatusBarItemConfig for use by subclasses
 export { StatusBarItemConfig } from './baseStatusBarItem';
 
 /**
- * 单提供商状态栏项基类
- * 继承 BaseStatusBarItem，提供 API Key 检查逻辑
+ * Base Class for Single Provider Status Bar Item
+ * Inherits BaseStatusBarItem, provides API Key check logic
  *
- * 适用于：
- * - 依赖单个 API Key 的提供商
- * - MiniMaxStatusBar、DeepSeekStatusBar、KimiStatusBar、MoonshotStatusBar 等
+ * Suitable for:
+ * - Providers that depend on a single API Key
+ * - MiniMaxStatusBar, DeepSeekStatusBar, KimiStatusBar, MoonshotStatusBar, etc.
  *
- * @template T 状态数据类型
+ * @template T Status data type
  */
 export abstract class ProviderStatusBarItem<T> extends BaseStatusBarItem<T> {
-    /** 状态栏项配置（包含 apiKeyProvider） */
+    /** Status bar item configuration (includes apiKeyProvider) */
     protected override readonly config: StatusBarItemConfig;
 
     /**
-     * 构造函数
-     * @param config 包含 apiKeyProvider 的状态栏项配置
+     * Constructor
+     * @param config Status bar item configuration containing apiKeyProvider
      */
     constructor(config: StatusBarItemConfig) {
         super(config);
@@ -34,9 +34,9 @@ export abstract class ProviderStatusBarItem<T> extends BaseStatusBarItem<T> {
     }
 
     /**
-     * 检查是否应该显示状态栏
-     * 通过检查 API Key 是否存在来决定
-     * @returns 是否应该显示状态栏
+     * Check whether the status bar should be displayed
+     * Determined by checking if API Key exists
+     * @returns Whether the status bar should be displayed
      */
     protected async shouldShowStatusBar(): Promise<boolean> {
         return await ApiKeyManager.hasValidApiKey(this.config.apiKeyProvider);

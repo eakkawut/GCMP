@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  Volcengine (火山方舟) 配置向导
- *  提供交互式向导来配置 Coding Plan 密钥和 Agent Plan 专用密钥
+ *  Volcengine (Volcano Ark) Configuration Wizard
+ *  Provides interactive wizard to configure Coding Plan key and Agent Plan dedicated key
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -12,33 +12,33 @@ export class VolcengineWizard {
     private static readonly AGENT_PLAN_KEY = 'volcengine-agent';
 
     /**
-     * 启动火山方舟配置向导
+     * Start Volcengine Ark configuration wizard
      */
     static async startWizard(displayName: string, apiKeyTemplate: string, tokenKeyTemplate?: string): Promise<void> {
         try {
             const choice = await vscode.window.showQuickPick(
                 [
                     {
-                        label: '$(key) 设置 Coding Plan API 密钥',
-                        detail: `用于 ${displayName} Coding Plan 模型 或 按量计费 模型`,
+                        label: '$(key) Set Coding Plan API Key',
+                        detail: `For ${displayName} Coding Plan models or pay-as-you-go models`,
                         value: 'coding'
                     },
                     {
-                        label: '$(key) 设置 Agent Plan 专用密钥',
-                        detail: `用于 ${displayName} Agent Plan 模型（专属API Key）`,
+                        label: '$(key) Set Agent Plan Dedicated Key',
+                        detail: `For ${displayName} Agent Plan models (exclusive API Key)`,
                         value: 'agentPlan'
                     },
                     {
-                        label: '$(check-all) 依次配置全部项目',
-                        detail: '按顺序配置 Coding Plan 密钥与 Agent Plan 专用密钥',
+                        label: '$(check-all) Configure All Items in Sequence',
+                        detail: 'Configure Coding Plan key and Agent Plan dedicated key in order',
                         value: 'all'
                     }
                 ],
-                { title: `${displayName} 密钥配置`, placeHolder: '请选择要配置的项目' }
+                { title: `${displayName} Key Configuration`, placeHolder: 'Select items to configure' }
             );
 
             if (!choice) {
-                Logger.debug('用户取消了火山方舟配置向导');
+                Logger.debug('User cancelled Volcengine Ark configuration wizard');
                 return;
             }
 
@@ -50,17 +50,17 @@ export class VolcengineWizard {
                 await this.setAgentPlanApiKey(displayName, tokenKeyTemplate || apiKeyTemplate);
             }
         } catch (error) {
-            Logger.error(`火山方舟配置向导出错: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error(`Volcengine Ark configuration wizard error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     /**
-     * 设置 Coding Plan API 密钥
+     * Set Coding Plan API key
      */
     static async setCodingPlanApiKey(displayName: string, apiKeyTemplate: string): Promise<void> {
         const result = await vscode.window.showInputBox({
-            prompt: `请输入 ${displayName} 的 Coding Plan API Key（留空可清除）`,
-            title: `设置 ${displayName} Coding Plan API Key`,
+            prompt: `Enter Coding Plan API Key for ${displayName} (leave blank to clear)`,
+            title: `Set ${displayName} Coding Plan API Key`,
             placeHolder: apiKeyTemplate,
             password: true,
             ignoreFocusOut: true
@@ -72,29 +72,29 @@ export class VolcengineWizard {
 
         try {
             if (result.trim() === '') {
-                Logger.info(`${displayName} Coding Plan API Key 已清除`);
+                Logger.info(`${displayName} Coding Plan API Key has been cleared`);
                 await ApiKeyManager.deleteApiKey(this.PROVIDER_KEY);
-                vscode.window.showInformationMessage(`${displayName} Coding Plan API Key 已清除`);
+                vscode.window.showInformationMessage(`${displayName} Coding Plan API Key has been cleared`);
             } else {
                 await ApiKeyManager.setApiKey(this.PROVIDER_KEY, result.trim());
-                Logger.info(`${displayName} Coding Plan API Key 已设置`);
-                vscode.window.showInformationMessage(`${displayName} Coding Plan API Key 已设置`);
+                Logger.info(`${displayName} Coding Plan API Key has been set`);
+                vscode.window.showInformationMessage(`${displayName} Coding Plan API Key has been set`);
             }
         } catch (error) {
             Logger.error(
-                `火山方舟 Coding Plan API Key 操作失败: ${error instanceof Error ? error.message : '未知错误'}`
+                `Volcengine Ark Coding Plan API Key operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
             );
-            vscode.window.showErrorMessage(`设置失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            vscode.window.showErrorMessage(`Setup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     /**
-     * 设置 Agent Plan 专用密钥
+     * Set Agent Plan dedicated key
      */
     static async setAgentPlanApiKey(displayName: string, apiKeyTemplate: string): Promise<void> {
         const result = await vscode.window.showInputBox({
-            prompt: `请输入 ${displayName} 的 Agent Plan 专用 API Key（留空可清除）`,
-            title: `设置 ${displayName} Agent Plan 专用 API Key`,
+            prompt: `Enter Agent Plan dedicated API Key for ${displayName} (leave blank to clear)`,
+            title: `Set ${displayName} Agent Plan dedicated API Key`,
             placeHolder: apiKeyTemplate,
             password: true,
             ignoreFocusOut: true
@@ -106,19 +106,19 @@ export class VolcengineWizard {
 
         try {
             if (result.trim() === '') {
-                Logger.info(`${displayName} Agent Plan 专用 API Key 已清除`);
+                Logger.info(`${displayName} Agent Plan dedicated API Key has been cleared`);
                 await ApiKeyManager.deleteApiKey(this.AGENT_PLAN_KEY);
-                vscode.window.showInformationMessage(`${displayName} Agent Plan 专用 API Key 已清除`);
+                vscode.window.showInformationMessage(`${displayName} Agent Plan dedicated API Key has been cleared`);
             } else {
                 await ApiKeyManager.setApiKey(this.AGENT_PLAN_KEY, result.trim());
-                Logger.info(`${displayName} Agent Plan 专用 API Key 已设置`);
-                vscode.window.showInformationMessage(`${displayName} Agent Plan 专用 API Key 已设置`);
+                Logger.info(`${displayName} Agent Plan dedicated API Key has been set`);
+                vscode.window.showInformationMessage(`${displayName} Agent Plan dedicated API Key has been set`);
             }
         } catch (error) {
             Logger.error(
-                `火山方舟 Agent Plan API Key 操作失败: ${error instanceof Error ? error.message : '未知错误'}`
+                `Volcengine Ark Agent Plan API Key operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
             );
-            vscode.window.showErrorMessage(`设置失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            vscode.window.showErrorMessage(`Setup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 }

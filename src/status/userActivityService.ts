@@ -2,62 +2,62 @@ import * as vscode from 'vscode';
 import { StatusLogger } from '../utils/statusLogger';
 
 /**
- * 用户活跃信息结构
+ * User activity information structure
  */
 interface UserActivityInfo {
-    lastActiveTime: number; // 最后一次活跃的时间戳
-    instanceId: string; // 最后活跃的实例ID
-    recentActivityCount: number; // 最近活跃次数（用于评估活跃度）
-    lastActivityType?: ActivityType; // 最后一次活跃的操作类型
+    lastActiveTime: number; // Timestamp of last activity
+    instanceId: string; // Instance ID of last activity
+    recentActivityCount: number; // Recent activity count (used to evaluate activity level)
+    lastActivityType?: ActivityType; // Type of last active operation
 }
 
 /**
- * 用户操作类型枚举
+ * User operation type enum
  */
 type ActivityType = 'windowFocus' | 'editorChange' | 'textEdit' | 'textSelection' | 'terminalChange';
 
 /**
- * 不同操作类型的节流配置（毫秒）
+ * Throttle configuration for different operation types (milliseconds)
  */
 const ACTIVITY_THROTTLE_CONFIG: Record<ActivityType, number> = {
-    windowFocus: 5000, // 窗口聚焦变化：5秒
-    editorChange: 3000, // 编辑器切换：3秒
-    textEdit: 5000, // 文本编辑：5秒
-    textSelection: 2000, // 文本选择：2秒（最可靠的用户操作）
-    terminalChange: 3000 // 终端切换：3秒
+    windowFocus: 5000, // Window focus change: 5 seconds
+    editorChange: 3000, // Editor switch: 3 seconds
+    textEdit: 5000, // Text edit: 5 seconds
+    textSelection: 2000, // Text selection: 2 seconds (most reliable user operation)
+    terminalChange: 3000 // Terminal switch: 3 seconds
 };
 
 /**
- * 用户活跃状态检测服务（纯静态类）
- * 负责监听和记录用户在 VS Code 中的活跃状态
- * 支持多实例共享活跃状态
+ * User activity status detection service (pure static class)
+ * Responsible for monitoring and recording user activity status in VS Code
+ * Supports multi-instance shared activity status
  */
 export class UserActivityService {
-    private static readonly USER_ACTIVITY_KEY = 'ccmp.user.activity'; // 用户活跃状态存储键
-    private static readonly ACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30分钟活跃超时
-    private static readonly ACTIVITY_COUNT_WINDOW = 5 * 60 * 1000; // 活跃次数统计窗口：5分钟
-    private static readonly CACHE_VALIDITY = 5000; // 缓存有效期：5秒
+    private static readonly USER_ACTIVITY_KEY = 'ccmp.user.activity'; // User activity status storage key
+    private static readonly ACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes activity timeout
+    private static readonly ACTIVITY_COUNT_WINDOW = 5 * 60 * 1000; // Activity count statistics window: 5 minutes
+    private static readonly CACHE_VALIDITY = 5000; // Cache validity: 5 seconds
 
-    // 静态成员变量
+    // Static member variables
     private static instanceId: string;
     private static context: vscode.ExtensionContext | undefined;
-    private static activityDisposables: vscode.Disposable[] = []; // 活跃状态监听器
-    private static lastRecordedActivityByType = new Map<ActivityType, number>(); // 按类型记录的上次活跃时间
-    private static cachedActivityInfo: UserActivityInfo | null = null; // 内存缓存
-    private static lastCacheUpdate = 0; // 缓存更新时间
+    private static activityDisposables: vscode.Disposable[] = []; // Activity status listeners
+    private static lastRecordedActivityByType = new Map<ActivityType, number>(); // Last activity time recorded by type
+    private static cachedActivityInfo: UserActivityInfo | null = null; // Memory cache
+    private static lastCacheUpdate = 0; // Cache update time
     private static initialized = false;
 
     /**
-     * 私有构造函数 - 防止实例化
+     * Private constructor - prevent instantiation
      */
     private constructor() {
         throw new Error('UserActivityService is a static class and cannot be instantiated');
     }
 
     /**
-     * 初始化活跃检测服务
-     * @param context VS Code 扩展上下文
-     * @param instanceId 当前实例ID（由调用方提供）
+     * Initialize activity detection service
+     * @param context VS Code extension context
+     * @param instanceId Current instance ID (provided by caller)
      */
     public static initialize(context: vscode.ExtensionContext, instanceId: string): void {
         if (this.initialized) {
@@ -67,40 +67,40 @@ export class UserActivityService {
         this.context = context;
         this.instanceId = instanceId;
 
-        // 注册用户活跃状态监听
+        // Register user activity status listeners
         this.registerActivityListeners();
 
         this.initialized = true;
-        StatusLogger.debug('[UserActivityService] 用户活跃检测服务已初始化');
+        StatusLogger.debug('[UserActivityService] User activity detection service initialized');
     }
 
     /**
-     * 停止活跃检测服务
+     * Stop activity detection service
      */
     public static stop(): void {
-        // 清理活跃状态监听器
+        // Clean up activity status listeners
         this.activityDisposables.forEach(d => d.dispose());
         this.activityDisposables = [];
 
-        // 清理缓存和状态
+        // Clean up cache and status
         this.cachedActivityInfo = null;
         this.lastCacheUpdate = 0;
         this.lastRecordedActivityByType.clear();
 
         this.initialized = false;
-        StatusLogger.debug('[UserActivityService] 用户活跃检测服务已停止');
+        StatusLogger.debug('[UserActivityService] User activity detection service stopped');
     }
 
     /**
-     * 注册用户活跃状态监听器
-     * 仅监听用户真实操作，过滤掉自动操作或非用户实际操作
+     * Register user activity status listeners
+     * Only listen to real user operations, filter out automatic operations or non-user actual operations
      */
     private static registerActivityListeners(): void {
         if (!this.context) {
             return;
         }
 
-        // 监听窗口状态变化（仅用户主动聚焦窗口）
+        // Listen for window state changes (only user actively focuses window)
         this.activityDisposables.push(
             vscode.window.onDidChangeWindowState(state => {
                 if (state.focused) {
@@ -109,7 +109,7 @@ export class UserActivityService {
             })
         );
 
-        // 监听用户主动切换编辑器（过滤掉程序触发的切换）
+        // Listen for user actively switching editors (filter out program-triggered switches)
         this.activityDisposables.push(
             vscode.window.onDidChangeActiveTextEditor(editor => {
                 if (vscode.window.state.focused && editor) {
@@ -121,7 +121,7 @@ export class UserActivityService {
             })
         );
 
-        // 监听文档内容变化（仅用户编辑，过滤自动格式化等）
+        // Listen for document content changes (only user edits, filter out auto-formatting etc.)
         this.activityDisposables.push(
             vscode.workspace.onDidChangeTextDocument(event => {
                 if (event.contentChanges.length === 0) {
@@ -142,7 +142,7 @@ export class UserActivityService {
             })
         );
 
-        // 监听用户选择变化（光标移动、文本选择）- 这是最可靠的用户操作信号
+        // Listen for user selection changes (cursor movement, text selection) - this is the most reliable user operation signal
         this.activityDisposables.push(
             vscode.window.onDidChangeTextEditorSelection(event => {
                 if (!vscode.window.state.focused) {
@@ -161,7 +161,7 @@ export class UserActivityService {
             })
         );
 
-        // 监听用户主动切换终端
+        // Listen for user actively switching terminal
         this.activityDisposables.push(
             vscode.window.onDidChangeActiveTerminal(terminal => {
                 if (vscode.window.state.focused && terminal) {
@@ -170,18 +170,18 @@ export class UserActivityService {
             })
         );
 
-        // 初始化时如果窗口已聚焦，记录一次
+        // If window is focused during initialization, record once
         if (vscode.window.state.focused) {
             this.recordUserActivity('windowFocus');
         }
 
-        StatusLogger.debug('[UserActivityService] 用户活跃状态监听器已注册（仅监听用户真实操作）');
+        StatusLogger.debug('[UserActivityService] User activity status listeners registered (only listening to real user operations)');
     }
 
     /**
-     * 检查指定操作类型是否需要节流
-     * @param activityType 操作类型
-     * @returns true 如果需要节流（跳过记录），false 如果可以记录
+     * Check if specified operation type needs throttling
+     * @param activityType Operation type
+     * @returns true if needs throttling (skip recording), false if can record
      */
     private static shouldThrottle(activityType: ActivityType): boolean {
         const now = Date.now();
@@ -191,17 +191,17 @@ export class UserActivityService {
     }
 
     /**
-     * 记录用户活跃状态到 globalState（带差异化节流）
-     * 任意实例的活跃状态都会更新全局的最后活跃时间
-     * 不同操作类型使用不同的节流间隔
-     * @param activityType 触发活跃的操作类型
+     * Record user activity status to globalState (with differentiated throttling)
+     * Activity status of any instance will update the global last activity time
+     * Different operation types use different throttle intervals
+     * @param activityType Operation type that triggered activity
      */
     private static async recordUserActivity(activityType: ActivityType): Promise<void> {
         if (!this.context) {
             return;
         }
 
-        // 差异化节流：根据操作类型决定是否记录
+        // Differentiated throttling: decide whether to record based on operation type
         if (this.shouldThrottle(activityType)) {
             return;
         }
@@ -209,7 +209,7 @@ export class UserActivityService {
         const now = Date.now();
         this.lastRecordedActivityByType.set(activityType, now);
 
-        // 获取当前活跃信息，计算活跃次数
+        // Get current activity info, calculate activity count
         const currentInfo = this.getCachedActivityInfo();
         let recentActivityCount = 1;
 
@@ -218,9 +218,9 @@ export class UserActivityService {
             typeof currentInfo.recentActivityCount === 'number' &&
             !isNaN(currentInfo.recentActivityCount)
         ) {
-            // 如果上次活跃在统计窗口内，累加次数；否则重置
+            // If last activity is within statistics window, accumulate count; otherwise reset
             if (now - currentInfo.lastActiveTime < this.ACTIVITY_COUNT_WINDOW) {
-                recentActivityCount = Math.min(currentInfo.recentActivityCount + 1, 100); // 上限100
+                recentActivityCount = Math.min(currentInfo.recentActivityCount + 1, 100); // Upper limit 100
             }
         }
 
@@ -231,35 +231,35 @@ export class UserActivityService {
             lastActivityType: activityType
         };
 
-        // 更新缓存
+        // Update cache
         this.cachedActivityInfo = activityInfo;
         this.lastCacheUpdate = now;
 
         await this.context.globalState.update(this.USER_ACTIVITY_KEY, activityInfo);
         StatusLogger.trace(
-            `[UserActivityService] 记录用户活跃状态: type=${activityType}, count=${recentActivityCount}, time=${now}`
+            `[UserActivityService] Recorded user activity status: type=${activityType}, count=${recentActivityCount}, time=${now}`
         );
     }
 
     /**
-     * 获取缓存的活跃信息（减少 globalState 读取）
+     * Get cached activity information (reduce globalState reads)
      */
     private static getCachedActivityInfo(): UserActivityInfo | null {
         const now = Date.now();
 
-        // 检查缓存是否有效
+        // Check if cache is valid
         if (this.cachedActivityInfo && now - this.lastCacheUpdate < this.CACHE_VALIDITY) {
             return this.cachedActivityInfo;
         }
 
-        // 缓存失效，从 globalState 读取
+        // Cache expired, read from globalState
         if (!this.context) {
             return null;
         }
 
         const activityInfo = this.context.globalState.get<UserActivityInfo>(this.USER_ACTIVITY_KEY);
         if (activityInfo) {
-            // 数据验证和修复：确保 recentActivityCount 是有效的数字
+            // Data validation and repair: ensure recentActivityCount is a valid number
             const isValidCount =
                 typeof activityInfo.recentActivityCount === 'number' &&
                 activityInfo.recentActivityCount >= 0 &&
@@ -279,13 +279,13 @@ export class UserActivityService {
     }
 
     /**
-     * 检查用户是否在最近30分钟内活跃
-     * @returns true 如果用户在30分钟内有活跃，false 如果超过30分钟无活跃
+     * Check if user was active in the last 30 minutes
+     * @returns true if user was active within 30 minutes, false if inactive for over 30 minutes
      */
     public static isUserActive(): boolean {
         const activityInfo = this.getCachedActivityInfo();
         if (!activityInfo) {
-            // 没有活跃记录，认为不活跃
+            // No activity records, consider inactive
             return false;
         }
 
@@ -294,7 +294,7 @@ export class UserActivityService {
         const isActive = inactiveTime <= this.ACTIVITY_TIMEOUT;
 
         StatusLogger.trace(
-            `[UserActivityService] 检查用户活跃状态: lastActive=${activityInfo.lastActiveTime}, ` +
+            `[UserActivityService] Checking user activity status: lastActive=${activityInfo.lastActiveTime}, ` +
             `inactiveTime=${inactiveTime}ms, activityCount=${activityInfo.recentActivityCount}, isActive=${isActive}`
         );
 
@@ -302,8 +302,8 @@ export class UserActivityService {
     }
 
     /**
-     * 获取用户最后活跃时间
-     * @returns 最后活跃时间戳，如果没有记录则返回 undefined
+     * Get user last active time
+     * @returns Last active timestamp, returns undefined if no records
      */
     public static getLastActiveTime(): number | undefined {
         const activityInfo = this.getCachedActivityInfo();
@@ -311,8 +311,8 @@ export class UserActivityService {
     }
 
     /**
-     * 获取用户不活跃的时长（毫秒）
-     * @returns 不活跃时长，如果没有记录则返回 Infinity
+     * Get user inactive duration (milliseconds)
+     * @returns Inactive duration, returns Infinity if no records
      */
     public static getInactiveTime(): number {
         const lastActiveTime = this.getLastActiveTime();

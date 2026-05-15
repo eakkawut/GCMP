@@ -7,104 +7,158 @@
         {
             "id": "mimo-v2.5-pro-token-plan",
             "name": "MiMo-V2.5-Pro (TokenPlan)",
-            "tooltip": "小米MiMo-V2.5-Pro Token Plan 专属接入点，支持文本生成、深度思考、流式输出、函数调用、结构化输出。上下文长度 1M，最大输出 128K。",
+            "tooltip": "Xiaomi MiMo-V2.5-Pro Token Plan exclusive endpoint, supporting text generation, deep thinking, streaming output, function calling, structured output. Context length 1M, maximum output 128K.",
             "provider": "xiaomimimo-token",
             "sdkMode": "anthropic",
             "baseUrl": "https://token-plan-cn.xiaomimimo.com/anthropic",
             "model": "mimo-v2.5-pro",
             "maxInputTokens": 1000000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "mimo-v2.5-token-plan",
             "name": "MiMo-V2.5 (TokenPlan)",
-            "tooltip": "小米MiMo-V2.5 Token Plan 专属接入点，支持全模态理解、深度思考、流式输出、函数调用、结构化输出。上下文长度 1M，最大输出 128K。",
+            "tooltip": "Xiaomi MiMo-V2.5 Token Plan exclusive endpoint, supporting full-modality understanding, deep thinking, streaming output, function calling, structured output. Context length 1M, maximum output 128K.",
             "provider": "xiaomimimo-token",
             "baseUrl": "https://token-plan-cn.xiaomimimo.com/v1",
             "model": "mimo-v2.5",
             "maxInputTokens": 1000000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "thinkingFormat": "object",
-            "capabilities": { "toolCalling": true, "imageInput": true }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": true
+            }
         },
         {
             "id": "mimo-v2-pro-token-plan",
             "name": "MiMo-V2-Pro (TokenPlan)",
-            "tooltip": "小米MiMo-V2-Pro Token Plan 专属接入点，支持文本生成、深度思考、流式输出、函数调用、结构化输出。上下文长度 1M，最大输出 128K。",
+            "tooltip": "Xiaomi MiMo-V2-Pro Token Plan exclusive endpoint, supporting text generation, deep thinking, streaming output, function calling, structured output. Context length 1M, maximum output 128K.",
             "provider": "xiaomimimo-token",
             "sdkMode": "anthropic",
             "baseUrl": "https://token-plan-cn.xiaomimimo.com/anthropic",
             "model": "mimo-v2-pro",
             "maxInputTokens": 1000000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "mimo-v2-omni-token-plan",
             "name": "MiMo-V2-Omni (TokenPlan)",
-            "tooltip": "小米MiMo-V2-Omni Token Plan 专属接入点，支持全模态理解、深度思考、流式输出、函数调用、结构化输出。上下文长度 256K，最大输出 128K。",
+            "tooltip": "Xiaomi MiMo-V2-Omni Token Plan exclusive endpoint, supporting full-modality understanding, deep thinking, streaming output, function calling, structured output. Context length 256K, maximum output 128K.",
             "provider": "xiaomimimo-token",
             "baseUrl": "https://token-plan-cn.xiaomimimo.com/v1",
             "model": "mimo-v2-omni",
             "maxInputTokens": 256000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "thinkingFormat": "object",
-            "capabilities": { "toolCalling": true, "imageInput": true }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": true
+            }
         },
         {
             "id": "mimo-v2.5-pro",
             "name": "MiMo-V2.5-Pro",
-            "tooltip": "小米MiMo-V2.5-Pro 通用大语言模型，支持文本生成、深度思考、流式输出、函数调用、结构化输出、联网搜索。上下文长度 1M，最大输出 128K。",
+            "tooltip": "Xiaomi MiMo-V2.5-Pro general large language model, supporting text generation, deep thinking, streaming output, function calling, structured output, web search. Context length 1M, maximum output 128K.",
             "maxInputTokens": 1000000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "thinkingFormat": "object",
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "mimo-v2.5",
             "name": "MiMo-V2.5",
-            "tooltip": "小米MiMo-V2.5 全模态理解模型，支持全模态理解、深度思考、流式输出、函数调用、结构化输出、联网搜索。上下文长度 1M，最大输出 128K。",
+            "tooltip": "Xiaomi MiMo-V2.5 full-modality understanding model, supporting full-modality understanding, deep thinking, streaming output, function calling, structured output, web search. Context length 1M, maximum output 128K.",
             "maxInputTokens": 1000000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "thinkingFormat": "object",
-            "capabilities": { "toolCalling": true, "imageInput": true }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": true
+            }
         },
         {
             "id": "mimo-v2-pro",
             "name": "MiMo-V2-Pro",
-            "tooltip": "小米MiMo-V2-Pro 通用大语言模型，支持文本生成、深度思考、流式输出、函数调用、结构化输出、联网搜索。上下文长度 1M，最大输出 128K。",
+            "tooltip": "Xiaomi MiMo-V2-Pro general large language model, supporting text generation, deep thinking, streaming output, function calling, structured output, web search. Context length 1M, maximum output 128K.",
             "maxInputTokens": 1000000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "thinkingFormat": "object",
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "mimo-v2-omni",
             "name": "MiMo-V2-Omni",
-            "tooltip": "小米MiMo-V2-Omni 全模态理解模型，支持全模态理解、深度思考、流式输出、函数调用、结构化输出、联网搜索。上下文长度 256K，最大输出 128K。",
+            "tooltip": "Xiaomi MiMo-V2-Omni full-modality understanding model, supporting full-modality understanding, deep thinking, streaming output, function calling, structured output, web search. Context length 256K, maximum output 128K.",
             "maxInputTokens": 256000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "thinkingFormat": "object",
-            "capabilities": { "toolCalling": true, "imageInput": true }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": true
+            }
         },
         {
             "id": "mimo-v2-flash",
             "name": "MiMo-V2-Flash",
-            "tooltip": "小米MiMo-V2-Flash 通用大语言模型，支持文本生成、深度思考、流式输出、函数调用、结构化输出、联网搜索。上下文长度 256K，最大输出 64K。高性价比选择。",
+            "tooltip": "Xiaomi MiMo-V2-Flash general large language model, supporting text generation, deep thinking, streaming output, function calling, structured output, web search. Context length 256K, maximum output 64K. Cost-effective choice.",
             "maxInputTokens": 256000,
             "maxOutputTokens": 64000,
-            "thinking": ["disabled", "enabled"],
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
             "thinkingFormat": "object",
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         }
     ]
 }

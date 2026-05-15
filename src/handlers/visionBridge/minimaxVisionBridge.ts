@@ -1,7 +1,7 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  MiniMax 图片桥接处理器
- *  当模型不支持图片输入时，使用 Vision API 将图片转换为文字描述
- *  注：当 MiniMax 模型完善图片支持后，可整体移除此桥接模块
+ *  MiniMax Image Bridge Handler
+ *  When model does not support image input, use Vision API to convert images to text descriptions
+ *  Note: When MiniMax models improve image support, this bridge module can be removed entirely
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -17,15 +17,15 @@ import {
 } from './visionBridge';
 
 /**
- * 图片桥接处理结果
+ * Image bridge processing result
  */
 export interface VisionBridgeResult {
     messages: Array<LanguageModelChatMessage>;
 }
 
 /**
- * 图片桥接回放事件（内部使用）
- * 用于从消息链中提取已处理的桥接结果
+ * Image bridge replay event (internal use)
+ * Used to extract already-processed bridge results from message chain
  */
 interface ReplayEvent {
     callId: string;
@@ -35,12 +35,13 @@ interface ReplayEvent {
 }
 
 /**
- * MiniMax 图片桥接处理器
+ * MiniMax Image Bridge Handler
  *
- * 将用户消息中的图片通过 MiniMax Vision API 转换为文字描述，
- * 再以 tool_call 消息链的形式注入回对话，使不支持图片的模型也能"理解"图片内容。
+ * Converts images in user messages to text descriptions via MiniMax Vision API,
+ * then injects them back into the conversation as tool_call message chain,
+ * enabling models that don't support images to "understand" image content.
  *
- * 当 MiniMax 模型原生支持图片输入后，删除此文件及 provider 中的调用即可。
+ * After MiniMax models natively support image input, delete this file and its calls in provider.
  */
 export class MiniMaxVisionBridge {
     private static readonly definition = visionBridgeDefinitions.minimax;
@@ -48,8 +49,8 @@ export class MiniMaxVisionBridge {
     private static readonly supportedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
     /**
-     * 检查 MIME 类型是否被 MiniMax Vision API 支持
-     * 仅支持 JPEG、PNG、WebP，不支持 GIF
+     * Check if MIME type is supported by MiniMax Vision API
+     * Only supports JPEG, PNG, WebP, does not support GIF
      */
     static isImageMimeType(mimeType: string): boolean {
         const normalized = mimeType.toLowerCase() === 'image/jpg' ? 'image/jpeg' : mimeType.toLowerCase();
@@ -65,8 +66,8 @@ export class MiniMaxVisionBridge {
     }
 
     /**
-     * 构建图片桥接消息链
-     * 将用户问题 + 图片描述注入为 user(question) -> assistant(tool_call) -> user(tool_result) 三条消息
+     * Build image bridge message chain
+     * Inject user question + image descriptions as user(question) -> assistant(tool_call) -> user(tool_result) three messages
      */
     static buildBridgeMessages(
         messages: Array<LanguageModelChatMessage>,
@@ -76,7 +77,7 @@ export class MiniMaxVisionBridge {
     ): VisionBridgeResult {
         const callId = createVisionBridgeToolCallId(MiniMaxVisionBridge.definition.toolName);
         const questionText =
-            originalQuestion || `请根据图片识别结果，总结这${imageDescriptions.length}张图片的主要内容。`;
+            originalQuestion || `Please summarize the main content of these ${imageDescriptions.length} image(s) based on the image recognition results.`;
 
         const bridgeResult = createVisionBridgeMessages({
             messages,
@@ -95,11 +96,11 @@ export class MiniMaxVisionBridge {
         const resultText = resultParts.map(part => part.value).join('\n');
 
         Logger.info(
-            `MiniMax 图片桥接: 注入消息链 user(question) -> assistant(tool_call=${MiniMaxVisionBridge.definition.toolName}) -> user(tool_result), callId=${callId}, imageCount=${imageDescriptions.length}, insertIndex=${lastUserMessageIndex}`
+            `MiniMax Image Bridge: Inject message chain user(question) -> assistant(tool_call=${MiniMaxVisionBridge.definition.toolName}) -> user(tool_result), callId=${callId}, imageCount=${imageDescriptions.length}, insertIndex=${lastUserMessageIndex}`
         );
-        Logger.trace(`MiniMax 图片桥接: tool_input=${JSON.stringify(toolInput)}`);
-        Logger.trace(`MiniMax 图片桥接: question预览=${MiniMaxVisionBridge.previewText(questionText)}`);
-        Logger.trace(`MiniMax 图片桥接: tool_result预览=${MiniMaxVisionBridge.previewText(resultText, 240)}`);
+        Logger.trace(`MiniMax Image Bridge: tool_input=${JSON.stringify(toolInput)}`);
+        Logger.trace(`MiniMax Image Bridge: question preview=${MiniMaxVisionBridge.previewText(questionText)}`);
+        Logger.trace(`MiniMax Image Bridge: tool_result preview=${MiniMaxVisionBridge.previewText(resultText, 240)}`);
 
         return {
             messages: bridgeResult.messages
@@ -107,15 +108,15 @@ export class MiniMaxVisionBridge {
     }
 
     /**
-     * 预处理消息中的图片（图片桥接功能）
-     * 使用 MiniMax Vision API 将图片转换为文字描述后再发送给模型
-     * 只处理当前轮次的新消息（最后一条用户消息），历史消息已在上一轮处理过
+     * Preprocess images in messages (image bridge functionality)
+     * Use MiniMax Vision API to convert images to text descriptions before sending to model
+     * Only process new messages of current turn (last user message), historical messages have been processed in previous turn
      *
-     * @param messages 原始消息列表
-     * @param modelConfig 模型配置
-     * @param providerKey 模型对应的 provider key
-     * @param token 取消信号，用户取消请求时停止图片预处理
-     * @returns 处理后的消息列表
+     * @param messages Original message list
+     * @param modelConfig Model configuration
+     * @param providerKey Provider key corresponding to the model
+     * @param token Cancel signal, stops image preprocessing when user cancels request
+     * @returns Processed message list
      */
     static async preprocessImages(
         messages: Array<LanguageModelChatMessage>,
@@ -123,21 +124,21 @@ export class MiniMaxVisionBridge {
         providerKey: string,
         token: CancellationToken
     ): Promise<VisionBridgeResult> {
-        // 只对 Coding Plan 模型启用图片桥接
+        // Only enable image bridge for Coding Plan models
         if (providerKey !== 'minimax-coding') {
             return { messages };
         }
 
-        // 检查是否有 MiniMax Vision API 密钥
+        // Check if MiniMax Vision API key is configured
         const hasApiKey = await ApiKeyManager.hasValidApiKey('minimax-coding');
         if (!hasApiKey) {
-            Logger.debug('MiniMax 图片桥接: 未配置 Coding Plan API 密钥，跳过图片预处理');
+            Logger.debug('MiniMax image bridge: Coding Plan API key not configured, skipping image preprocessing');
             return { messages };
         }
 
-        // 用户取消时快速退出
+        // Quick exit when user cancels
         if (token.isCancellationRequested) {
-            Logger.debug('MiniMax 图片桥接: 请求已取消，跳过图片预处理');
+            Logger.debug('MiniMax image bridge: Request cancelled, skipping image preprocessing');
             return { messages };
         }
 
@@ -147,7 +148,7 @@ export class MiniMaxVisionBridge {
             abortController.abort();
         });
 
-        // 找到最后一条用户消息（当前轮次的新消息）
+        // Find the last user message (new messages of current turn)
         let lastUserMessageIndex = -1;
         for (let i = messages.length - 1; i >= 0; i--) {
             if (messages[i].role === vscode.LanguageModelChatMessageRole.User) {
@@ -156,7 +157,7 @@ export class MiniMaxVisionBridge {
             }
         }
 
-        // 统计需要处理的图片数量（包含所有 image/* 类型，确保 GIF 等不支持格式也进入桥接）
+        // Count number of images to process (includes all image/* types, ensures unsupported formats like GIF also enter bridge)
         let totalImages = 0;
         if (lastUserMessageIndex >= 0) {
             const lastUserMessage = messages[lastUserMessageIndex];
@@ -171,10 +172,10 @@ export class MiniMaxVisionBridge {
             return { messages };
         }
 
-        // 只处理最后一条用户消息
+        // Only process the last user message
         const lastUserMessage = messages[lastUserMessageIndex];
 
-        // 先提取用户原始问题（用于喂给视觉模型的提示词）
+        // First extract user's original question (used as prompt for vision model)
         const originalTextParts: string[] = [];
         for (const part of lastUserMessage.content) {
             if (part instanceof vscode.LanguageModelTextPart) {
@@ -183,19 +184,19 @@ export class MiniMaxVisionBridge {
         }
         const originalQuestion = originalTextParts.join('\n').trim();
 
-        // 再处理图片部分：并发调用 Vision，最终按原始顺序拼接结果
+        // Then process image parts: call Vision concurrently, finally concatenate results in original order
         const imageParts: Array<{ imageNumber: number; part: vscode.LanguageModelDataPart }> = [];
         for (const part of lastUserMessage.content) {
             if (token.isCancellationRequested) {
-                Logger.debug('MiniMax 图片桥接: 请求已取消，停止图片预处理');
+                Logger.debug('MiniMax Image Bridge: Request cancelled, stopping image preprocessing');
                 return { messages };
             }
             if (!(part instanceof vscode.LanguageModelDataPart) || !part.mimeType.startsWith('image/')) {
                 continue;
             }
             if (!MiniMaxVisionBridge.isImageMimeType(part.mimeType)) {
-                Logger.error(`不支持的图片格式: ${part.mimeType}`);
-                throw new Error(`不支持的图片格式: ${part.mimeType}。MiniMax Vision 仅支持 JPEG、PNG、WebP。`);
+                Logger.error(`Unsupported image format: ${part.mimeType}`);
+                throw new Error(`Unsupported image format: ${part.mimeType}. MiniMax Vision only supports JPEG, PNG, WebP.`);
             }
 
             imageParts.push({
@@ -207,7 +208,7 @@ export class MiniMaxVisionBridge {
         const maxConcurrency = Math.min(MiniMaxVisionBridge.maxConcurrency, imageParts.length);
         const queuedCount = imageParts.length - maxConcurrency;
         Logger.info(
-            `检测到 ${totalImages} 张图片需要分析，使用 ${maxConcurrency} 并发处理${queuedCount > 0 ? `，其余 ${queuedCount} 张排队` : ''}`
+            `Detected ${totalImages} image(s) to analyze, using ${maxConcurrency} concurrent processing${queuedCount > 0 ? `, ${queuedCount} more queued` : ''}`
         );
 
         const imageDescriptions = new Array<string>(imageParts.length);
@@ -226,14 +227,14 @@ export class MiniMaxVisionBridge {
                     const { imageNumber, part } = imageParts[currentIndex];
                     const imageStartTime = Date.now();
                     Logger.info(
-                        `开始分析图片 (${imageNumber}/${totalImages}) [worker ${workerId}/${maxConcurrency}]: mimeType=${part.mimeType}, data大小=${part.data.length}字节`
+                        `Starting to analyze image (${imageNumber}/${totalImages}) [worker ${workerId}/${maxConcurrency}]: mimeType=${part.mimeType}, data size=${part.data.length} bytes`
                     );
 
-                    // 带上图片序号（共N张）和用户问题，让视觉模型给出结构化、有针对性的描述
+                    // With image sequence number (total N) and user question, let vision model give structured, targeted description
                     const visionPrompt =
                         originalQuestion ?
-                            `这是第${imageNumber}张（共${totalImages}张）。用户的问题是：${originalQuestion}\n\n请详细描述这张图片的内容，力求准确完整。`
-                        :   `这是第${imageNumber}张（共${totalImages}张）。\n\n请详细描述这张图片的内容，力求准确完整。`;
+                            `This is image ${imageNumber} of ${totalImages}. The user's question is: ${originalQuestion}\n\nPlease describe the content of this image in detail, striving for accuracy and completeness.`
+                            : `This is image ${imageNumber} of ${totalImages}.\n\nPlease describe the content of this image in detail, striving for accuracy and completeness.`;
 
                     try {
                         const response = await visionTool.understandImage(
@@ -246,17 +247,17 @@ export class MiniMaxVisionBridge {
                         completedCount += 1;
                         successCount += 1;
                         Logger.info(
-                            `图片 ${imageNumber}/${totalImages} 转换成功 (耗时 ${Date.now() - imageStartTime}ms, 已完成 ${completedCount}/${totalImages})`
+                            `Image ${imageNumber}/${totalImages} converted successfully (elapsed ${Date.now() - imageStartTime}ms, completed ${completedCount}/${totalImages})`
                         );
                     } catch (error) {
                         if (abortController.signal.aborted) {
                             throw error;
                         }
-                        imageDescriptions[currentIndex] = '[图片分析失败]';
+                        imageDescriptions[currentIndex] = '[Image analysis failed]';
                         completedCount += 1;
                         failedCount += 1;
                         Logger.error(
-                            `图片 ${imageNumber}/${totalImages} 转换失败 (耗时 ${Date.now() - imageStartTime}ms, 已完成 ${completedCount}/${totalImages})`,
+                            `Image ${imageNumber}/${totalImages} conversion failed (elapsed ${Date.now() - imageStartTime}ms, completed ${completedCount}/${totalImages})`,
                             error instanceof Error ? error : undefined
                         );
                     }
@@ -266,7 +267,7 @@ export class MiniMaxVisionBridge {
             await Promise.all(Array.from({ length: maxConcurrency }, (_, index) => worker(index + 1)));
         } catch (error) {
             if (abortController.signal.aborted) {
-                Logger.debug('MiniMax 图片桥接: 请求已取消');
+                Logger.debug('MiniMax Image Bridge: Request cancelled');
                 return { messages };
             }
             throw error;
@@ -274,7 +275,7 @@ export class MiniMaxVisionBridge {
 
         if (imageParts.length > 0) {
             Logger.info(
-                `全部 ${imageParts.length} 张图片解析完成 (成功 ${successCount} 张, 失败 ${failedCount} 张, 最大并发 ${maxConcurrency}, 总耗时 ${Date.now() - batchStartTime}ms)`
+                `All ${imageParts.length} image(s) parsed completed (success ${successCount}, failed ${failedCount}, max concurrency ${maxConcurrency}, total elapsed ${Date.now() - batchStartTime}ms)`
             );
         }
 
@@ -286,15 +287,15 @@ export class MiniMaxVisionBridge {
         );
     }
 
-    // ==================== 回放相关逻辑 ====================
-    // 当 MiniMax 模型支持视觉识别后，以下代码可一并删除
+    // ==================== Replay-related logic ====================
+    // After MiniMax models support visual recognition, the following code can be deleted together
 
     /**
-     * 从消息链中提取图片桥接回放事件
-     * 检测消息链末尾是否符合 user(question) -> assistant(tool_call) -> user(tool_result) 模式
+     * Extract image bridge replay event from message chain
+     * Detect if message chain end matches user(question) -> assistant(tool_call) -> user(tool_result) pattern
      *
-     * @param messages 消息链
-     * @returns 回放事件，如果不符合模式则返回 null
+     * @param messages Message chain
+     * @returns Replay event, returns null if pattern does not match
      */
     static extractReplayEvent(messages: readonly vscode.LanguageModelChatMessage[]): ReplayEvent | null {
         if (messages.length < 3) {
@@ -349,12 +350,12 @@ export class MiniMaxVisionBridge {
     }
 
     /**
-     * 回放图片桥接工具结果
-     * 用于在 Anthropic SDK 流开始时报告已处理的桥接结果
+     * Replay image bridge tool results
+     * Used to report already-processed bridge results at Anthropic SDK stream start
      *
-     * @param messages 消息链
-     * @param reportResult 回调函数，用于报告工具结果
-     * @returns 是否成功回放
+     * @param messages Message chain
+     * @param reportResult Callback function for reporting tool results
+     * @returns Whether replay was successful
      */
     static replayVisionBridge(
         messages: readonly vscode.LanguageModelChatMessage[],
@@ -365,19 +366,19 @@ export class MiniMaxVisionBridge {
             return false;
         }
 
-        Logger.info(`MiniMax 图片桥接回放: ${MiniMaxVisionBridge.definition.label} toolCallId: ${replayEvent.callId}`);
+        Logger.info(`MiniMax Image Bridge Replay: ${MiniMaxVisionBridge.definition.label} toolCallId: ${replayEvent.callId}`);
         reportResult(replayEvent.callId, replayEvent.resultParts);
         return true;
     }
 
     /**
-     * 收集历史消息中的工具定义
-     * 为历史消息中出现过但当前工具列表不包含的工具调用，创建合成的工具定义。
-     * Anthropic API 要求：如果消息历史中包含 tool_use / tool_result，对应的 tool 定义必须出现在 tools 参数中。
+     * Collect tool definitions from historical messages
+     * Create synthetic tool definitions for tool calls that appeared in historical messages but are not in current tool list.
+     * Anthropic API requirement: If message history contains tool_use / tool_result, corresponding tool definitions must appear in tools parameter.
      *
-     * @param messages 消息链
-     * @param existingToolNames 已存在的工具名集合
-     * @returns 合成的工具定义数组
+     * @param messages Message chain
+     * @param existingToolNames Set of existing tool names
+     * @returns Array of synthetic tool definitions
      */
     static collectHistoricalToolDefinitions(
         messages: readonly vscode.LanguageModelChatMessage[],

@@ -1,76 +1,76 @@
 /*---------------------------------------------------------------------------------------------
- *  模型上下文窗口占用情况状态栏
- *  显示最近一次请求的模型上下文窗口占用情况
- *  独立实现，不使用缓存机制
+ *  Model Context Window Usage Status Bar
+ *  Displays the model context window usage of the most recent request
+ *  Independent implementation, does not use caching mechanism
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
 import { StatusLogger } from '../utils/statusLogger';
 
 /**
- * 提示词部分的 token 占用详情
+ * Token usage details for prompt parts
  */
 export interface PromptPartTokens {
-    /** 系统提示词 token 数 */
+    /** System prompt token count */
     systemPrompt?: number;
-    /** 可用工具描述 token 数 */
+    /** Available tools description token count */
     availableTools?: number;
-    /** 环境信息 token 数 (environment_info 和 workspace_info) */
+    /** Environment info token count (environment_info and workspace_info) */
     environment?: number;
-    /** 用户助手消息 token 数 (user + assistant + tool roles 合并) */
+    /** User/assistant message token count (user + assistant + tool roles merged) */
     userAssistantMessage?: number;
-    /** 历史消息 token 数 (本轮对话之前的所有消息) */
+    /** History message token count (all messages before this conversation round) */
     historyMessages?: number;
-    /** 本轮消息 token 数 (从最后一个 user text 消息开始的所有消息) */
+    /** Current round message token count (all messages starting from the last user text message) */
     currentRoundMessages?: number;
-    /** 本轮图片 token 数 (仅统计本轮消息中的图片 DataPart) */
+    /** Current round image token count (only counts image DataPart in current round messages) */
     currentRoundImages?: number;
-    /** 思考过程 token 数 (thinking 内容) */
+    /** Thinking process token count (thinking content) */
     thinking?: number;
-    /** 自动压缩部分 token 数 */
+    /** Auto-compressed part token count */
     autoCompressed?: number;
-    /** 上下文内容 token 数 (总和) */
+    /** Context content token count (sum) */
     context?: number;
 }
 
 /**
- * 模型上下文窗口占用情况数据接口
+ * Model context window usage data interface
  */
 export interface ContextUsageData {
-    /** 模型 ID */
+    /** Model ID */
     modelId: string;
-    /** 模型名称 */
+    /** Model name */
     modelName: string;
-    /** 输入 token 数量 */
+    /** Input token count */
     inputTokens: number;
-    /** 最大输入 token 数量 */
+    /** Maximum input token count */
     maxInputTokens: number;
-    /** 占用百分比 */
+    /** Usage percentage */
     percentage: number;
-    /** 请求时间戳 */
+    /** Request timestamp */
     timestamp: number;
-    /** 提示词各部分的 token 占用细节 */
+    /** Token usage details for each prompt part */
     promptParts?: PromptPartTokens;
-    /** 剩余可用 token 数 */
+    /** Remaining available token count */
     remainingTokens?: number;
 }
 
 /**
- * 模型上下文窗口占用情况状态栏
- * 独立实现，不依赖缓存机制
- * 只在请求时通过 updateContextUsage 直接更新状态
+ * Model context window usage status bar
+ * Independent implementation, not dependent on caching mechanism
+ * Only updates status directly via updateContextUsage when requests occur
  */
 export class ContextUsageStatusBar {
-    // 静态实例，用于全局访问
+    // Static instance for global access
     private static instance: ContextUsageStatusBar | undefined;
 
-    // 状态栏项
+    // Status bar item
     private statusBarItem: vscode.StatusBarItem | undefined;
 
-    // 默认数据，显示 0%
+    // Default data showing 0%
     private readonly defaultData: ContextUsageData = {
         modelId: '',
-        modelName: '暂无请求',
+        modelName: 'No Requests',
         inputTokens: 0,
         maxInputTokens: 0,
         percentage: 0,
@@ -78,19 +78,19 @@ export class ContextUsageStatusBar {
     };
 
     constructor() {
-        // 保存实例引用
+        // Save instance reference
         ContextUsageStatusBar.instance = this;
     }
 
     /**
-     * 获取全局实例
+     * Get global instance
      */
     static getInstance(): ContextUsageStatusBar | undefined {
         return ContextUsageStatusBar.instance;
     }
 
     /**
-     * 初始化状态栏
+     * Initialize status bar
      */
     async initialize(context: vscode.ExtensionContext): Promise<void> {
         this.statusBarItem = vscode.window.createStatusBarItem(
@@ -101,46 +101,46 @@ export class ContextUsageStatusBar {
 
         this.statusBarItem.name = 'CCMP: Context Usage';
 
-        // 初始显示
+        // Initial display
         this.updateUI(this.defaultData);
         this.statusBarItem.show();
 
         context.subscriptions.push(this.statusBarItem);
-        StatusLogger.debug('[模型上下文窗口占用状态栏] 初始化完成');
+        StatusLogger.debug('[Context Window Usage StatusBar] Initialization complete');
     }
 
     /**
-     * 更新上下文占用数据（外部调用）
+     * Update context usage data (external call)
      */
     updateContextUsage(data: ContextUsageData): void {
-        StatusLogger.debug(`[模型上下文窗口占用状态栏] 更新上下文占用数据: ${data.inputTokens}/${data.maxInputTokens}`);
+        StatusLogger.debug(`[Context Window Usage StatusBar] Updating context usage: ${data.inputTokens}/${data.maxInputTokens}`);
 
-        // 直接更新 UI（无缓存）
+        // Update UI directly (no cache)
         this.updateUI(data);
 
-        // 确保状态栏可见
+        // Ensure status bar is visible
         if (this.statusBarItem) {
             this.statusBarItem.show();
         }
     }
 
     /**
-     * 更新状态栏 UI
+     * Update status bar UI
      */
     private updateUI(data: ContextUsageData): void {
         if (!this.statusBarItem) {
             return;
         }
 
-        // 更新文本
+        // Update text
         this.statusBarItem.text = this.getDisplayText(data);
 
-        // 更新 Tooltip
+        // Update Tooltip
         this.statusBarItem.tooltip = this.generateTooltip(data);
     }
 
     /**
-     * 根据百分比获取图标
+     * Get icon based on percentage
      */
     private getPieChartIcon(percentage: number): string {
         if (percentage === 0) {
@@ -160,12 +160,12 @@ export class ContextUsageStatusBar {
         } else if (percentage <= 85) {
             return '$(ccmp-token7)'; // 7/8
         } else {
-            return '$(ccmp-token8)'; // 8/8 (满)
+            return '$(ccmp-token8)'; // 8/8 (full)
         }
     }
 
     /**
-     * 格式化 token 数量为易读的格式（如 2K、96K）
+     * Format token count to human-readable format (e.g., 2K, 96K)
      */
     private formatTokens(tokens: number): string {
         if (tokens >= 1000000) {
@@ -178,7 +178,7 @@ export class ContextUsageStatusBar {
     }
 
     /**
-     * 获取显示文本
+     * Get display text
      */
     protected getDisplayText(data: ContextUsageData): string {
         // const percentage = data.percentage.toFixed(1);
@@ -188,17 +188,17 @@ export class ContextUsageStatusBar {
     }
 
     /**
-     * 生成 Tooltip 内容
+     * Generate tooltip content
      */
     private generateTooltip(data: ContextUsageData): vscode.MarkdownString {
         const md = new vscode.MarkdownString();
         md.supportHtml = true;
 
-        md.appendMarkdown('#### 模型上下文窗口占用情况\n\n');
+        md.appendMarkdown('#### Model Context Window Usage\n\n');
 
-        // 如果是默认数据（无请求），显示提示信息
+        // If default data (no requests), show hint
         if (data.inputTokens === 0 && data.maxInputTokens === 0) {
-            md.appendMarkdown('💡 发送任意 CCMP 提供的模型请求后显示\n');
+            md.appendMarkdown('💡 Displayed after sending any CCMP model request\n');
             return md;
         }
 
@@ -207,75 +207,75 @@ export class ContextUsageStatusBar {
         md.appendMarkdown('| ------ | :------- |\n');
 
         const requestTime = new Date(data.timestamp);
-        const requestTimeStr = requestTime.toLocaleString('zh-CN');
-        md.appendMarkdown(`| **请求时间** | ${requestTimeStr} |\n`);
-        md.appendMarkdown(`| **模型名称** | ${data.modelName} |\n`);
+        const requestTimeStr = requestTime.toLocaleString('en-US');
+        md.appendMarkdown(`| **Request Time** | ${requestTimeStr} |\n`);
+        md.appendMarkdown(`| **Model Name** | ${data.modelName} |\n`);
         const usageString = `${this.formatTokens(data.inputTokens)}/${this.formatTokens(data.maxInputTokens)}`;
-        md.appendMarkdown(`| **占用情况** | **${data.percentage.toFixed(1)}%** \t ${usageString} |\n`);
+        md.appendMarkdown(`| **Usage** | **${data.percentage.toFixed(1)}%** \t ${usageString} |\n`);
 
         if (data.promptParts) {
             md.appendMarkdown('\n---\n');
             const parts = data.promptParts;
             const totalTokens = data.inputTokens;
 
-            // 表头行（显示窗口信息，三列格式）
+            // Header row (display window info, three-column format)
             md.appendMarkdown('|          |          |          |\n');
             md.appendMarkdown('| :------- | -------: | -------: |\n');
 
-            // 1. 系统提示词
+            // 1. System prompt
             if (parts.systemPrompt !== undefined && parts.systemPrompt > 0) {
                 const percent = totalTokens > 0 ? ((parts.systemPrompt / totalTokens) * 100).toFixed(1) : '0';
-                md.appendMarkdown(`| **系统提示** | ${percent}% | ${this.formatTokens(parts.systemPrompt)} |\n`);
+                md.appendMarkdown(`| **System Prompt** | ${percent}% | ${this.formatTokens(parts.systemPrompt)} |\n`);
             }
-            // 2. 可用的工具
+            // 2. Available tools
             if (parts.availableTools !== undefined && parts.availableTools > 0) {
                 const percent = totalTokens > 0 ? ((parts.availableTools / totalTokens) * 100).toFixed(1) : '0';
-                md.appendMarkdown(`| **可用工具** | ${percent}% | ${this.formatTokens(parts.availableTools)} |\n`);
+                md.appendMarkdown(`| **Available Tools** | ${percent}% | ${this.formatTokens(parts.availableTools)} |\n`);
             }
-            // 3. 环境信息
+            // 3. Environment info
             if (parts.environment !== undefined && parts.environment > 0) {
                 const percent = totalTokens > 0 ? ((parts.environment / totalTokens) * 100).toFixed(1) : '0';
-                md.appendMarkdown(`| **环境信息** | ${percent}% | ${this.formatTokens(parts.environment)} |\n`);
+                md.appendMarkdown(`| **Environment Info** | ${percent}% | ${this.formatTokens(parts.environment)} |\n`);
             }
-            // 4. 压缩的消息
+            // 4. Compressed messages
             if (parts.autoCompressed !== undefined && parts.autoCompressed > 0) {
                 const percent = totalTokens > 0 ? ((parts.autoCompressed / totalTokens) * 100).toFixed(1) : '0';
-                md.appendMarkdown(`| **压缩消息** | ${percent}% | ${this.formatTokens(parts.autoCompressed)} |\n`);
+                md.appendMarkdown(`| **Compressed Messages** | ${percent}% | ${this.formatTokens(parts.autoCompressed)} |\n`);
             }
-            // 5. 历史消息
+            // 5. History messages
             if (parts.historyMessages !== undefined && parts.historyMessages > 0) {
                 const percent = totalTokens > 0 ? ((parts.historyMessages / totalTokens) * 100).toFixed(1) : '0';
-                md.appendMarkdown(`| **历史消息** | ${percent}% | ${this.formatTokens(parts.historyMessages)} |\n`);
+                md.appendMarkdown(`| **History Messages** | ${percent}% | ${this.formatTokens(parts.historyMessages)} |\n`);
             }
-            // 6. 思考内容
+            // 6. Thinking content
             if (parts.thinking !== undefined && parts.thinking > 0) {
                 const percent = totalTokens > 0 ? ((parts.thinking / totalTokens) * 100).toFixed(1) : '0';
-                md.appendMarkdown(`| **思考内容** | ${percent}% | ${this.formatTokens(parts.thinking)} |\n`);
+                md.appendMarkdown(`| **Thinking Content** | ${percent}% | ${this.formatTokens(parts.thinking)} |\n`);
             }
-            // 7. 本轮图片附件
+            // 7. Current round image attachments
             if (parts.currentRoundImages !== undefined && parts.currentRoundImages > 0) {
                 const currentRoundImages = parts.currentRoundImages;
                 const percent = totalTokens > 0 ? ((currentRoundImages / totalTokens) * 100).toFixed(1) : '0';
-                md.appendMarkdown(`| **本轮图片** | ${percent}% | ${this.formatTokens(currentRoundImages)} |\n`);
+                md.appendMarkdown(`| **Current Round Images** | ${percent}% | ${this.formatTokens(currentRoundImages)} |\n`);
             }
-            // 8. 本轮会话消息
+            // 8. Current round session messages
             if (parts.currentRoundMessages !== undefined && parts.currentRoundMessages > 0) {
                 const currentRoundMessages = parts.currentRoundMessages;
                 const percent = totalTokens > 0 ? ((currentRoundMessages / totalTokens) * 100).toFixed(1) : '0';
-                md.appendMarkdown(`| **本轮消息** | ${percent}% | ${this.formatTokens(currentRoundMessages)} |\n`);
+                md.appendMarkdown(`| **Current Round Messages** | ${percent}% | ${this.formatTokens(currentRoundMessages)} |\n`);
             }
             md.appendMarkdown('\n');
         }
 
         md.appendMarkdown('\n---\n');
-        md.appendMarkdown('💡 此数据显示最近一次请求的预估值\n');
+        md.appendMarkdown('💡 This data shows estimated values from the most recent request\n');
 
         return md;
     }
 
     /**
-     * 检查并显示状态
-     * Token 占用状态栏总是显示
+     * Check and display status
+     * Token usage status bar is always displayed
      */
     async checkAndShowStatus(): Promise<void> {
         if (this.statusBarItem) {
@@ -284,13 +284,13 @@ export class ContextUsageStatusBar {
     }
 
     /**
-     * 根据各部分 token 占用来更新状态
-     * @param modelName 模型名称
-     * @param maxInputTokens 最大输入 token 数
-     * @param promptParts 提示词各部分的 token 占用
+     * Update status based on token usage of each part
+     * @param modelName Model name
+     * @param maxInputTokens Maximum input token count
+     * @param promptParts Token usage of each prompt part
      */
     updateWithPromptParts(modelName: string, maxInputTokens: number, promptParts: PromptPartTokens): void {
-        // 使用 context 作为总 token 占用（已包含所有部分）
+        // Use context as total token usage (includes all parts)
         const inputTokens = promptParts.context || 0;
         const remainingTokens = maxInputTokens - inputTokens;
         const percentage = (inputTokens / maxInputTokens) * 100;
@@ -308,18 +308,18 @@ export class ContextUsageStatusBar {
     }
 
     /**
-     * 延迟更新（不使用，上下文占用由外部驱动）
+     * Delayed update (not used, context usage is externally driven)
      */
     delayedUpdate(_delayMs?: number): void {
-        // 上下文占用状态栏不需要定时更新
-        // 数据通过 updateContextUsage() 外部驱动
+        // Context usage status bar does not need periodic updates
+        // Data is externally driven via updateContextUsage()
     }
 
     /**
-     * 销毁状态栏
+     * Dispose status bar
      */
     dispose(): void {
         this.statusBarItem?.dispose();
-        StatusLogger.debug('[模型上下文窗口占用状态栏] 已销毁');
+        StatusLogger.debug('[Context Window Usage StatusBar] Disposed');
     }
 }

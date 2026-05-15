@@ -1,11 +1,11 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  Copilot Bundle - 延迟加载入口
+ *  Copilot Bundle - Lazy Loading Entry Point
  *
- *  此文件作为独立的 bundle 入口点，包含 @vscode/chat-lib 等重型依赖。
- *  在首次触发内联补全时，由 InlineCompletionShim 动态加载。
+ *  This file serves as a standalone bundle entry point, containing heavy dependencies like @vscode/chat-lib.
+ *  Dynamically loaded by InlineCompletionShim on first inline completion trigger.
  *
- *  打包输出: dist/copilot.bundle.js
+ *  Build output: dist/copilot.bundle.js
  *--------------------------------------------------------------------------------------------*/
 
-// 导出完整的 InlineCompletionProvider
+// Export complete InlineCompletionProvider
 export { InlineCompletionProvider } from './completionProvider';

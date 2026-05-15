@@ -1,6 +1,6 @@
 /**
- * 提供商统计组件
- * 负责渲染提供商和模型列表
+ * Provider Statistics Component
+ * Responsible for rendering provider and model lists
  */
 
 import type { ProviderData } from '../types';
@@ -14,10 +14,10 @@ import {
     getProviderDisplayName
 } from '../utils';
 
-// ============= 工具函数 =============
+// ============= Utility Functions =============
 
 /**
- * 创建表格单元格
+ * Create table cell
  */
 function createCell(content: string | number, className = ''): HTMLElement {
     const cell = createElement('td');
@@ -28,16 +28,16 @@ function createCell(content: string | number, className = ''): HTMLElement {
     return cell;
 }
 
-// ============= 组件渲染 =============
+// ============= Component Rendering =============
 
 /**
- * 创建提供商统计区域
+ * Create provider statistics section
  */
 export function createProviderStats(providers: ProviderData[]): HTMLElement {
     const section = createElement('section');
 
     const h2 = createElement('h2');
-    h2.textContent = '按提供商统计';
+    h2.textContent = 'Statistics by Provider';
     section.appendChild(h2);
 
     if (providers && providers.length > 0) {
@@ -46,14 +46,14 @@ export function createProviderStats(providers: ProviderData[]): HTMLElement {
         const headerRow = createElement('tr');
 
         const headers = [
-            '提供商/模型',
-            '输入Tokens',
-            '缓存命中',
-            '输出Tokens',
-            '消耗Tokens',
-            '请求次数',
-            '平均延迟',
-            '平均速度'
+            'Provider/Model',
+            'Input Tokens',
+            'Cache Hit',
+            'Output Tokens',
+            'Consumed Tokens',
+            'Requests',
+            'Avg Latency',
+            'Avg Speed'
         ];
         headers.forEach(h => {
             const th = createElement('th');
@@ -65,20 +65,20 @@ export function createProviderStats(providers: ProviderData[]): HTMLElement {
 
         const tbody = createElement('tbody');
 
-        // 计算合计数据
+        // Calculate total data
         let totalInput = 0;
         let totalCache = 0;
         let totalOutput = 0;
         let totalRequests = 0;
 
         providers.forEach(provider => {
-            // 累加合计数据
+            // Accumulate total data
             totalInput += provider.actualInput || 0;
             totalCache += provider.cacheTokens || 0;
             totalOutput += provider.outputTokens || 0;
             totalRequests += provider.requests || 0;
 
-            // 提供商行
+            // Provider row
             const providerRow = createElement('tr');
             providerRow.style.backgroundColor = 'var(--vscode-editor-inactiveSelectionBackground)';
             providerRow.style.fontWeight = 'bold';
@@ -96,7 +96,7 @@ export function createProviderStats(providers: ProviderData[]): HTMLElement {
 
             tbody.appendChild(providerRow);
 
-            // 模型行
+            // Model rows
             Object.entries(provider.models).forEach(([, stats]) => {
                 const modelRow = createElement('tr') as HTMLTableRowElement;
                 const totalTokens = calculateTotalTokens(stats);
@@ -117,14 +117,14 @@ export function createProviderStats(providers: ProviderData[]): HTMLElement {
             });
         });
 
-        // 添加合计行
+        // Add total row
         const totalRow = createElement('tr');
         totalRow.style.backgroundColor = 'var(--vscode-editor-selectionBackground)';
         totalRow.style.fontWeight = 'bold';
         totalRow.style.borderTop = '2px solid var(--vscode-editor-selectionForeground)';
 
         const grandTotal = totalInput + totalOutput;
-        totalRow.appendChild(createCell('合计'));
+        totalRow.appendChild(createCell('Total'));
         totalRow.appendChild(createCell(formatTokens(totalInput)));
         totalRow.appendChild(createCell(formatTokens(totalCache)));
         totalRow.appendChild(createCell(formatTokens(totalOutput)));
@@ -138,7 +138,7 @@ export function createProviderStats(providers: ProviderData[]): HTMLElement {
             return cleaned.reduce((sum, v) => sum + v, 0) / cleaned.length;
         };
 
-        // 合计口径：对“所有模型”的已聚合指标做算术平均（与 speed 聚合口径保持一致）。
+        // Total calculation: arithmetic mean of aggregated metrics across all models (consistent with speed aggregation).
         const allModelSpeeds: number[] = [];
         const allModelLatencies: number[] = [];
         providers.forEach(provider => {
@@ -172,7 +172,7 @@ export function createProviderStats(providers: ProviderData[]): HTMLElement {
         section.appendChild(table);
     } else {
         const empty = createElement('div', 'empty-message');
-        empty.textContent = '暂无提供商数据';
+        empty.textContent = 'No provider data available';
         section.appendChild(empty);
     }
 

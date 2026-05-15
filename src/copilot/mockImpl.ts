@@ -1,13 +1,13 @@
 /*---------------------------------------------------------------------------------------------
- *  此文件包含为创建 FIM / NES 必要的参数而实现的类，但只是空实现，没有实际使用。
- *  这些类仅用于满足 VS Code chat-lib 库的接口要求，使扩展能够正常初始化。
+ *  This file contains classes implemented for creating FIM / NES required parameters, but are empty implementations with no actual usage.
+ *  These classes are only used to satisfy the VS Code chat-lib library interface requirements, allowing the extension to initialize properly.
  *
- *  包含的空实现：
- *  - AuthenticationService: 认证服务实现，无实际验证逻辑
- *  - TelemetrySender: 遥测发送器实现，不发送任何数据
- *  - EndpointProvider：官方的示例传参，目前没具体作用，先留着
+ *  Empty implementations included:
+ *  - AuthenticationService: Authentication service implementation, no actual verification logic
+ *  - TelemetrySender: Telemetry sender implementation, does not send any data
+ *  - EndpointProvider: Official example parameter passing, currently has no specific purpose, kept for now
  *
- *  参考: getInlineCompletions.spec.ts 和 nesProvider.spec.ts 的测试示例
+ *  Reference: Test examples in getInlineCompletions.spec.ts and nesProvider.spec.ts
  *--------------------------------------------------------------------------------------------*/
 
 import type { AuthenticationGetSessionOptions, AuthenticationSession, ChatRequest, LanguageModelChat } from 'vscode';
@@ -30,15 +30,15 @@ import {
 } from '@vscode/chat-lib/dist/src/_internal/platform/networking/common/networking';
 
 /**
- * 简单的认证服务实现，无实际验证逻辑
+ * Simple authentication service implementation with no actual verification logic
  *
- * 这是一个空实现，仅用于满足 NES 的接口要求。
- * 实际项目不使用，仅传递给 chat-lib 以符合官方接口要求。
- * 所有方法都返回默认值或空值，不执行任何实际的认证操作。
+ * This is an empty implementation used only to satisfy NES interface requirements.
+ * Not used in actual projects, only passed to chat-lib to meet official interface requirements.
+ * All methods return default or empty values and perform no actual authentication operations.
  */
 export class AuthenticationService extends Disposable implements IAuthenticationService, ICopilotTokenManager {
     readonly _serviceBrand: undefined;
-    readonly isMinimalMode = true; // 标识非官方模式，不请求 GHToken
+    readonly isMinimalMode = true; // Flag for non-official mode, do not request GHToken
     readonly anyGitHubSession = undefined;
     readonly permissiveGitHubSession = undefined;
     readonly copilotToken = new CopilotToken(
@@ -93,11 +93,11 @@ export class AuthenticationService extends Disposable implements IAuthentication
 }
 
 /**
- * 遥测发送器实现
+ * Telemetry Sender Implementation
  *
- * 这是一个空实现，仅用于满足 NES 的接口要求。
- * 所有遥测事件都被忽略，不发送任何数据到外部服务。
- * 这确保了用户隐私和数据安全，同时满足 VS Code 扩展的接口要求。
+ * This is an empty implementation used only to satisfy NES interface requirements.
+ * All telemetry events are ignored and no data is sent to external services.
+ * This ensures user privacy and data security while meeting VS Code extension interface requirements.
  */
 export class TelemetrySender implements ITelemetrySender {
     sendTelemetryEvent(
@@ -110,7 +110,7 @@ export class TelemetrySender implements ITelemetrySender {
 }
 
 /**
- * 端点提供者实现
+ * Endpoint Provider Implementation
  */
 export class EndpointProvider extends Disposable implements IEndpointProvider {
     readonly _serviceBrand: undefined;

@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  Kimi For Coding 状态栏项
- *  继承 ProviderStatusBarItem，显示 Kimi For Coding 使用量信息
+ *  Kimi For Coding Status Bar Item
+ *  Extends ProviderStatusBarItem, displays Kimi For Coding usage information
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -11,66 +11,66 @@ import { ApiKeyManager } from '../utils/apiKeyManager';
 import { VersionManager } from '../utils/versionManager';
 
 /**
- * Kimi 使用量窗口数据
+ * Kimi usage window data
  */
 export interface KimiUsageWindow {
-    /** 持续时间 */
+    /** Duration */
     duration: number;
-    /** 时间单位 */
+    /** Time unit */
     timeUnit: string;
-    /** 详细信息 */
+    /** Detailed information */
     detail: {
-        /** 限制值（可能是百分比100或Token量） */
+        /** Limit value (could be percentage 100 or Token amount) */
         limit: number;
-        /** 已使用值（API不返回时默认为0） */
+        /** Used value (defaults to 0 if API does not return) */
         used: number;
-        /** 剩余值 */
+        /** Remaining value */
         remaining: number;
-        /** 重置时间 */
+        /** Reset time */
         resetTime?: string;
     };
 }
 
 /**
- * Kimi 使用量摘要数据
+ * Kimi usage summary data
  */
 export interface KimiUsageSummary {
-    /** 总限制值（可能是百分比100或Token量） */
+    /** Total limit value (could be percentage 100 or Token amount) */
     limit: number;
-    /** 已使用值 */
+    /** Used value */
     used: number;
-    /** 剩余值 */
+    /** Remaining value */
     remaining: number;
-    /** 重置时间 */
+    /** Reset time */
     resetTime: string;
 }
 
 /**
- * Kimi 并发上限数据
+ * Kimi concurrency limit data
  */
 export interface KimiParallelInfo {
-    /** 并发上限 */
+    /** Concurrency limit */
     limit: number;
 }
 
 /**
- * Kimi 状态数据
+ * Kimi status data
  */
 export interface KimiStatusData {
-    /** 总体用量信息 */
+    /** Overall usage information */
     summary: KimiUsageSummary;
-    /** 详细使用限制 */
+    /** Detailed usage limits */
     windows: KimiUsageWindow[];
-    /** 并发上限（可选） */
+    /** Concurrency limit (optional) */
     parallel?: KimiParallelInfo;
 }
 
 /**
- * Kimi For Coding 状态栏项
- * 显示 Kimi For Coding 的使用量信息，包括：
- * - 剩余/总量
- * - 已使用百分比
- * - 支持多时间窗口展示
+ * Kimi For Coding Status Bar Item
+ * Displays Kimi For Coding usage information, including:
+ * - Remaining/total amount
+ * - Usage percentage
+ * - Support for multiple time window display
  */
 export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
     constructor() {
@@ -82,19 +82,19 @@ export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
             refreshCommand: 'ccmp.kimi.refreshUsage',
             apiKeyProvider: 'kimi',
             cacheKeyPrefix: 'kimi',
-            logPrefix: 'Kimi状态栏',
+            logPrefix: 'Kimi StatusBar',
             icon: '$(ccmp-kimi)'
         };
         super(config);
     }
 
     /**
-     * 获取显示文本
+     * Get display text
      */
     protected getDisplayText(data: KimiStatusData): string {
         const { summary, windows } = data;
         let displayText = `${this.config.icon} ${summary.remaining}%`;
-        // 如果有窗口数据，添加每个窗口的剩余（排除剩余100%的窗口）
+        // If there is window data, add remaining for each window (exclude windows with 100% remaining)
         if (windows.length > 0) {
             const windowTexts = windows
                 .filter(window => window.detail.remaining < 100)
@@ -107,7 +107,7 @@ export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
     }
 
     /**
-     * 格式化Token数量显示
+     * Format token count display
      */
     private formatTokenCount(tokens: number): string {
         if (tokens >= 1000000) {
@@ -119,25 +119,25 @@ export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
     }
 
     /**
-     * 生成 Tooltip 内容
+     * Generate tooltip content
      */
     protected generateTooltip(data: KimiStatusData): vscode.MarkdownString {
         const md = new vscode.MarkdownString();
         md.supportHtml = true;
 
         const { summary, windows } = data;
-        md.appendMarkdown('#### Kimi For Coding 使用情况\n\n');
+        md.appendMarkdown('#### Kimi For Coding Usage\n\n');
 
-        // 百分比模式：显示频限类型、剩余量、重置时间
-        md.appendMarkdown('| 频限类型 | 剩余量 | 重置时间 |\n');
+        // Percentage mode: display rate limit type, remaining amount, reset time
+        md.appendMarkdown('| Rate Limit Type | Remaining | Reset Time |\n');
         md.appendMarkdown('| :----: | ----: | :----: |\n');
 
-        // 添加每周额度
+        // Add weekly quota
         const resetTime = new Date(summary.resetTime);
         const resetTimeStr = this.formatDateTime(resetTime);
-        md.appendMarkdown(`| **每周额度** | ${summary.remaining}% | ${resetTimeStr} |\n`);
+        md.appendMarkdown(`| **Weekly Quota** | ${summary.remaining}% | ${resetTimeStr} |\n`);
 
-        // 添加窗口限制
+        // Add window limits
         if (windows.length > 0) {
             for (const window of windows) {
                 const timeUnit = this.translateTimeUnit(window.timeUnit);
@@ -148,49 +148,49 @@ export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
             }
         }
 
-        // 添加并发上限行
+        // Add concurrency limit row
         if (data.parallel) {
             md.appendMarkdown('\n');
-            md.appendMarkdown(`**最高并发上限**：${data.parallel.limit}\n`);
+            md.appendMarkdown(`**Maximum Concurrency Limit**: ${data.parallel.limit}\n`);
         }
 
         md.appendMarkdown('\n');
         md.appendMarkdown('---\n');
-        md.appendMarkdown('点击状态栏可手动刷新\n');
+        md.appendMarkdown('Click status bar to manually refresh\n');
         return md;
     }
 
     /**
-     * 执行 API 查询
-     * 直接实现 Kimi For Coding 余量查询逻辑
+     * Execute API query
+     * Directly implements Kimi For Coding remaining balance query logic
      */
     protected async performApiQuery(): Promise<{ success: boolean; data?: KimiStatusData; error?: string }> {
         const REMAIN_QUERY_URL = 'https://api.kimi.com/coding/v1/usages';
         const KIMI_KEY = 'kimi';
 
         try {
-            // 检查 Kimi For Coding 密钥是否存在
+            // Check if Kimi For Coding key exists
             const hasCodingKey = await ApiKeyManager.hasValidApiKey(KIMI_KEY);
             if (!hasCodingKey) {
                 return {
                     success: false,
-                    error: 'Kimi For Coding 专用密钥未配置，请先设置 Kimi For Coding API 密钥'
+                    error: 'Kimi For Coding dedicated key not configured, please set Kimi For Coding API key first'
                 };
             }
 
-            // 获取 Kimi For Coding 密钥
+            // Get Kimi For Coding key
             const apiKey = await ApiKeyManager.getApiKey(KIMI_KEY);
             if (!apiKey) {
                 return {
                     success: false,
-                    error: '无法获取 Kimi For Coding 专用密钥'
+                    error: 'Unable to get Kimi For Coding dedicated key'
                 };
             }
 
-            Logger.debug('触发查询 Kimi For Coding 余量');
-            StatusLogger.debug(`[${this.config.logPrefix}] 开始查询 Kimi For Coding 余量...`);
+            Logger.debug('Triggered Kimi For Coding balance query');
+            StatusLogger.debug(`[${this.config.logPrefix}] Starting Kimi For Coding balance query...`);
 
-            // 构建请求
+            // Build request
             const requestOptions: RequestInit = {
                 method: 'GET',
                 headers: {
@@ -200,15 +200,15 @@ export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
                 }
             };
 
-            // 发送请求
+            // Send request
             const response = await fetch(REMAIN_QUERY_URL, requestOptions);
             const responseText = await response.text();
 
             StatusLogger.debug(
-                `[${this.config.logPrefix}] 余量查询响应状态: ${response.status} ${response.statusText}`
+                `[${this.config.logPrefix}] Remaining balance query response status: ${response.status} ${response.statusText}`
             );
 
-            // 解析响应
+            // Parse response
             interface KimiBillingResponse {
                 user?: {
                     userId: string;
@@ -257,63 +257,63 @@ export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
             try {
                 parsedResponse = JSON.parse(responseText);
             } catch (parseError) {
-                Logger.error(`解析响应 JSON 失败: ${parseError}`);
+                Logger.error(`Failed to parse response JSON: ${parseError}`);
                 return {
                     success: false,
-                    error: `响应格式错误: ${responseText.substring(0, 200)}`
+                    error: `Response format error: ${responseText.substring(0, 200)}`
                 };
             }
 
-            // 检查响应状态
+            // Check response status
             if (!response.ok) {
                 const errorMessage = `HTTP ${response.status}`;
-                Logger.error(`余量查询失败: ${errorMessage}`);
+                Logger.error(`Remaining balance query failed: ${errorMessage}`);
                 return {
                     success: false,
-                    error: `查询失败: ${errorMessage}`
+                    error: `Query failed: ${errorMessage}`
                 };
             }
 
-            // 检查具体的认证错误
+            // Check specific authentication error
             if (parsedResponse.code === 'unauthenticated') {
-                const errorMessage = 'API密钥无效或已过期，请检查您的Kimi API密钥';
-                Logger.error(`认证失败: ${errorMessage}`);
+                const errorMessage = 'API key is invalid or expired, please check your Kimi API key';
+                Logger.error(`Authentication failed: ${errorMessage}`);
                 return {
                     success: false,
-                    error: `认证失败: ${errorMessage}`
+                    error: `Authentication failed: ${errorMessage}`
                 };
             }
 
-            // 检查其他 API 错误
+            // Check other API errors
             if (parsedResponse.code !== undefined && parsedResponse.code !== 'unauthenticated') {
-                const errorMessage = `API错误: ${parsedResponse.code}`;
-                Logger.error(`余量查询API失败: ${errorMessage}`);
+                const errorMessage = `API Error: ${parsedResponse.code}`;
+                Logger.error(`Remaining balance query API failed: ${errorMessage}`);
                 return {
                     success: false,
-                    error: `API查询失败: ${errorMessage}`
+                    error: `API query failed: ${errorMessage}`
                 };
             }
 
-            // 解析成功响应
-            StatusLogger.debug(`[${this.config.logPrefix}] 余量查询成功`);
+            // Parse successful response
+            StatusLogger.debug(`[${this.config.logPrefix}] Balance query successful`);
 
-            // 计算格式化信息
+            // Calculate formatted information
             if (!parsedResponse.usage) {
                 return {
                     success: false,
-                    error: '未获取到用量数据'
+                    error: 'No usage data retrieved'
                 };
             }
 
             const usage = parsedResponse.usage;
 
-            // 解析数值
+            // Parse numeric values
             const used = typeof usage.used === 'string' ? parseInt(usage.used, 10) : (usage.used ?? 0);
             const limit = typeof usage.limit === 'string' ? parseInt(usage.limit, 10) : usage.limit;
             const remaining =
                 typeof usage.remaining === 'string' ? parseInt(usage.remaining, 10) : (usage.remaining ?? 0);
 
-            // 总体用量信息
+            // Overall usage information
             const summary: KimiUsageSummary = {
                 limit,
                 used,
@@ -321,7 +321,7 @@ export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
                 resetTime: usage.resetTime
             };
 
-            // 详细使用限制
+            // Detailed usage limits
             const windows: KimiUsageWindow[] = [];
             if (parsedResponse.limits && parsedResponse.limits.length > 0) {
                 for (const limitItem of parsedResponse.limits) {
@@ -344,7 +344,7 @@ export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
                 }
             }
 
-            // 并发上限
+            // Concurrency limit
             let parallel: KimiParallelInfo | undefined;
             if (parsedResponse.parallel) {
                 const parallelLimit =
@@ -363,29 +363,29 @@ export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
                 }
             };
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : '未知错误';
-            Logger.error(`余量查询异常: ${errorMessage}`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            Logger.error(`Remaining balance query exception: ${errorMessage}`);
             return {
                 success: false,
-                error: `查询异常: ${errorMessage}`
+                error: `Query exception: ${errorMessage}`
             };
         }
     }
 
     /**
-     * 检查是否需要高亮警告（剩余百分比低于阈值或任意窗口剩余百分比低于阈值）
+     * Check if highlight warning is needed (remaining percentage below threshold or any window remaining percentage below threshold)
      */
     protected shouldHighlightWarning(data: KimiStatusData): boolean {
         const { summary, windows } = data;
 
-        // 检查总体剩余是否低于阈值
+        // Check if overall remaining is below threshold
         const usedPercentage = summary.used;
 
         if (usedPercentage >= this.HIGH_USAGE_THRESHOLD) {
             return true;
         }
 
-        // 检查是否存在任意窗口剩余低于阈值
+        // Check if any window remaining is below threshold
         if (windows.length > 0) {
             for (const window of windows) {
                 if (window.detail.used >= this.HIGH_USAGE_THRESHOLD) {
@@ -398,8 +398,8 @@ export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
     }
 
     /**
-     * 检查是否需要刷新缓存
-     * 缓存超过5分钟固定过期时间则刷新
+     * Check if cache refresh is needed
+     * Refresh when cache exceeds 5-minute fixed expiry time
      */
     protected shouldRefresh(): boolean {
         if (!this.lastStatusData) {
@@ -407,12 +407,12 @@ export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
         }
 
         const dataAge = Date.now() - this.lastStatusData.timestamp;
-        const CACHE_EXPIRY_THRESHOLD = (5 * 60 - 10) * 1000; // 缓存过期阈值 5 分钟
+        const CACHE_EXPIRY_THRESHOLD = (5 * 60 - 10) * 1000; // Cache expiry threshold 5 minutes
 
-        // 检查缓存是否超过5分钟固定过期时间
+        // Check if cache exceeds 5-minute fixed expiry time
         if (dataAge > CACHE_EXPIRY_THRESHOLD) {
             StatusLogger.debug(
-                `[${this.config.logPrefix}] 缓存时间(${(dataAge / 1000).toFixed(1)}秒)超过5分钟固定过期时间，触发API刷新`
+                `[${this.config.logPrefix}] Cache time (${(dataAge / 1000).toFixed(1)}s) exceeds 5-minute fixed expiry time, triggering API refresh`
             );
             return true;
         }
@@ -421,22 +421,22 @@ export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
     }
 
     /**
-     * 将时间单位转换为中文
+     * Translate time unit to display string
      */
     private translateTimeUnit(timeUnit: string): string {
         const unitMap: Record<string, string> = {
-            TIME_UNIT_SECOND: '秒',
-            TIME_UNIT_MINUTE: '分钟',
-            TIME_UNIT_HOUR: '小时',
-            TIME_UNIT_DAY: '天',
-            TIME_UNIT_MONTH: '月',
-            TIME_UNIT_YEAR: '年'
+            TIME_UNIT_SECOND: 'Second',
+            TIME_UNIT_MINUTE: 'Minute',
+            TIME_UNIT_HOUR: 'Hour',
+            TIME_UNIT_DAY: 'Day',
+            TIME_UNIT_MONTH: 'Month',
+            TIME_UNIT_YEAR: 'Year'
         };
         return unitMap[timeUnit] || timeUnit;
     }
 
     /**
-     * 格式化日期时间为 MM/DD HH:mm 格式
+     * Format date time to MM/DD HH:mm format
      */
     private formatDateTime(date: Date): string {
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -447,7 +447,7 @@ export class KimiStatusBar extends ProviderStatusBarItem<KimiStatusData> {
     }
 
     /**
-     * 访问器：获取最后的状态数据（用于测试和调试）
+     * Getter: Get the last status data (for testing and debugging)
      */
     getLastStatusData(): { data: KimiStatusData; timestamp: number } | null {
         return this.lastStatusData;

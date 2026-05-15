@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  MiniMax 配置向导
- *  提供交互式向导来配置普通密钥和 Coding Plan 专用密钥，支持接入点（站点）选择
+ *  MiniMax Configuration Wizard
+ *  Provides interactive wizard to configure standard key and Coding Plan dedicated key, with endpoint selection support
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -15,44 +15,44 @@ export class MiniMaxWizard {
     private static readonly CODING_PLAN_KEY = 'minimax-coding';
 
     /**
-     * 启动 MiniMax 配置向导
-     * 允许用户选择配置哪种密钥类型
+     * Start MiniMax configuration wizard
+     * Allows user to select which key type to configure
      */
     static async startWizard(displayName: string, apiKeyTemplate: string, codingKeyTemplate?: string): Promise<void> {
         try {
-            // 获取当前接入站点
+            // Get current endpoint
             const currentEndpoint = ConfigManager.getMinimaxEndpoint();
-            const endpointLabel = currentEndpoint === 'minimax.io' ? '国际站 (minimax.io)' : '国内站 (minimaxi.com)';
+            const endpointLabel = currentEndpoint === 'minimax.io' ? 'International (minimax.io)' : 'China (minimaxi.com)';
 
             const choice = await vscode.window.showQuickPick(
                 [
                     {
-                        label: '$(key) 设置普通 API 密钥',
-                        detail: '用于 MiniMax-M2 等标准按量计费模型',
+                        label: '$(key) Set Standard API Key',
+                        detail: 'For MiniMax-M2 standard pay-as-you-go models',
                         value: 'normal'
                     },
                     {
-                        label: '$(key) 设置 Coding Plan 专用密钥',
-                        detail: '用于 MiniMax-M2 (Coding Plan) 模型',
+                        label: '$(key) Set Coding Plan Dedicated Key',
+                        detail: 'For MiniMax-M2 (Coding Plan) models',
                         value: 'coding'
                     },
                     {
-                        label: '$(check-all) 同时设置两种密钥',
-                        detail: '按顺序配置普通密钥和 Coding Plan 密钥',
+                        label: '$(check-all) Set Both Keys',
+                        detail: 'Configure standard key and Coding Plan key in sequence',
                         value: 'both'
                     },
                     {
-                        label: '$(globe) 设置 Coding Plan 接入点',
-                        description: `当前：${endpointLabel}`,
-                        detail: '设置 Coding Plan 编程套餐接入的站点：国内站 (minimaxi.com) 或国际站 (minimax.io)',
+                        label: '$(globe) Set Coding Plan Endpoint',
+                        description: `Current: ${endpointLabel}`,
+                        detail: 'Set the endpoint for Coding Plan programming package: China (minimaxi.com) or International (minimax.io)',
                         value: 'endpoint'
                     }
                 ],
-                { title: `${displayName} 密钥配置`, placeHolder: '请选择要配置的项目' }
+                { title: `${displayName} Key Configuration`, placeHolder: 'Select items to configure' }
             );
 
             if (!choice) {
-                Logger.debug('用户取消了 MiniMax 配置向导');
+                Logger.debug('User cancelled MiniMax configuration wizard');
                 return;
             }
 
@@ -68,135 +68,135 @@ export class MiniMaxWizard {
                 await this.setCodingPlanEndpoint(displayName);
             }
         } catch (error) {
-            Logger.error(`MiniMax 配置向导出错: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error(`MiniMax configuration wizard error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     /**
-     * 设置普通 API 密钥
+     * Set standard API key
      */
     static async setNormalApiKey(displayName: string, apiKeyTemplate: string): Promise<void> {
         const result = await vscode.window.showInputBox({
-            prompt: `请输入 ${displayName} 的普通 API Key（留空可清除）`,
-            title: `设置 ${displayName} 普通 API Key`,
+            prompt: `Enter standard API Key for ${displayName} (leave blank to clear)`,
+            title: `Set ${displayName} Standard API Key`,
             placeHolder: apiKeyTemplate,
             password: true,
             ignoreFocusOut: true
         });
 
-        // 用户取消了输入
+        // User cancelled input
         if (result === undefined) {
             return;
         }
 
         try {
-            // 允许空值，用于清除 API Key
+            // Allow empty value to clear API Key
             if (result.trim() === '') {
-                Logger.info(`${displayName} 普通 API Key 已清除`);
+                Logger.info(`${displayName} standard API Key has been cleared`);
                 await ApiKeyManager.deleteApiKey(this.PROVIDER_KEY);
-                vscode.window.showInformationMessage(`${displayName} 普通 API Key 已清除`);
+                vscode.window.showInformationMessage(`${displayName} standard API Key has been cleared`);
             } else {
                 await ApiKeyManager.setApiKey(this.PROVIDER_KEY, result.trim());
-                Logger.info(`${displayName} 普通 API Key 已设置`);
-                vscode.window.showInformationMessage(`${displayName} 普通 API Key 已设置`);
+                Logger.info(`${displayName} standard API Key has been set`);
+                vscode.window.showInformationMessage(`${displayName} standard API Key has been set`);
             }
         } catch (error) {
-            Logger.error(`普通 API Key 操作失败: ${error instanceof Error ? error.message : '未知错误'}`);
-            vscode.window.showErrorMessage(`设置失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error(`Standard API Key operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            vscode.window.showErrorMessage(`Setup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     /**
-     * 设置 Coding Plan 专用密钥
+     * Set Coding Plan dedicated key
      */
     static async setCodingPlanApiKey(displayName: string, codingKeyTemplate?: string): Promise<void> {
         const result = await vscode.window.showInputBox({
-            prompt: `请输入 ${displayName} 的 Coding Plan 专用 API Key（留空可清除）`,
-            title: `设置 ${displayName} Coding Plan 专用 API Key`,
+            prompt: `Enter Coding Plan dedicated API Key for ${displayName} (leave blank to clear)`,
+            title: `Set ${displayName} Coding Plan dedicated API Key`,
             placeHolder: codingKeyTemplate,
             password: true,
             ignoreFocusOut: true
         });
 
-        // 用户取消了输入
+        // User cancelled input
         if (result === undefined) {
             return;
         }
 
         try {
-            // 允许空值，用于清除 API Key
+            // Allow empty value to clear API Key
             if (result.trim() === '') {
-                Logger.info(`${displayName} Coding Plan 专用 API Key 已清除`);
+                Logger.info(`${displayName} Coding Plan dedicated API Key has been cleared`);
                 await ApiKeyManager.deleteApiKey(this.CODING_PLAN_KEY);
-                vscode.window.showInformationMessage(`${displayName} Coding Plan 专用 API Key 已清除`);
+                vscode.window.showInformationMessage(`${displayName} Coding Plan dedicated API Key has been cleared`);
             } else {
                 await ApiKeyManager.setApiKey(this.CODING_PLAN_KEY, result.trim());
-                Logger.info(`${displayName} Coding Plan 专用 API Key 已设置`);
-                vscode.window.showInformationMessage(`${displayName} Coding Plan 专用 API Key 已设置`);
+                Logger.info(`${displayName} Coding Plan dedicated API Key has been set`);
+                vscode.window.showInformationMessage(`${displayName} Coding Plan dedicated API Key has been set`);
 
-                // API Key 设置后，自动进行接入点选择
+                // After API Key is set, automatically prompt for endpoint selection
                 await this.setCodingPlanEndpoint(displayName);
             }
         } catch (error) {
-            Logger.error(`Coding Plan API Key 操作失败: ${error instanceof Error ? error.message : '未知错误'}`);
-            vscode.window.showErrorMessage(`设置失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error(`Coding Plan API Key operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            vscode.window.showErrorMessage(`Setup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
 
-        // 检查并显示状态栏
+        // Check and display status bar
         await StatusBarManager.checkAndShowStatus('minimax');
     }
 
     /**
-     * 选择 Coding Plan 接入点（国内/国际站）
+     * Select Coding Plan endpoint (China/International)
      */
     static async setCodingPlanEndpoint(displayName: string): Promise<void> {
         try {
             const choice = await vscode.window.showQuickPick(
                 [
                     {
-                        label: '$(home) 国内站 (minimaxi.com)',
+                        label: '$(home) China (minimaxi.com)',
                         value: 'minimaxi.com' as const
                     },
                     {
-                        label: '$(globe) 国际站 (minimax.io)',
+                        label: '$(globe) International (minimax.io)',
                         value: 'minimax.io' as const
                     }
                 ],
                 {
-                    title: `${displayName} (Coding Plan) 接入点选择`,
-                    placeHolder: '请选择接入点',
+                    title: `${displayName} (Coding Plan) Endpoint Selection`,
+                    placeHolder: 'Select endpoint',
                     canPickMany: false
                 }
             );
 
             if (!choice) {
-                Logger.debug(`用户取消了 ${displayName} Coding Plan 接入点选择`);
+                Logger.debug(`User cancelled ${displayName} Coding Plan endpoint selection`);
                 return;
             }
 
-            // 保存用户的站点选择
+            // Save user's endpoint selection
             await this.saveCodingPlanSite(choice.value);
 
-            const siteLabel = choice.value === 'minimax.io' ? '国际站' : '国内站';
-            Logger.info(`${displayName} Coding Plan 接入点已设置为: ${siteLabel}`);
-            vscode.window.showInformationMessage(`${displayName} Coding Plan 接入点已设置为: ${siteLabel}`);
+            const siteLabel = choice.value === 'minimax.io' ? 'International' : 'China';
+            Logger.info(`${displayName} Coding Plan endpoint set to: ${siteLabel}`);
+            vscode.window.showInformationMessage(`${displayName} Coding Plan endpoint set to: ${siteLabel}`);
         } catch (error) {
-            Logger.error(`Coding Plan 接入点设置失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error(`Coding Plan endpoint setup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     /**
-     * 保存 Coding Plan 接入点配置
+     * Save Coding Plan endpoint configuration
      */
     static async saveCodingPlanSite(site: MiniMaxConfig['endpoint']): Promise<void> {
         try {
             const config = vscode.workspace.getConfiguration('ccmp.minimax');
 
-            // 保存到 ccmp.minimax.endpoint 配置
+            // Save to ccmp.minimax.endpoint configuration
             await config.update('endpoint', site, vscode.ConfigurationTarget.Global);
-            Logger.info(`已保存 Coding Plan 接入点: ${site}`);
+            Logger.info(`Saved Coding Plan endpoint: ${site}`);
         } catch (error) {
-            Logger.error(`保存 Coding Plan 接入点失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error(`Failed to save Coding Plan endpoint: ${error instanceof Error ? error.message : 'Unknown error'}`);
             throw error;
         }
     }

@@ -1,5 +1,5 @@
 ﻿/**
- * 组件导出索引
+ * Component Export Index
  */
 
 export * from './dateList';

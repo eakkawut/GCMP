@@ -137,7 +137,7 @@ export class ModelEditor {
     private static generateHTML(model: CompatibleModelConfig, isCreateMode: boolean, webview: vscode.Webview): string {
         const cspSource = webview.cspSource || '';
 
-        // 准备模型数据
+        // Prepare model data
         const modelData = {
             ...model,
             id: model?.id || '',
@@ -160,7 +160,7 @@ export class ModelEditor {
         const pageTitle = isCreateMode ? 'Create New Model' : `Edit Model: ${this.escapeHtml(modelData.name)}`;
 
         return `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -177,11 +177,11 @@ export class ModelEditor {
         <script>
             ${modelEditorJs}
 
-            // 初始化数据
+            // Initialize data
             const initialModelData = ${JSON.stringify(modelData)};
             const initialIsCreateMode = ${isCreateMode};
 
-            // 启动编辑器
+            // Start editor
             document.addEventListener('DOMContentLoaded', function() {
                 initializeEditor(initialModelData, initialIsCreateMode);
             });
@@ -213,7 +213,7 @@ export class ModelEditor {
     private static sendProvidersList(webview: vscode.Webview) {
         const providersMap = new Map<string, { id: string; name: string }>();
 
-        // 从内置配置中获取提供商 (configProviders)
+        // Get providers from built-in configurations (configProviders)
         Object.entries(configProviders).forEach(([key, config]) => {
             providersMap.set(key, {
                 id: key,
@@ -221,7 +221,7 @@ export class ModelEditor {
             });
         });
 
-        // 添加已知提供商 (KnownProviders)
+        // Add known providers (KnownProviders)
         Object.entries(KnownProviders).forEach(([key, config]) => {
             providersMap.set(key, {
                 id: key,
@@ -236,7 +236,7 @@ export class ModelEditor {
     }
 
     /**
-     * 从 API 获取模型列表
+     * Fetch model list from API
      */
     private static async fetchModelsFromAPI(
         webview: vscode.Webview,
@@ -254,45 +254,45 @@ export class ModelEditor {
                 return;
             }
 
-            // 构建完整的 URL
+            // Build complete URL
             let url = baseUrl.trim();
-            // 移除末尾的斜杠
+            // Remove trailing slash
             url = url.replace(/\/+$/, '');
 
-            // 智能添加 /models 端点
-            // 如果 URL 不包含 /v1，则添加 /v1/models
-            // 如果已经包含 /v1，则只添加 /models
+            // Intelligently add /models endpoint
+            // If URL does not contain /v1, add /v1/models
+            // If already contains /v1, only add /models
             let modelsUrl: string;
             if (url.includes('/v1')) {
-                // 已经包含 /v1，直接添加 /models
+                // Already contains /v1, directly add /models
                 modelsUrl = `${url}/models`;
             } else {
-                // 不包含 /v1，添加 /v1/models
+                // Does not contain /v1, add /v1/models
                 modelsUrl = `${url}/v1/models`;
             }
 
-            // 发送加载中状态
+            // Send loading state
             webview.postMessage({
                 command: 'modelsLoading'
             });
 
-            // 构建请求头
+            // Build request headers
             const headers: Record<string, string> = {
                 'Content-Type': 'application/json',
                 'User-Agent': VersionManager.getUserAgent('ModelEditor')
             };
 
-            // 如果提供了 API Key，添加到请求头
+            // If API Key is provided, add to request headers
             let effectiveApiKey = apiKey;
             if (!effectiveApiKey && provider) {
-                // 如果未提供 API Key，尝试从 ApiKeyManager 获取
+                // If API Key is not provided, try to get from ApiKeyManager
                 effectiveApiKey = await ApiKeyManager.getApiKey(provider);
             }
             if (effectiveApiKey && effectiveApiKey.trim()) {
                 headers['Authorization'] = `Bearer ${effectiveApiKey.trim()}`;
             }
 
-            // 发起请求
+            // Send request
             const response = await fetch(modelsUrl, {
                 method: 'GET',
                 headers: headers
@@ -308,29 +308,29 @@ export class ModelEditor {
                 | OpenAI.Models.Model[]
                 | string[];
 
-            // 解析模型列表
+            // Parse model list
             let models: string[] = [];
 
-            // OpenAI 格式: { data: [{ id: "model-name" }] }
+            // OpenAI format: { data: [{ id: "model-name" }] }
             if ('data' in responseData && Array.isArray(responseData.data)) {
                 models = responseData.data
                     .filter((item): item is OpenAI.Models.Model => !!item?.id)
                     .map(item => item.id);
             }
-            // 直接数组格式: ["model1", "model2"]
+            // Direct array format: ["model1", "model2"]
             else if (Array.isArray(responseData)) {
                 models = responseData
                     .filter((item): item is string | OpenAI.Models.Model => typeof item === 'string' || !!item?.id)
                     .map(item => (typeof item === 'string' ? item : item.id));
             }
-            // 其他格式: { models: [...] } 或 { models: ["model1", "model2"] }
+            // Other format: { models: [...] } or { models: ["model1", "model2"] }
             else if ('models' in responseData && Array.isArray(responseData.models)) {
                 models = responseData.models
                     .filter((item): item is string | OpenAI.Models.Model => typeof item === 'string' || !!item?.id)
                     .map(item => (typeof item === 'string' ? item : item.id));
             }
 
-            // 发送模型列表
+            // Send model list
             webview.postMessage({
                 command: 'modelsLoaded',
                 models: models

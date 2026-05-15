@@ -1,5 +1,5 @@
 import { ProviderConfig } from '../../types/sharedTypes';
-// 统一导出所有模型配置，便于代码 import
+// Export all model configurations uniformly for easy code import
 import zhipu from './zhipu.json';
 import volcengine from './volcengine.json';
 import minimax from './minimax.json';

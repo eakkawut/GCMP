@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  提交消息生成服务
- *  通过 VS Code Language Model API 调用模型生成提交消息
+ *  Commit Message Generation Service
+ *  Calls models via VS Code Language Model API to generate commit messages
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -24,8 +24,8 @@ function throwIfCancelled(token: vscode.CancellationToken): void {
 }
 
 /**
- * 提交消息生成服务类
- * 通过 VS Code Language Model API 调用语言模型生成提交消息
+ * Commit message generation service class
+ * Calls language models via VS Code Language Model API to generate commit messages
  */
 export class GeneratorService {
     private static readonly MAX_CONTEXT_CHARS_PER_MESSAGE = 14000;
@@ -42,10 +42,10 @@ export class GeneratorService {
     }
 
     /**
-     * 获取 Commit 可用提供商列表（providerKey + 展示名 + vendor）。
-     * 逻辑参照 JsonSchemaProvider#getCommitModelSchema：
-     * - 内置提供商（provider）+ providerOverrides 合并
-     * - compatible 提供商（可包含用户自定义模型）
+     * Get available Commit provider list (providerKey + display name + vendor).
+     * Logic references JsonSchemaProvider#getCommitModelSchema:
+     * - Built-in providers (provider) + providerOverrides merged
+     * - Compatible providers (can include user-defined models)
      */
     static async getAvailableCommitProviders(): Promise<
         Array<{ providerKey: string; displayName: string; vendor: string }>
@@ -61,7 +61,7 @@ export class GeneratorService {
             });
         }
 
-        // compatible 提供商（providerKey = compatible）
+        // Compatible provider (providerKey = compatible)
         if (!results.some(p => p.providerKey === 'compatible')) {
             results.push({
                 providerKey: 'compatible',
@@ -74,9 +74,9 @@ export class GeneratorService {
     }
 
     /**
-     * 获取某个提供商下的可用模型列表（用于 UI 下拉）。
-     * - 内置提供商（provider）：使用 applyProviderOverrides 后的 effectiveConfig.models
-     * - compatible: 使用 CompatibleModelManager.getModels()
+     * Get available model list under a provider (for UI dropdown).
+     * - Built-in providers (provider): use effectiveConfig.models after applyProviderOverrides
+     * - compatible: use CompatibleModelManager.getModels()
      */
     static async getAvailableCommitModelsForProvider(
         providerKey: string
@@ -101,8 +101,8 @@ export class GeneratorService {
     }
 
     /**
-     * 生成提交消息（分段 diff）：
-     * staged/tracked/untracked 每个文件一条 User message。
+     * Generate commit messages (segmented diff):
+     * One User message per file for staged/tracked/untracked.
      */
     static async generateCommitMessages(
         diffParts: GitDiffParts,
@@ -111,16 +111,16 @@ export class GeneratorService {
         progress: ProgressReporter,
         token: vscode.CancellationToken
     ): Promise<CommitMessage> {
-        // 1) 选择模型
-        progress.report({ message: '正在选择模型...', increment: 8 });
+        // 1) Select model
+        progress.report({ message: 'Selecting model...', increment: 8 });
         const model = await this.selectModel();
         throwIfCancelled(token);
 
-        // 2) 组装 diff 上下文（每个文件一个 message）
-        progress.report({ message: '正在提取关键变更片段...', increment: 10 });
+        // 2) Assemble diff context (one message per file)
+        progress.report({ message: 'Extracting key change snippets...', increment: 10 });
         const messages: vscode.LanguageModelChatMessage[] = [];
 
-        // System Role 消息：部分模型要求首条消息为 system role
+        // System Role message: some models require the first message to be system role
         messages.push(
             new vscode.LanguageModelChatMessage(
                 vscode.LanguageModelChatMessageRole.System,
@@ -134,7 +134,7 @@ export class GeneratorService {
 
         const blameContext = (blameAnalysis ?? '').trim();
         if (blameContext) {
-            // 单独一条用户消息：文件改动相关的历史上下文（用于理解改动内容）。
+            // Separate user message: historical context related to file changes (for understanding modification content).
             messages.push(
                 vscode.LanguageModelChatMessage.User(`Blame analysis (changed files reference):\n\n${blameContext}`)
             );
@@ -143,7 +143,7 @@ export class GeneratorService {
         const commitConfig = ConfigManager.getCommitConfig();
         const repoHistory = (recentCommitHistory ?? '').trim();
         if (commitConfig.format === 'auto' && repoHistory) {
-            // 单独一条用户消息：仓库级别最近提交历史（与文件无关），用于 auto 推断提交规范。
+            // Separate user message: repository-level recent commit history (unrelated to files), used for auto inference of commit conventions.
             messages.push(
                 vscode.LanguageModelChatMessage.User(
                     `Recent commit history (repository-wide, last 50, for style inference):\n\n${repoHistory}`
@@ -178,15 +178,15 @@ export class GeneratorService {
             )
         );
 
-        // 3) 生成最终提交消息
-        progress.report({ message: `正在使用 ${model.name} 生成提交消息...`, increment: 20 });
+        // 3) Generate final commit message
+        progress.report({ message: `Generating commit message using ${model.name}...`, increment: 20 });
         const message = await this.callModelWithMessages(model, messages, progress, token);
 
-        // 4) 后处理
-        progress.report({ message: '正在处理结果...', increment: 10 });
+        // 4) Post-processing
+        progress.report({ message: 'Processing results...', increment: 10 });
         const cleanedMessage = PromptService.normalizeCommitMessage(message);
 
-        // 5) 验证消息
+        // 5) Validate message
         if (!cleanedMessage.trim()) {
             throw new EmptyCommitMessageError();
         }
@@ -237,7 +237,7 @@ export class GeneratorService {
     }
 
     /**
-     * 选择语言模型
+     * Select language model
      */
     private static async selectModel(): Promise<vscode.LanguageModelChat> {
         const resolveConfiguredModel = async (
@@ -256,16 +256,16 @@ export class GeneratorService {
                 });
                 return candidates?.[0] ?? null;
             } catch {
-                // 查询失败视为模型不可用
+                // Query failure treated as model unavailable
                 return null;
             }
         };
 
         /**
-         * 独立分支：处理 autoPrefixModelId 和 compatible 提供商的特殊场景。
-         * - autoPrefixModelId 启用时，查询 ID 需要加上 `${provider}:::${modelId}` 前缀
-         * - compatible 提供商：先从 CompatibleModelManager 获取模型列表匹配，再构造查询
-         * 不涉及特殊场景时返回 null，交由原流程处理。
+         * Independent branch: handles special scenarios for autoPrefixModelId and compatible providers.
+         * - When autoPrefixModelId is enabled, query ID needs to add `${provider}:::${modelId}` prefix
+         * - Compatible providers: first get model list from CompatibleModelManager for matching, then construct query
+         * Returns null when no special scenarios involved, handed to original process.
          */
         const resolveConfiguredModelCompat = async (
             selection: { provider?: string; model?: string } | undefined
@@ -297,7 +297,7 @@ export class GeneratorService {
                     return candidates?.[0] ?? null;
                 }
 
-                // autoPrefix 启用但非 compatible：需要检查模型是否有独立的 provider 字段
+                // autoPrefix enabled but not compatible: need to check if model has independent provider field
                 const effectiveConfig = this.getEffectiveProviderConfig(provider);
                 const matchedModel = effectiveConfig?.models.find(m => m.id === modelId);
                 const actualProvider = matchedModel?.provider || provider;
@@ -313,7 +313,7 @@ export class GeneratorService {
         };
 
         /**
-         * 综合解析：先尝试 compat 分支，不命中时回退到原流程。
+         * Comprehensive resolution: first try compat branch, fallback to original process on miss.
          */
         const resolveModel = async (
             selection: { provider?: string; model?: string } | undefined
@@ -321,42 +321,42 @@ export class GeneratorService {
             return (await resolveConfiguredModelCompat(selection)) ?? (await resolveConfiguredModel(selection));
         };
 
-        // 1) 优先使用已配置且可用的模型
+        // 1) Prioritize using configured and available model
         const configuredSelection = ConfigManager.getCommitConfig().model;
         const configuredModel = await resolveModel(configuredSelection);
         if (configuredModel) {
-            Logger.trace(`[GeneratorService] 使用配置的模型: ${configuredModel.name}`);
+            Logger.trace(`[GeneratorService] Using configured model: ${configuredModel.name}`);
             return configuredModel;
         }
 
-        // 2) 未配置模型或配置无效：弹出模型选择向导，并在成功选择后重试
+        // 2) Model not configured or configuration invalid: popup model selection wizard, retry after successful selection
         const before = JSON.stringify(configuredSelection ?? {});
         await vscode.commands.executeCommand('ccmp.commit.selectModel');
 
         const afterSelection = ConfigManager.getCommitConfig().model;
         const after = JSON.stringify(afterSelection ?? {});
         if (after === before) {
-            // 用户未更新配置（通常表示取消/关闭了向导）
+            // User did not update configuration (usually indicates cancel/close wizard)
             throw new UserCancelledError();
         }
 
         const selectedModel = await resolveModel(afterSelection);
         if (selectedModel) {
-            Logger.trace(`[GeneratorService] 使用用户选择的模型: ${selectedModel.name}`);
+            Logger.trace(`[GeneratorService] Using user-selected model: ${selectedModel.name}`);
             return selectedModel;
         }
 
         const providerKey =
-            (afterSelection?.provider ?? configuredSelection?.provider ?? '(未指定)').trim() || '(未指定)';
-        const modelId = (afterSelection?.model ?? configuredSelection?.model ?? '(未指定)').trim() || '(未指定)';
+            (afterSelection?.provider ?? configuredSelection?.provider ?? '(not specified)').trim() || '(not specified)';
+        const modelId = (afterSelection?.model ?? configuredSelection?.model ?? '(not specified)').trim() || '(not specified)';
         throw new ModelNotFoundError(
-            `配置的模型 "${providerKey}:${modelId}" 不可用或未启用。` +
-            '请运行“CCMP: 选择 Commit 模型”重新选择，或检查对应提供商模型是否已启用。'
+            `Configured model "${providerKey}:${modelId}" is unavailable or not enabled.` +
+            'Please run "CCMP: Select Commit Model" to reselect, or check if the corresponding provider model is enabled.'
         );
     }
 
     /**
-     * 调用语言模型
+     * Call language model
      */
     private static async callModelWithMessages(
         model: vscode.LanguageModelChat,
@@ -365,42 +365,42 @@ export class GeneratorService {
         token: vscode.CancellationToken
     ): Promise<string> {
         try {
-            // 发送请求
+            // Send request
             const response = await model.sendRequest(
                 messages,
                 { modelOptions: { commit: true } as CommitChatModelOptions },
                 token
             );
 
-            // 收集响应
+            // Collect response
             let result = '';
             for await (const chunk of response.text) {
                 if (token.isCancellationRequested) {
                     throw new vscode.CancellationError();
                 }
                 result += chunk;
-                // 更新进度
+                // Update progress
                 if (result.length % 100 === 0) {
-                    progress.report({ message: `正在生成... (${result.length} 字符)`, increment: 1 });
+                    progress.report({ message: `Generating... (${result.length} characters)`, increment: 1 });
                 }
             }
 
-            Logger.trace(`[GeneratorService] 模型响应长度: ${result.length} 字符`);
+            Logger.trace(`[GeneratorService] Model response length: ${result.length} characters`);
             return result;
         } catch (error) {
-            Logger.error('[GeneratorService] 模型调用失败:', error);
+            Logger.error('[GeneratorService] Model call failed:', error);
 
-            // 检查是否是用户取消
+            // Check if it is user cancellation
             if (error instanceof vscode.CancellationError) {
                 throw error;
             }
 
-            // 检查是否是权限问题
+            // Check if it is a permission issue
             if (error instanceof Error && error.message.includes('access')) {
-                throw new Error('无法访问语言模型。请确保您有权限使用该模型，或者尝试选择其他模型。');
+                throw new Error('Unable to access language model. Please ensure you have permission to use this model, or try selecting another model.');
             }
 
-            throw new Error(`生成提交消息失败: ${error instanceof Error ? error.message : String(error)}`);
+            throw new Error(`Failed to generate commit message: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 }

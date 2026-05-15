@@ -1,5 +1,5 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  SiliconFlow 余额查询器
+ *  SiliconFlow Balance Query Handler
  *--------------------------------------------------------------------------------------------*/
 
 import { IBalanceQuery, BalanceQueryResult } from '../balanceQuery';
@@ -8,68 +8,68 @@ import { ApiKeyManager } from '../../../utils/apiKeyManager';
 import { Logger } from '../../../utils';
 
 /**
- * SiliconFlow API 响应类型
+ * SiliconFlow API response type
  */
 interface SiliconFlowBalanceResponse {
-    /** 响应状态码 */
+    /** Response status code */
     code: number;
-    /** 响应消息 */
+    /** Response message */
     message: string;
-    /** 响应状态 */
+    /** Response status */
     status: boolean;
-    /** 用户数据对象 */
+    /** User data object */
     data: SiliconFlowUserData;
 }
 
 /**
- * SiliconFlow 用户数据对象
+ * SiliconFlow user data object
  */
 interface SiliconFlowUserData {
-    /** 用户ID */
+    /** User ID */
     id: string;
-    /** 用户名 */
+    /** User name */
     name: string;
-    /** 用户头像 */
+    /** User avatar */
     image: string;
-    /** 用户邮箱 */
+    /** User email */
     email: string;
-    /** 是否为管理员 */
+    /** Whether admin */
     isAdmin: boolean;
-    /** 赠送余额 */
+    /** Granted balance */
     balance: string;
-    /** 账户状态 */
+    /** Account status */
     status: string;
-    /** 用户介绍 */
+    /** User introduction */
     introduction: string;
-    /** 用户角色 */
+    /** User role */
     role: string;
-    /** 充值余额 */
+    /** Recharged balance */
     chargeBalance: string;
-    /** 总余额 */
+    /** Total balance */
     totalBalance: string;
 }
 
 /**
- * SiliconFlow 余额查询器
+ * SiliconFlow balance query handler
  */
 export class SiliconflowBalanceQuery implements IBalanceQuery {
     /**
-     * 查询 SiliconFlow 余额
-     * @param providerId 提供商标识符
-     * @returns 余额查询结果
+     * Query SiliconFlow balance
+     * @param providerId Provider identifier
+     * @returns Balance query result
      */
     async queryBalance(providerId: string): Promise<BalanceQueryResult> {
-        StatusLogger.debug(`[SiliconflowBalanceQuery] 查询提供商 ${providerId} 的余额`);
+        StatusLogger.debug(`[SiliconflowBalanceQuery] Querying balance for provider ${providerId}`);
 
         try {
-            // 获取API密钥
+            // Get API key
             const apiKey = await ApiKeyManager.getApiKey(providerId);
 
             if (!apiKey) {
-                throw new Error(`未找到提供商 ${providerId} 的API密钥`);
+                throw new Error(`API key not found for provider ${providerId}`);
             }
 
-            // 调用SiliconFlow余额查询API
+            // Call SiliconFlow balance query API
             const response = await fetch('https://api.siliconflow.cn/v1/user/info', {
                 method: 'GET',
                 headers: {
@@ -79,33 +79,33 @@ export class SiliconflowBalanceQuery implements IBalanceQuery {
             });
 
             if (!response.ok) {
-                throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+                throw new Error(`API request failed: ${response.status} ${response.statusText}`);
             }
 
             const result = (await response.json()) as SiliconFlowBalanceResponse;
 
-            // 检查API响应状态码
+            // Check API response status code
             if (result.code !== 20000 || !result.status) {
-                throw new Error(`API返回错误: ${result.message || '未知错误'}`);
+                throw new Error(`API returned error: ${result.message || 'Unknown error'}`);
             }
 
-            // 解析余额数据
+            // Parse balance data
             const data = result.data;
-            const granted = parseFloat(data.balance) || 0; // 赠送余额
-            const paid = parseFloat(data.chargeBalance) || 0; // 充值余额
-            const balance = parseFloat(data.totalBalance) || paid + granted; // 总余额
+            const granted = parseFloat(data.balance) || 0; // Granted balance
+            const paid = parseFloat(data.chargeBalance) || 0; // Recharged balance
+            const balance = parseFloat(data.totalBalance) || paid + granted; // Total balance
 
-            StatusLogger.debug('[SiliconflowBalanceQuery] 余额查询成功');
+            StatusLogger.debug('[SiliconflowBalanceQuery] Balance query successful');
 
             return {
                 paid,
                 granted,
                 balance,
-                currency: 'CNY' // SiliconFlow使用人民币
+                currency: 'CNY' // SiliconFlowusing CNY
             };
         } catch (error) {
-            Logger.error('[SiliconflowBalanceQuery] 查询余额失败', error);
-            throw new Error(`SiliconFlow 余额查询失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error('[SiliconflowBalanceQuery] Failed to query balance', error);
+            throw new Error(`SiliconFlow balance query failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 }

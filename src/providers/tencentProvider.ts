@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  腾讯云专用 Provider
- *  为腾讯云付费模型、Coding Plan、Token Plan 与 DeepSeek 提供多密钥管理和协议切换功能
+ *  Tencent Cloud Dedicated Provider
+ *  Provides multi-key management and protocol switching for Tencent Cloud paid models, Coding Plan, Token Plan, and DeepSeek
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -28,7 +28,7 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
         providerKey: string,
         providerConfig: ProviderConfig
     ): { provider: TencentProvider; disposables: vscode.Disposable[] } {
-        Logger.trace(`${providerConfig.displayName} 专用模型扩展已激活!`);
+        Logger.trace(`${providerConfig.displayName} Dedicated Model Extension Activated!`);
 
         const provider = new TencentProvider(context, providerKey, providerConfig);
         const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`ccmp.${providerKey}`, provider);
@@ -71,7 +71,7 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
         );
 
         const configWizardCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.configWizard`, async () => {
-            Logger.info(`启动 ${providerConfig.displayName} 配置向导`);
+            Logger.info(`Starting ${providerConfig.displayName} Configuration Wizard`);
             await TencentWizard.startWizard(
                 providerConfig.displayName,
                 providerConfig.apiKeyTemplate,
@@ -103,7 +103,7 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
         _token: CancellationToken
     ): Promise<LanguageModelChatInformation[]> {
         if (options.configuration) {
-            // 如果请求中包含 configuration，不返回模型列表
+            // If request contains configuration, do not return model list
             return [];
         }
 
@@ -115,7 +115,7 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
         const hasAnyKey = hasNormalKey || hasCodingKey || hasTokenPlanKey || hasDeepSeekKey || hasTokenHubKey;
 
         if (options.silent && !hasAnyKey) {
-            Logger.debug(`${this.providerConfig.displayName}: 静默模式下，未检测到任何密钥，返回空模型列表`);
+            Logger.debug(`${this.providerConfig.displayName}: In silent mode, no keys detected, returning empty model list`);
             return [];
         }
 
@@ -133,7 +133,7 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
             const deepSeekKeyValid = await ApiKeyManager.hasValidApiKey('tencent-deepseek');
             const tokenHubKeyValid = await ApiKeyManager.hasValidApiKey('tencent-tokenhub');
             if (!normalKeyValid && !codingKeyValid && !tokenPlanKeyValid && !deepSeekKeyValid && !tokenHubKeyValid) {
-                Logger.warn(`${this.providerConfig.displayName}: 用户未设置任何密钥，返回空模型列表`);
+                Logger.warn(`${this.providerConfig.displayName}: User has not set any keys, returning empty model list`);
                 return [];
             }
         }
@@ -148,10 +148,10 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
         progress: Progress<vscode.LanguageModelResponsePart>,
         _token: CancellationToken
     ): Promise<void> {
-        // 查找对应的模型配置
+        // Find corresponding model configuration
         const rawModelConfig = this.findModelConfigById(model);
         if (!rawModelConfig) {
-            const errorMessage = `未找到模型: ${model.id}`;
+            const errorMessage = `Model not found: ${model.id}`;
             Logger.error(errorMessage);
             throw new Error(errorMessage);
         }
@@ -160,11 +160,11 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
         const providerKey = this.getProviderKeyForModel(modelConfig);
         const apiKey = await this.ensureApiKeyForModel(modelConfig);
         if (!apiKey) {
-            throw new Error(`${this.providerConfig.displayName}: 无效的 ${this.getKeyLabel(providerKey)} API 密钥`);
+            throw new Error(`${this.providerConfig.displayName}: Invalid ${this.getKeyLabel(providerKey)} API key`);
         }
 
         Logger.debug(
-            `${this.providerConfig.displayName}: 即将处理请求，使用 ${providerKey} 密钥 - 模型: ${modelConfig.name}`
+            `${this.providerConfig.displayName}: About to process request, using ${providerKey} key - Model: ${modelConfig.name}`
         );
 
         const totalInputTokens = await this.updateContextUsageStatusBar(model, messages, modelConfig, options);
@@ -180,12 +180,12 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
                 estimatedInputTokens: totalInputTokens
             });
         } catch (err) {
-            Logger.warn('记录预估Token失败，继续执行请求:', err);
+            Logger.warn('Failed to record estimated Token, continuing with request:', err);
         }
 
         const sdkMode = modelConfig.sdkMode || 'openai';
         const sdkName = this.getSdkDisplayName(sdkMode);
-        Logger.info(`${this.providerConfig.displayName} Provider 开始处理请求 (${sdkName}): ${modelConfig.name}`);
+        Logger.info(`${this.providerConfig.displayName} Provider starting to process request (${sdkName}): ${modelConfig.name}`);
 
         try {
             await this.executeModelRequest(
@@ -203,12 +203,12 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
                 try {
                     await usagesManager.updateActualTokens({ requestId, status: 'failed' });
                 } catch (err) {
-                    Logger.warn('更新Token统计失败状态失败:', err);
+                    Logger.warn('Failed to update Token statistics status:', err);
                 }
             }
             throw error;
         } finally {
-            Logger.info(`✅ ${this.providerConfig.displayName}: ${model.name} 请求已完成`);
+            Logger.info(`✅ ${this.providerConfig.displayName}: ${model.name} request completed`);
         }
     }
 
@@ -219,15 +219,15 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
     private getKeyLabel(providerKey: string): string {
         switch (providerKey) {
             case 'tencent-coding':
-                return 'Coding Plan 专用';
+                return 'Coding Plan Dedicated';
             case 'tencent-token':
-                return 'Token Plan 专用';
+                return 'Token Plan Dedicated';
             case 'tencent-deepseek':
-                return 'DeepSeek 专用';
+                return 'DeepSeek Dedicated';
             case 'tencent-tokenhub':
-                return 'TokenHub 专用';
+                return 'TokenHub Dedicated';
             default:
-                return '付费模型';
+                return 'Paid Model';
         }
     }
 
@@ -241,7 +241,7 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
             }
         }
 
-        Logger.warn(`模型 ${modelConfig.name} 缺少 ${this.getKeyLabel(providerKey)} API 密钥，进入设置流程`);
+        Logger.warn(`Model ${modelConfig.name} missing ${this.getKeyLabel(providerKey)} API key, entering setup flow`);
 
         if (providerKey === 'tencent-coding') {
             await TencentWizard.setCodingPlanApiKey(this.providerConfig.codingKeyTemplate);
@@ -257,10 +257,10 @@ export class TencentProvider extends GenericModelProvider implements LanguageMod
 
         const apiKey = await ApiKeyManager.getApiKey(providerKey);
         if (apiKey) {
-            Logger.info(`${this.getKeyLabel(providerKey)}密钥设置成功`);
+            Logger.info(`${this.getKeyLabel(providerKey)} key set successfully`);
             return apiKey;
         }
 
-        throw new Error(`${this.providerConfig.displayName}: 用户未设置 ${this.getKeyLabel(providerKey)} API 密钥`);
+        throw new Error(`${this.providerConfig.displayName}: User has not set ${this.getKeyLabel(providerKey)} API key`);
     }
 }

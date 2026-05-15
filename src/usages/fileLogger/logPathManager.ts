@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  文件路径管理器
- *  负责管理日志文件的目录结构: logs/usages/YYYY-MM-DD/HH.jsonl
+ *  File Path Manager
+ *  Responsible for managing log file directory structure: logs/usages/YYYY-MM-DD/HH.jsonl
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
@@ -11,21 +11,21 @@ import { DateUtils } from './dateUtils';
 import type { LogFilePath } from './types';
 
 /**
- * 文件路径管理器
- * 管理日志文件的目录结构
+ * File Path Manager
+ * Manages log file directory structure
  */
 export class LogPathManager {
     private readonly baseDir: string;
 
     /**
-     * @param baseDir 日志根目录(使用 extensionContext.globalStorageUri.fsPath 确保不被清理)
+     * @param baseDir Log root directory (use extensionContext.globalStorageUri.fsPath to ensure not cleaned up)
      */
     constructor(baseDir: string) {
         this.baseDir = path.join(baseDir, 'usages');
     }
 
     /**
-     * 获取指定时间戳的日志文件路径
+     * Get Log File Path for Specified Timestamp
      */
     getLogPath(timestamp: number): LogFilePath {
         const date = new Date(timestamp);
@@ -33,7 +33,7 @@ export class LogPathManager {
     }
 
     /**
-     * 获取指定日期对象的日志文件路径
+     * Get Log File Path for Specified Date Object
      */
     getLogPathFromDate(date: Date): LogFilePath {
         const dateStr = DateUtils.formatDate(date);
@@ -53,14 +53,14 @@ export class LogPathManager {
     }
 
     /**
-     * 获取指定日期字符串的文件夹路径
+     * Get Folder Path for Specified Date String
      */
     getDateFolderPath(dateStr: string): string {
         return path.join(this.baseDir, dateStr);
     }
 
     /**
-     * 获取指定日期和小时的文件路径
+     * Get File Path for Specified Date and Hour
      */
     getHourFilePath(dateStr: string, hour: number): string {
         const dateFolder = this.getDateFolderPath(dateStr);
@@ -69,31 +69,31 @@ export class LogPathManager {
     }
 
     /**
-     * 获取当前时刻的日志文件路径
+     * Get Log File Path for Current Moment
      */
     getCurrentLogPath(): LogFilePath {
         return this.getLogPath(Date.now());
     }
 
     /**
-     * 获取基础目录路径
+     * Get Base Directory Path
      */
     getBaseDir(): string {
         return this.baseDir;
     }
 
     /**
-     * 确保目录存在(递归创建)
+     * Ensure Directory Exists (recursive creation)
      */
     async ensureDirectoryExists(dir: string): Promise<void> {
         try {
-            // 同步检查避免竞态条件
+            // Synchronous check to avoid race conditions
             if (!fsSync.existsSync(dir)) {
                 await fs.mkdir(dir, { recursive: true });
-                StatusLogger.debug(`[LogPathManager] 创建目录: ${dir}`);
+                StatusLogger.debug(`[LogPathManager] Created directory: ${dir}`);
             }
         } catch (err) {
-            // 忽略已存在错误
+            // Ignore already exists error
             const error = err as NodeJS.ErrnoException;
             if (error.code !== 'EEXIST') {
                 throw err;

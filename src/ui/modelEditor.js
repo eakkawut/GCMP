@@ -925,7 +925,7 @@ function validateJSON_UI(fieldId) {
     const errorDiv = document.getElementById(fieldId + 'Error');
     const content = textarea.value.trim();
 
-    // 移除所有验证状态类
+    // remove all validation status classes
     textarea.classList.remove('json-valid', 'json-invalid');
     if (errorDiv) {
         errorDiv.classList.remove('show');

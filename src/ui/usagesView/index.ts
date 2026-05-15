@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
  *  Token Usages View
- *  Token 用量详细视图
+ *  Token Usage Detailed View
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -12,7 +12,7 @@ import { UpdateDateDetailsMessage, UpdateDateListMessage } from './types';
 import { getTodayDateString } from './utils';
 
 /**
- * WebView 消息类型定义
+ * WebView Message Type Definitions
  */
 type WebViewMessage =
     | { command: 'getInitialData' }
@@ -21,37 +21,37 @@ type WebViewMessage =
     | { command: 'openStorageDir' };
 
 /**
- * Token 用量 WebView 视图
+ * Token Usage WebView View
  */
 export class TokenUsagesView {
     private panel: vscode.WebviewPanel | undefined;
     private usagesManager: TokenUsagesManager;
     private updateDisposable: vscode.Disposable | undefined;
-    private currentSelectedDate: string | undefined; // 当前查看的日期
-    private hasCheckedOutdatedStats: boolean = false; // 是否已检查过过期统计
+    private currentSelectedDate: string | undefined; // Currently viewed date
+    private hasCheckedOutdatedStats: boolean = false; // Whether outdated stats have been checked
 
     constructor(private context: vscode.ExtensionContext) {
         this.usagesManager = TokenUsagesManager.instance;
     }
 
     /**
-     * 显示 WebView
+     * Show WebView
      */
     show(): void {
-        // 如果面板已存在，直接显示
+        // If panel already exists, just show it
         if (this.panel) {
             this.panel.reveal();
             return;
         }
 
-        // 重置检查标志，每次打开时都检查过期统计
+        // Reset check flag, check outdated stats each time opened
         this.hasCheckedOutdatedStats = false;
 
-        // 获取今日日期作为标题
+        // Get today's date as title
         const today = getTodayDateString();
         this.panel = vscode.window.createWebviewPanel(
             'ccmpTokenStats',
-            `CCMP Token 消耗统计 - ${today}`,
+            `CCMP Token Consumption Statistics - ${today}`,
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -61,21 +61,21 @@ export class TokenUsagesView {
 
         this.updateView();
 
-        // 监听消息
+        // Listen for messages
         this.panel.webview.onDidReceiveMessage(
             message => this.handleMessage(message),
             undefined,
             this.context.subscriptions
         );
 
-        // 监听统计更新事件，智能刷新视图
+        // Listen for stats update events, intelligently refresh view
         this.updateDisposable = this.usagesManager.onStatsUpdate(() => {
             if (this.panel) {
                 this.smartRefresh();
             }
         });
 
-        // 监听关闭
+        // Listen for close event
         this.panel.onDidDispose(() => {
             this.panel = undefined;
             this.updateDisposable?.dispose();
@@ -84,7 +84,7 @@ export class TokenUsagesView {
     }
 
     /**
-     * 更新视图内容
+     * Update view content
      */
     private async updateView(selectedDate?: string): Promise<void> {
         if (!this.panel) {
@@ -92,32 +92,32 @@ export class TokenUsagesView {
         }
 
         try {
-            // 检查并重新生成过期的统计数据（仅在首次打开时执行）
+            // Check and regenerate outdated statistics (only executed on first open)
             if (!this.hasCheckedOutdatedStats) {
                 await this.usagesManager.getFileLogger().regenerateOutdatedStats();
                 this.hasCheckedOutdatedStats = true;
             }
 
-            // 获取所有日期摘要
+            // Get all date summaries
             await this.usagesManager.getAllDateSummaries();
 
-            // 确定要显示的日期（默认为今日）
+            // Determine date to display (default to today)
             const today = getTodayDateString();
             const displayDate = selectedDate || today;
 
-            // 记录当前查看的日期
+            // Record currently viewed date
             this.currentSelectedDate = displayDate;
 
             this.panel.webview.html = this.getWebviewContent();
         } catch (err) {
-            StatusLogger.error('[TokenUsagesView] 更新视图失败:', err);
+            StatusLogger.error('[TokenUsagesView] Failed to update view:', err);
         }
     }
 
     /**
-     * 智能刷新 - 数据变更时总是通知页面更新
-     * - 如果正在查看今日：刷新整个详情（包括请求记录）+ 更新日期列表
-     * - 如果正在查看其他日期：只刷新左侧日期列表的统计数字
+     * Smart refresh - always notify page update when data changes
+     * - If viewing today: refresh entire details (including request records) + update date list
+     * - If viewing other dates: only refresh left date list statistics
      */
     private async smartRefresh(): Promise<void> {
         if (!this.panel) {
@@ -128,23 +128,23 @@ export class TokenUsagesView {
         const isViewingToday = this.currentSelectedDate === today;
 
         StatusLogger.debug(
-            `[TokenUsagesView] 智能刷新: 查看日期=${this.currentSelectedDate}, 今日=${today}, 是否查看今日=${isViewingToday}`
+            `[TokenUsagesView] Smart refresh: viewing date=${this.currentSelectedDate}, today=${today}, viewing today=${isViewingToday}`
         );
 
         if (isViewingToday) {
-            // 查看今日 - 刷新整个详情（包括请求记录）+ 更新日期列表
-            StatusLogger.debug('[TokenUsagesView] 刷新今日详情 + 日期列表');
+            // Viewing today - refresh entire details (including request records) + update date list
+            StatusLogger.debug('[TokenUsagesView] Refresh today details + date list');
             await this.updateDateDetails(today);
             await this.updateDateListOnly();
         } else {
-            // 查看其他日期 - 只刷新日期列表统计
-            StatusLogger.debug('[TokenUsagesView] 仅刷新日期列表');
+            // Viewing other dates - only refresh date list statistics
+            StatusLogger.debug('[TokenUsagesView] Only refresh date list');
             await this.updateDateListOnly();
         }
     }
 
     /**
-     * 只更新日期列表的统计数字，不刷新右侧详情
+     * Only update date list statistics, do not refresh right side details
      */
     private async updateDateListOnly(): Promise<void> {
         if (!this.panel) {
@@ -154,7 +154,7 @@ export class TokenUsagesView {
         try {
             const dateSummaries = await this.usagesManager.getAllDateSummaries();
             const today = getTodayDateString();
-            // 直接发送原始数据，让组件自己处理格式化
+            // Send raw data directly, let components handle formatting themselves
             this.panel.webview.postMessage({
                 command: 'updateDateList',
                 dateList: dateSummaries,
@@ -162,12 +162,12 @@ export class TokenUsagesView {
                 today
             } as UpdateDateListMessage);
         } catch (err) {
-            StatusLogger.error('[TokenUsagesView] 更新日期列表失败:', err);
+            StatusLogger.error('[TokenUsagesView] Failed to update date list:', err);
         }
     }
 
     /**
-     * 发送初始数据给 WebView
+     * Send initial data to WebView
      */
     private async sendInitialData(): Promise<void> {
         if (!this.panel) {
@@ -179,20 +179,20 @@ export class TokenUsagesView {
             const today = getTodayDateString();
             const displayDate = today;
 
-            // 获取选中日期的详细数据
+            // Get detailed data for selected date
             const dateStats = await this.usagesManager.getDateStatsFromFile(displayDate);
             const dateRecords = await this.usagesManager.getDateRecords(displayDate);
 
-            // 转换 providers 为数组，同时添加 providerKey 字段（因为 Object.values 会丢失 key）
+            // Convert providers to array, while adding providerKey field (because Object.values loses key)
             const providers = Object.entries(dateStats.providers).map(([key, value]) => ({
                 ...value,
                 providerKey: key
             }));
 
-            // 更新当前状态
+            // Update current state
             this.currentSelectedDate = displayDate;
 
-            // 发送日期列表（直接发送原始数据，全量）
+            // Send date list (send raw data directly, full)
             this.panel.webview.postMessage({
                 command: 'updateDateList',
                 dateList: dateSummaries,
@@ -200,24 +200,24 @@ export class TokenUsagesView {
                 today
             } as UpdateDateListMessage);
 
-            // 发送日期详情（直接发送原始数据）
+            // Send date details (send raw data directly)
             this.panel.webview.postMessage({
                 command: 'updateDateDetails',
                 date: displayDate,
                 isToday: displayDate === today,
                 providers: providers,
                 hourlyStats: dateStats.hourly || {},
-                records: dateRecords // getDateRecords 已经返回扩展后的记录
+                records: dateRecords // getDateRecords already returns extended records
             } as UpdateDateDetailsMessage);
 
-            StatusLogger.debug('[TokenUsagesView] 已发送初始数据');
+            StatusLogger.debug('[TokenUsagesView] Initial data sent');
         } catch (err) {
-            StatusLogger.error('[TokenUsagesView] 发送初始数据失败:', err);
+            StatusLogger.error('[TokenUsagesView] Failed to send initial data:', err);
         }
     }
 
     /**
-     * 处理来自 WebView 的消息
+     * Handle messages from WebView
      */
     private async handleMessage(message: WebViewMessage): Promise<void> {
         switch (message.command) {
@@ -240,31 +240,31 @@ export class TokenUsagesView {
     }
 
     /**
-     * 更新日期详情（动态更新）
+     * Update date details (dynamic update)
      */
     private async updateDateDetails(date: string): Promise<void> {
         try {
             const today = getTodayDateString();
 
-            // 从文件直接读取,不使用缓存
+            // Read directly from file, without using cache
             const dateStats = await this.usagesManager.getDateStatsFromFile(date);
             const dateRecords = await this.usagesManager.getDateRecords(date);
 
-            // 转换 providers 为数组，同时添加 providerKey 字段（因为 Object.values 会丢失 key）
+            // Convert providers to array, while adding providerKey field (because Object.values loses key)
             const providers = Object.entries(dateStats.providers).map(([key, value]) => ({
                 ...value,
                 providerKey: key
             }));
 
-            // 更新当前状态
+            // Update current state
             this.currentSelectedDate = date;
 
-            // 更新面板标题
+            // Update panel title
             if (this.panel) {
-                this.panel.title = `CCMP Token 消耗统计 - ${date}`;
+                this.panel.title = `CCMP Token Consumption Statistics - ${date}`;
             }
 
-            // 发送消息给 WebView，让它更新详情区域
+            // Send message to WebView to update details area
             if (this.panel) {
                 this.panel.webview.postMessage({
                     command: 'updateDateDetails',
@@ -272,62 +272,62 @@ export class TokenUsagesView {
                     isToday: date === today,
                     providers: providers,
                     hourlyStats: dateStats.hourly || {},
-                    records: dateRecords // getDateRecords 已经返回扩展后的记录
+                    records: dateRecords // getDateRecords already returns extended records
                 } as UpdateDateDetailsMessage);
             }
 
-            StatusLogger.debug(`[TokenUsagesView] 已更新日期详情: ${date}, 记录数=${dateRecords.length}`);
+            StatusLogger.debug(`[TokenUsagesView] Date details updated: ${date}, record count=${dateRecords.length}`);
         } catch (err) {
-            StatusLogger.error('[TokenUsagesView] 更新日期详情失败:', err);
+            StatusLogger.error('[TokenUsagesView] Failed to update date details:', err);
         }
     }
 
     /**
-     * 打开存储目录
+     * Open storage directory
      */
     private async openStorageDir(): Promise<void> {
         try {
             const storageDir = this.usagesManager.getStorageDir();
             await vscode.env.openExternal(vscode.Uri.file(storageDir));
-            StatusLogger.debug(`[TokenUsagesView] 已打开存储目录: ${storageDir}`);
+            StatusLogger.debug(`[TokenUsagesView] Storage directory opened: ${storageDir}`);
         } catch (err) {
-            StatusLogger.error('[TokenUsagesView] 打开存储目录失败:', err);
-            vscode.window.showErrorMessage('打开存储目录失败');
+            StatusLogger.error('[TokenUsagesView] Failed to open storage directory:', err);
+            vscode.window.showErrorMessage('Failed to open storage directory');
         }
     }
 
     /**
-     * 生成 WebView HTML 内容
+     * Generate WebView HTML content
      */
     private getWebviewContent(): string {
         const cspSource = this.panel?.webview.cspSource || '';
 
-        // 读取编译后的应用 JS 文件（已包含框架和应用代码）
+        // Read compiled application JS file (already includes framework and application code)
         const usagesViewJsPath = path.join(this.context.extensionPath, 'dist', 'ui', 'usagesView.js');
         let usagesViewJs = '';
         try {
             usagesViewJs = fs.readFileSync(usagesViewJsPath, 'utf8');
         } catch (error) {
-            StatusLogger.error('[TokenUsagesView] 读取 usagesView.js 失败:', error);
+            StatusLogger.error('[TokenUsagesView] Failed to read usagesView.js:', error);
             usagesViewJs = '/* Error loading usagesView.js */';
         }
 
         const htmlContent = `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>CCMP Token 消耗统计</title>
+	<title>CCMP Token Consumption Statistics</title>
 	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${cspSource}; script-src 'unsafe-inline' ${cspSource};" />
 </head>
 <body>
 	<div id="app"></div>
 	<script>
-		// 注入 VSCode API（必须在其他脚本之前）
+		// Inject VSCode API (must be before other scripts)
 		const vscode = acquireVsCodeApi();
 		window.vscode = vscode;
 
-		// 加载应用（IIFE，已包含框架和应用代码）
+		// Load application (IIFE, already includes framework and application code)
 		${usagesViewJs}
 	</script>
 </body>
@@ -337,7 +337,7 @@ export class TokenUsagesView {
     }
 
     /**
-     * 销毁视图
+     * Destroy view
      */
     dispose(): void {
         this.updateDisposable?.dispose();

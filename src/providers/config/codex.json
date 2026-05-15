@@ -12,11 +12,17 @@
             "id": "gpt-5.2",
             "name": "GPT-5.2 (ChatGPT)",
             "sdkMode": "openai-responses",
-            "tooltip": "ChatGPT 提供的 GPT-5.2 模型，通过 Codex 端点访问，适合代码生成与理解任务",
+            "tooltip": "GPT-5.2 model provided by ChatGPT, accessed via Codex endpoint, suitable for code generation and understanding tasks",
             "maxInputTokens": 192000,
             "maxOutputTokens": 64000,
             "useInstructions": true,
-            "reasoningEffort": ["none", "low", "medium", "high", "xhigh"],
+            "reasoningEffort": [
+                "none",
+                "low",
+                "medium",
+                "high",
+                "xhigh"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -34,11 +40,17 @@
             "id": "gpt-5.2-codex",
             "name": "GPT-5.2-Codex (ChatGPT)",
             "sdkMode": "openai-responses",
-            "tooltip": "OpenAI 迄今最前沿的智能体编码模型，赋能复杂软件工程实践",
+            "tooltip": "OpenAI's most advanced agent coding model to date, empowering complex software engineering practices",
             "maxInputTokens": 272000,
             "maxOutputTokens": 128000,
             "useInstructions": true,
-            "reasoningEffort": ["none", "low", "medium", "high", "xhigh"],
+            "reasoningEffort": [
+                "none",
+                "low",
+                "medium",
+                "high",
+                "xhigh"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -56,11 +68,17 @@
             "id": "gpt-5.3-codex",
             "name": "GPT-5.3-Codex (ChatGPT)",
             "sdkMode": "openai-responses",
-            "tooltip": "OpenAI 迄今能力最强的智能体编程模型，运行速度提升25%，支持跨电脑专业工作",
+            "tooltip": "OpenAI's most capable agent programming model to date, with 25% faster execution speed, supporting cross-computer professional work",
             "maxInputTokens": 272000,
             "maxOutputTokens": 128000,
             "useInstructions": true,
-            "reasoningEffort": ["none", "low", "medium", "high", "xhigh"],
+            "reasoningEffort": [
+                "none",
+                "low",
+                "medium",
+                "high",
+                "xhigh"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -78,11 +96,17 @@
             "id": "gpt-5.4",
             "name": "GPT-5.4 (ChatGPT)",
             "sdkMode": "openai-responses",
-            "tooltip": "OpenAI 针对专业化工作负载能力最强、效率最高的前沿模型，整合GPT-5.3-Codex编程能力",
+            "tooltip": "OpenAI's most capable and efficient frontier model for specialized workloads, integrating GPT-5.3-Codex programming capabilities",
             "maxInputTokens": 272000,
             "maxOutputTokens": 128000,
             "useInstructions": true,
-            "reasoningEffort": ["none", "low", "medium", "high", "xhigh"],
+            "reasoningEffort": [
+                "none",
+                "low",
+                "medium",
+                "high",
+                "xhigh"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -100,11 +124,17 @@
             "id": "gpt-5.4-mini",
             "name": "GPT-5.4 mini (ChatGPT)",
             "sdkMode": "openai-responses",
-            "tooltip": "OpenAI 迄今能力最强的小型模型，快速高效，专为代码编写与子智能体优化，Codex中仅消耗GPT-5.4配额的30%",
+            "tooltip": "OpenAI's most capable small model to date, fast and efficient, optimized for code writing and sub-agents, consuming only 30% of GPT-5.4 quota in Codex",
             "maxInputTokens": 272000,
             "maxOutputTokens": 128000,
             "useInstructions": true,
-            "reasoningEffort": ["none", "low", "medium", "high", "xhigh"],
+            "reasoningEffort": [
+                "none",
+                "low",
+                "medium",
+                "high",
+                "xhigh"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true
@@ -122,11 +152,17 @@
             "id": "gpt-5.5",
             "name": "GPT-5.5 (ChatGPT)",
             "sdkMode": "openai-responses",
-            "tooltip": "ChatGPT 提供的 GPT-5.5 模型，通过 Codex 端点访问，适合代码生成与理解任务",
+            "tooltip": "GPT-5.5 model provided by ChatGPT, accessed via Codex endpoint, suitable for code generation and understanding tasks",
             "maxInputTokens": 272000,
             "maxOutputTokens": 128000,
             "useInstructions": true,
-            "reasoningEffort": ["none", "low", "medium", "high", "xhigh"],
+            "reasoningEffort": [
+                "none",
+                "low",
+                "medium",
+                "high",
+                "xhigh"
+            ],
             "capabilities": {
                 "toolCalling": true,
                 "imageInput": true

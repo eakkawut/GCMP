@@ -1,29 +1,29 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  兼容提供商余额查询接口和类型定义
+ *  Compatible Provider Balance Query Interface and Type Definitions
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * 余额查询结果
+ * Balance Query Result
  */
 export interface BalanceQueryResult {
-    /** 已支付余额 */
+    /** Paid balance */
     paid?: number;
-    /** 赠送余额 */
+    /** Granted balance */
     granted?: number;
-    /** 可用余额 */
+    /** Available balance */
     balance: number;
-    /** 货币符号(CNY/USD) */
+    /** Currency symbol (CNY/USD) */
     currency: string;
 }
 
 /**
- * 余额查询器接口
+ * Balance Query Interface
  */
 export interface IBalanceQuery {
     /**
-     * 查询提供商余额
-     * @param providerId 提供商标识符
-     * @returns 余额查询结果
+     * Query provider balance
+     * @param providerId Provider identifier
+     * @returns Balance query result
      */
     queryBalance(providerId: string): Promise<BalanceQueryResult>;
 }

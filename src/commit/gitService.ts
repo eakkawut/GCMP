@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  Git 服务
- *  处理所有与 Git 相关的操作
+ *  Git Service
+ *  Handles all Git-related operations
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -25,82 +25,82 @@ function throwIfCancelled(token?: vscode.CancellationToken): void {
 }
 
 export interface GitDiffSection {
-    /** 每个 diff 项对应的文件（索引相同）。 */
+    /** File corresponding to each diff item (same index). */
     uri: vscode.Uri[];
-    /** 每个文件的统一 diff（与 uri 索引相同）。 */
+    /** Unified diff for each file (same index as uri). */
     diff: string[];
 }
 
 export interface GitDiffParts {
     staged: GitDiffSection;
-    /** working tree tracked 文件的变更（unstaged）。 */
+    /** Changes for working tree tracked files (unstaged). */
     tracked: GitDiffSection;
     untracked: GitDiffSection;
 }
 
 /**
- * 检查 Git 可用性并设置上下文变量
- * 用于控制 Commit 消息生成按钮的显示
+ * Check Git availability and set context variable
+ * Used to control the display of Commit message generation button
  *
- * @returns vscode.Disposable 返回一个 Disposable 用于清理监听器
+ * @returns vscode.Disposable Returns a Disposable for cleaning up listeners
  */
 export function checkGitAvailability(): vscode.Disposable {
     const disposables: vscode.Disposable[] = [];
 
-    // 监听扩展的启用状态变化
+    // Listen for extension enablement status changes
     const onDidChangeGitExtensionEnablement = (enabled: boolean) => {
         if (enabled) {
             vscode.commands.executeCommand('setContext', 'ccmp.gitAvailable', true);
-            Logger.debug('[Git] vscode.git 扩展已启用，Commit 消息生成功能已启用');
+            Logger.debug('[Git] vscode.git extension enabled, Commit message generation feature enabled');
         } else {
             vscode.commands.executeCommand('setContext', 'ccmp.gitAvailable', false);
-            Logger.warn('[Git] vscode.git 扩展已禁用，Commit 消息生成功能将被隐藏');
+            Logger.warn('[Git] vscode.git extension disabled, Commit message generation feature will be hidden');
         }
     };
 
-    // 初始化 Git 扩展
+    // Initialize Git extension
     const initialize = () => {
         const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git');
 
         if (!gitExtension) {
-            // vscode.git 扩展不存在（可能被禁用或未安装）
+            // vscode.git extension does not exist (may be disabled or not installed)
             vscode.commands.executeCommand('setContext', 'ccmp.gitAvailable', false);
-            Logger.warn('[Git] vscode.git 扩展未找到，Commit 消息生成功能将被隐藏');
+            Logger.warn('[Git] vscode.git extension not found, Commit message generation feature will be hidden');
             return;
         }
 
-        // 激活扩展并监听启用状态变化
+        // Activate extension and listen for enablement status changes
         gitExtension.activate().then(
             extension => {
-                // 监听扩展启用状态变化
+                // Listen for extension enablement status changes
                 disposables.push(extension.onDidChangeEnablement(onDidChangeGitExtensionEnablement));
 
-                // 设置初始状态
+                // Set initial status
                 onDidChangeGitExtensionEnablement(extension.enabled);
             },
             (error: unknown) => {
-                // 发生错误，认为 Git 不可用
+                // Error occurred, consider Git unavailable
                 vscode.commands.executeCommand('setContext', 'ccmp.gitAvailable', false);
-                Logger.warn('[Git] 检查 Git 可用性时出错:', error);
+                Logger.warn('[Git] Error checking Git availability:', error);
             }
         );
     };
 
-    // 尝试立即初始化
+    // Try to initialize immediately
     initialize();
 
-    // 监听扩展的安装/启用事件
+    // Listen for extension install/enable events
     const listener = vscode.extensions.onDidChange(() => {
         const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git');
         if (gitExtension) {
-            // vscode.git 扩展已安装，初始化并移除监听器
+            // vscode.git extension installed, initialize and remove listener
             initialize();
             listener.dispose();
         }
     });
     disposables.push(listener);
 
-    // 返回一个 Disposable 用于清理所有监听器
+    // Return a Disposable for cleaning up all listeners
     return {
         dispose: () => {
             for (const disposable of disposables) {
@@ -112,15 +112,15 @@ export function checkGitAvailability(): vscode.Disposable {
 }
 
 /**
- * Git 服务类
- * 负责执行 Git 命令和管理 repository
+ * Git Service class
+ * Responsible for executing Git commands and managing repositories
  */
 export class GitService {
     private static gitApi: API | null = null;
     private static execFileAsync = promisify(execFile);
 
     /**
-     * 验证 Git 扩展是否可用
+     * Validate Git extension availability
      */
     static async validateGitExtension(): Promise<void> {
         const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git');
@@ -148,7 +148,7 @@ export class GitService {
     }
 
     /**
-     * 获取所有 repository
+     * Get all repositories
      */
     static async getRepositories(): Promise<Repository[]> {
         if (!this.gitApi) {
@@ -164,7 +164,7 @@ export class GitService {
     }
 
     /**
-     * 让用户选择 repository
+     * Let user select repository
      */
     static async selectRepository(repos: Repository[]): Promise<Repository> {
         const items = repos.map(repo => ({
@@ -174,7 +174,7 @@ export class GitService {
         }));
 
         const selected = await vscode.window.showQuickPick(items, {
-            placeHolder: '选择一个 Git repository'
+            placeHolder: 'Select a Git repository'
         });
 
         if (!selected) {
@@ -185,12 +185,12 @@ export class GitService {
     }
 
     /**
-     * 获取代码 diff（分部分返回）
-     * - staged: staged 变更
-     * - tracked: working tree tracked 文件的 unstaged 变更
-     * - untracked: untracked 新文件（以"新增文件"unified diff 形式拼出）
+     * Get code diff (returned in parts)
+     * - staged: staged changes
+     * - tracked: unstaged changes for working tree tracked files
+     * - untracked: untracked new files (pasted in "new file" unified diff format)
      *
-     * 每个部分都返回 { uri: [], diff: [] }，两数组按 index 对齐。
+     * Each part returns { uri: [], diff: [] }, two arrays aligned by index.
      */
     static async getDiff(
         repoPath: string,
@@ -229,7 +229,7 @@ export class GitService {
 
             return { staged, tracked, untracked };
         } catch (error) {
-            Logger.error('[GitService] 获取 diff 失败:', error);
+            Logger.error('[GitService] Failed to get diff:', error);
             throw error;
         }
     }
@@ -252,7 +252,7 @@ export class GitService {
             if (!filePath || filePath === '(unknown-file)') {
                 continue;
             }
-            // filePath 是相对于 repository 的路径，使用正斜杠。
+            // filePath is a path relative to the repository, using forward slashes.
             const fsPath = path.join(repoPath, filePath);
             uri.push(vscode.Uri.file(fsPath));
             diff.push(snip.excerpt);
@@ -262,13 +262,13 @@ export class GitService {
     }
 
     private static toGitPath(repoPath: string, fileFsPath: string): string {
-        // git diff headers 使用正斜杠和相对于 repository 的路径。
+        // git diff headers use forward slashes and paths relative to the repository.
         const rel = path.relative(repoPath, fileFsPath);
         return rel.split(path.sep).join('/');
     }
 
     private static looksBinary(buf: Uint8Array): boolean {
-        // 启发式判断：NUL 字节几乎总是表示二进制文件。
+        // Heuristic check: NUL bytes almost always indicate binary files.
         return buf.includes(0);
     }
 
@@ -305,7 +305,7 @@ export class GitService {
             return { uri: [], diff: [] };
         }
 
-        // 稳定排序
+        // Stable sort
         untrackedUris.sort((a, b) => a.fsPath.localeCompare(b.fsPath));
 
         const uri: vscode.Uri[] = [];
@@ -339,7 +339,7 @@ export class GitService {
                     patch = this.buildNewFileUnifiedDiff(repoRelativePath, text);
                 }
 
-                // 确保每个文件的 patch 不超过上限。
+                // Ensure each file's patch does not exceed the limit.
                 if (patch.length > maxCharsPerFile) {
                     patch = patch.slice(0, maxCharsPerFile) + '\n... [file excerpt truncated]';
                 }
@@ -347,7 +347,7 @@ export class GitService {
                 uri.push(fileUri);
                 diff.push(patch);
             } catch (e) {
-                Logger.warn('[GitService] 读取 untracked 文件失败:', fileUri.fsPath, e);
+                Logger.warn('[GitService] Failed to read untracked file:', fileUri.fsPath, e);
             }
         }
 
@@ -363,16 +363,16 @@ export class GitService {
 
         const out = new Map<string, vscode.Uri>();
 
-        // 1) 主要来源：VS Code Git API 状态
+        // 1) Primary source: VS Code Git API status
         const untracked = repo.state.untrackedChanges ?? [];
         for (const ch of untracked) {
             out.set(ch.uri.fsPath, ch.uri);
         }
 
-        // 2) 回退方案：某些环境不会填充 `untrackedChanges`，但会在
-        // workingTreeChanges 中标记 untracked 文件。
-        // 注意：Status 是 VS Code git API 中的枚举，但我们不在运行时导入它。
-        // 根据 src/types/git.d.ts 的顺序：
+        // 2) Fallback: some environments do not fill `untrackedChanges`, but will
+        // mark untracked files in workingTreeChanges.
+        // Note: Status is an enum in VS Code git API, but we do not import it at runtime.
+        // According to the order in src/types/git.d.ts:
         // - UNTRACKED = 7
         // - INTENT_TO_ADD = 9
         if (out.size === 0) {
@@ -386,7 +386,7 @@ export class GitService {
             }
         }
 
-        // 3) 硬回退方案：直接询问 git（最可靠）
+        // 3) Hard fallback: query git directly (most reliable)
         if (out.size === 0) {
             try {
                 if (!this.gitApi) {
@@ -394,11 +394,11 @@ export class GitService {
                 }
                 const gitPath = this.gitApi?.git.path;
                 if (gitPath) {
-                    // 使用 -z 避免路径引号问题；解析 NUL 分隔的输出。
+                    // Use -z to avoid path quoting issues; parse NUL-separated output.
                     const { stdout } = await this.execFileAsync(
                         gitPath,
                         ['ls-files', '--others', '--exclude-standard', '-z'],
-                        // 请求 Buffer 以避免编码/类型边缘情况。
+                        // Request Buffer to avoid encoding/type edge cases.
                         { cwd: repoPath, windowsHide: true, encoding: null }
                     );
                     const buf = stdout as Buffer;
@@ -413,7 +413,7 @@ export class GitService {
                     }
                 }
             } catch (e) {
-                Logger.warn('[GitService] git ls-files 获取 untracked 失败:', e);
+                Logger.warn('[GitService] git ls-files failed to get untracked:', e);
             }
         }
 
@@ -421,9 +421,9 @@ export class GitService {
     }
 
     /**
-     * 获取指定文件的最近 commit 历史（用于生成 commit 消息的上下文）。
-     * 说明：这里使用 git log 而不是逐行 git blame，原因是 blame 在未 commit/大改动时
-     * 行号映射复杂且开销大；log 的信息对"写出本次 commit 信息"更直接。
+     * Get recent commit history for specified files (for context in generating commit messages).
+     * Description: Here we use git log instead of line-by-line git blame, because blame has complex
+     * line number mapping and high overhead when not committed/large changes; log information is more direct for "writing this commit info".
      */
     static async getRecentCommitsForFiles(
         repoPath: string,
@@ -439,7 +439,7 @@ export class GitService {
         const maxCommitsPerFile = 3;
         const selectedFiles = uniqueFiles.slice(0, maxFiles);
 
-        // 跨路径去重（重命名的旧路径/新路径往往共享相同的 commit 历史）。
+        // Deduplicate across paths (renamed old path/new path often share the same commit history).
         const commitMap = new Map<
             string,
             {
@@ -513,7 +513,7 @@ export class GitService {
     }
 
     /**
-     * 获取仓库最近提交历史（与文件无关，用于让模型推断仓库的提交规范）。
+     * Get repository recent commit history (unrelated to files, used to let the model infer the repository's commit conventions).
      */
     static async getRecentCommits(
         repoPath: string,

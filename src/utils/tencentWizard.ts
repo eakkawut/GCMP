@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  腾讯云配置向导
- *  提供交互式向导来配置付费模型、Coding Plan、Token Plan 和 DeepSeek 专用密钥
+ *  Tencent Cloud Configuration Wizard
+ *  Provides interactive wizard to configure paid models, Coding Plan, Token Plan, and DeepSeek dedicated keys
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -24,40 +24,40 @@ export class TencentWizard {
             const choice = await vscode.window.showQuickPick(
                 [
                     {
-                        label: '$(key) 设置付费模型 API 密钥',
-                        detail: '用于腾讯混元与腾讯云第三方大模型按量计费模型',
+                        label: '$(key) Set Paid Model API Key',
+                        detail: 'For Tencent Hunyuan and Tencent Cloud third-party large model pay-as-you-go models',
                         value: 'normal'
                     },
                     {
-                        label: '$(key) 设置 Coding Plan 专用密钥',
-                        detail: '用于腾讯云 Coding Plan 模型',
+                        label: '$(key) Set Coding Plan Dedicated Key',
+                        detail: 'For Tencent Cloud Coding Plan models',
                         value: 'coding'
                     },
                     {
-                        label: '$(key) 设置 Token Plan 专用密钥',
-                        detail: '用于腾讯云 Token Plan 模型',
+                        label: '$(key) Set Token Plan Dedicated Key',
+                        detail: 'For Tencent Cloud Token Plan models',
                         value: 'tokenPlan'
                     },
                     {
-                        label: '$(key) 设置 DeepSeek 专用密钥',
-                        detail: '用于腾讯云知识引擎原子能力 DeepSeek 模型',
+                        label: '$(key) Set DeepSeek Dedicated Key',
+                        detail: 'For Tencent Cloud Knowledge Engine Atomic Capability DeepSeek models',
                         value: 'deepseek'
                     },
                     {
-                        label: '$(key) 设置 TokenHub 计费密钥',
-                        detail: '用于腾讯云 TokenHub 按量付费模型',
+                        label: '$(key) Set TokenHub Billing Key',
+                        detail: 'For Tencent Cloud TokenHub pay-as-you-go models',
                         value: 'tokenhub'
                     },
                     {
-                        label: '$(check-all) 依次配置全部项目',
-                        detail: '按顺序配置付费密钥、Coding Plan 密钥、Token Plan 密钥、DeepSeek 密钥和 TokenHub 密钥',
+                        label: '$(check-all) Configure All Items in Sequence',
+                        detail: 'Configure paid key, Coding Plan key, Token Plan key, DeepSeek key, and TokenHub key in order',
                         value: 'all'
                     }
                 ],
-                { title: `${displayName} 配置向导`, placeHolder: '请选择要配置的项目' }
+                { title: `${displayName} Configuration Wizard`, placeHolder: 'Select items to configure' }
             );
             if (!choice) {
-                Logger.debug('用户取消了腾讯云配置向导');
+                Logger.debug('User cancelled Tencent Cloud configuration wizard');
                 return;
             }
 
@@ -77,62 +77,62 @@ export class TencentWizard {
                 await this.setTokenHubApiKey(apiKeyTemplate);
             }
         } catch (error) {
-            Logger.error(`腾讯云配置向导出错: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error(`Tencent Cloud configuration wizard error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     static async setApiKey(apiKeyTemplate: string): Promise<void> {
         await this.promptForApiKey({
             providerKey: this.PROVIDER_KEY,
-            prompt: '请输入 腾讯云大模型 API Key（留空可清除）',
-            title: '设置 腾讯云大模型 API Key',
+            prompt: 'Enter Tencent Cloud large model API Key (leave blank to clear)',
+            title: 'Set Tencent Cloud large model API Key',
             placeHolder: apiKeyTemplate,
-            successMessage: '腾讯云大模型 API Key 已设置',
-            clearMessage: '腾讯云大模型 API Key 已清除'
+            successMessage: 'Tencent Cloud large model API Key has been set',
+            clearMessage: 'Tencent Cloud large model API Key has been cleared'
         });
     }
 
     static async setCodingPlanApiKey(codingKeyTemplate?: string): Promise<void> {
         await this.promptForApiKey({
             providerKey: this.CODING_PLAN_KEY,
-            prompt: '请输入 腾讯云 Coding Plan 专用 API Key（留空可清除）',
-            title: '设置 腾讯云 Coding Plan 专用 API Key',
+            prompt: 'Enter Tencent Cloud Coding Plan dedicated API Key (leave blank to clear)',
+            title: 'Set Tencent Cloud Coding Plan dedicated API Key',
             placeHolder: codingKeyTemplate,
-            successMessage: '腾讯云 Coding Plan 专用 API Key 已设置',
-            clearMessage: '腾讯云 Coding Plan 专用 API Key 已清除'
+            successMessage: 'Tencent Cloud Coding Plan dedicated API Key has been set',
+            clearMessage: 'Tencent Cloud Coding Plan dedicated API Key has been cleared'
         });
     }
 
     static async setTokenPlanApiKey(tokenPlanKeyTemplate?: string): Promise<void> {
         await this.promptForApiKey({
             providerKey: this.TOKEN_PLAN_KEY,
-            prompt: '请输入 腾讯云 Token Plan 专用 API Key（留空可清除）',
-            title: '设置 腾讯云 Token Plan 专用 API Key',
+            prompt: 'Enter Tencent Cloud Token Plan dedicated API Key (leave blank to clear)',
+            title: 'Set Tencent Cloud Token Plan dedicated API Key',
             placeHolder: tokenPlanKeyTemplate,
-            successMessage: '腾讯云 Token Plan 专用 API Key 已设置',
-            clearMessage: '腾讯云 Token Plan 专用 API Key 已清除'
+            successMessage: 'Tencent Cloud Token Plan dedicated API Key has been set',
+            clearMessage: 'Tencent Cloud Token Plan dedicated API Key has been cleared'
         });
     }
 
     static async setDeepSeekApiKey(apiKeyTemplate?: string): Promise<void> {
         await this.promptForApiKey({
             providerKey: this.DEEPSEEK_KEY,
-            prompt: '请输入 腾讯云 DeepSeek 专用 API Key（留空可清除）',
-            title: '设置 腾讯云 DeepSeek 专用 API Key',
+            prompt: 'Enter Tencent Cloud DeepSeek dedicated API Key (leave blank to clear)',
+            title: 'Set Tencent Cloud DeepSeek dedicated API Key',
             placeHolder: apiKeyTemplate,
-            successMessage: '腾讯云 DeepSeek 专用 API Key 已设置',
-            clearMessage: '腾讯云 DeepSeek 专用 API Key 已清除'
+            successMessage: 'Tencent Cloud DeepSeek dedicated API Key has been set',
+            clearMessage: 'Tencent Cloud DeepSeek dedicated API Key has been cleared'
         });
     }
 
     static async setTokenHubApiKey(apiKeyTemplate?: string): Promise<void> {
         await this.promptForApiKey({
             providerKey: this.TOKENHUB_KEY,
-            prompt: '请输入 腾讯云 TokenHub API Key（留空可清除）',
-            title: '设置 腾讯云 TokenHub API Key',
+            prompt: 'Enter Tencent Cloud TokenHub API Key (leave blank to clear)',
+            title: 'Set Tencent Cloud TokenHub API Key',
             placeHolder: apiKeyTemplate,
-            successMessage: '腾讯云 TokenHub API Key 已设置',
-            clearMessage: '腾讯云 TokenHub API Key 已清除'
+            successMessage: 'Tencent Cloud TokenHub API Key has been set',
+            clearMessage: 'Tencent Cloud TokenHub API Key has been cleared'
         });
     }
 
@@ -167,8 +167,8 @@ export class TencentWizard {
             vscode.window.showInformationMessage(options.successMessage);
             return true;
         } catch (error) {
-            Logger.error(`腾讯云 API Key 操作失败: ${error instanceof Error ? error.message : '未知错误'}`);
-            vscode.window.showErrorMessage(`设置失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error(`Tencent Cloud API Key operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            vscode.window.showErrorMessage(`Setup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
             return false;
         }
     }

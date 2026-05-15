@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  Xiaomi MiMo 专用 Provider
- *  为 Xiaomi MiMo 提供多密钥管理和 Token Plan 支持
+ *  Xiaomi MiMo Dedicated Provider
+ *  Provides multi-key management and Token Plan support for Xiaomi MiMo
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -28,19 +28,19 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
         providerKey: string,
         providerConfig: ProviderConfig
     ): { provider: XiaomimimoProvider; disposables: vscode.Disposable[] } {
-        Logger.trace(`${providerConfig.displayName} 专用模型扩展已激活!`);
+        Logger.trace(`${providerConfig.displayName} Dedicated Model Extension Activated!`);
 
         const provider = new XiaomimimoProvider(context, providerKey, providerConfig);
         const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`ccmp.${providerKey}`, provider);
 
-        // 普通 API Key
+        // Normal API Key
         const setApiKeyCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.setApiKey`, async () => {
             await XiaomimimoWizard.setNormalApiKey(providerConfig.displayName, providerConfig.apiKeyTemplate);
             await provider.modelInfoCache?.invalidateCache(providerKey);
             provider._onDidChangeLanguageModelChatInformation.fire();
         });
 
-        // Token Plan 专用 API Key
+        // Token Plan Dedicated API Key
         const setTokenPlanApiKeyCommand = vscode.commands.registerCommand(
             `ccmp.${providerKey}.setTokenPlanApiKey`,
             async () => {
@@ -53,13 +53,13 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
         const setTokenPlanEndpointCommand = vscode.commands.registerCommand(
             `ccmp.${providerKey}.setTokenPlanEndpoint`,
             async () => {
-                Logger.info(`用户手动打开 ${providerConfig.displayName} Token Plan 接入点选择`);
+                Logger.info(`User manually opened ${providerConfig.displayName} Token Plan endpoint selection`);
                 await XiaomimimoWizard.setTokenPlanEndpoint(providerConfig.displayName);
             }
         );
 
         const configWizardCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.configWizard`, async () => {
-            Logger.info(`启动 ${providerConfig.displayName} 配置向导`);
+            Logger.info(`Starting ${providerConfig.displayName} Configuration Wizard`);
             await XiaomimimoWizard.startWizard(
                 providerConfig.displayName,
                 providerConfig.apiKeyTemplate,
@@ -87,7 +87,7 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
     private async ensureApiKeyForModel(modelConfig: ModelConfig): Promise<string> {
         const providerKey = this.getProviderKeyForModel(modelConfig);
         const isTokenPlan = providerKey === 'xiaomimimo-token';
-        const keyType = isTokenPlan ? 'Token Plan 专用' : '普通';
+        const keyType = isTokenPlan ? 'Token Plan Dedicated' : 'Normal';
 
         const hasApiKey = await ApiKeyManager.hasValidApiKey(providerKey);
         if (hasApiKey) {
@@ -97,7 +97,7 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
             }
         }
 
-        Logger.warn(`模型 ${modelConfig.name} 缺少 ${keyType} API 密钥，进入设置流程`);
+        Logger.warn(`Model ${modelConfig.name} missing ${keyType} API key, entering setup flow`);
 
         if (isTokenPlan) {
             await XiaomimimoWizard.setTokenPlanApiKey(
@@ -110,11 +110,11 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
 
         const apiKey = await ApiKeyManager.getApiKey(providerKey);
         if (apiKey) {
-            Logger.info(`${keyType}密钥设置成功`);
+            Logger.info(`${keyType} key set successfully`);
             return apiKey;
         }
 
-        throw new Error(`${this.providerConfig.displayName}: 用户未设置 ${keyType} API 密钥`);
+        throw new Error(`${this.providerConfig.displayName}: User has not set ${keyType} API key`);
     }
 
     override async provideLanguageModelChatInformation(
@@ -122,7 +122,7 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
         _token: CancellationToken
     ): Promise<LanguageModelChatInformation[]> {
         if (options.configuration) {
-            // 如果请求中包含 configuration，不返回模型列表
+            // If request contains configuration, do not return model list
             return [];
         }
 
@@ -131,7 +131,7 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
         const hasAnyKey = hasNormalKey || hasTokenPlanKey;
 
         if (options.silent && !hasAnyKey) {
-            Logger.debug(`${this.providerConfig.displayName}: 静默模式下，未检测到任何密钥，返回空模型列表`);
+            Logger.debug(`${this.providerConfig.displayName}: In silent mode, no keys detected, returning empty model list`);
             return [];
         }
 
@@ -145,7 +145,7 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
             const normalKeyValid = await ApiKeyManager.hasValidApiKey(this.providerKey);
             const tokenPlanKeyValid = await ApiKeyManager.hasValidApiKey('xiaomimimo-token');
             if (!normalKeyValid && !tokenPlanKeyValid) {
-                Logger.warn(`${this.providerConfig.displayName}: 用户未设置任何密钥，返回空模型列表`);
+                Logger.warn(`${this.providerConfig.displayName}: User has not set any keys, returning empty model list`);
                 return [];
             }
         }
@@ -162,10 +162,10 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
         progress: Progress<vscode.LanguageModelResponsePart>,
         _token: CancellationToken
     ): Promise<void> {
-        // 查找对应的模型配置
+        // Find corresponding model configuration
         const modelConfig = this.findModelConfigById(model);
         if (!modelConfig) {
-            const errorMessage = `未找到模型: ${model.id}`;
+            const errorMessage = `Model not found: ${model.id}`;
             Logger.error(errorMessage);
             throw new Error(errorMessage);
         }
@@ -173,12 +173,12 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
         const providerKey = this.getProviderKeyForModel(modelConfig);
         const apiKey = await this.ensureApiKeyForModel(modelConfig);
         if (!apiKey) {
-            const keyType = providerKey === 'xiaomimimo-token' ? 'Token Plan 专用' : '普通';
-            throw new Error(`${this.providerConfig.displayName}: 无效的 ${keyType} API 密钥`);
+            const keyType = providerKey === 'xiaomimimo-token' ? 'Token Plan Dedicated' : 'Normal';
+            throw new Error(`${this.providerConfig.displayName}: Invalid ${keyType} API key`);
         }
 
         Logger.debug(
-            `${this.providerConfig.displayName}: 即将处理请求，使用 ${providerKey === 'xiaomimimo-token' ? 'Token Plan' : '普通'} 密钥 - 模型: ${modelConfig.name}`
+            `${this.providerConfig.displayName}: About to process request, using ${providerKey === 'xiaomimimo-token' ? 'Token Plan' : 'Normal'} key - Model: ${modelConfig.name}`
         );
 
         const totalInputTokens = await this.updateContextUsageStatusBar(model, messages, modelConfig, options);
@@ -194,12 +194,12 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
                 estimatedInputTokens: totalInputTokens
             });
         } catch (err) {
-            Logger.warn('记录预估Token失败，继续执行请求:', err);
+            Logger.warn('Failed to record estimated Token, continuing with request:', err);
         }
 
         const sdkMode = modelConfig.sdkMode || 'openai';
         const sdkName = this.getSdkDisplayName(sdkMode);
-        Logger.info(`${this.providerConfig.displayName} Provider 开始处理请求 (${sdkName}): ${modelConfig.name}`);
+        Logger.info(`${this.providerConfig.displayName} Provider starting to process request (${sdkName}): ${modelConfig.name}`);
 
         try {
             await this.executeModelRequest(
@@ -217,12 +217,12 @@ export class XiaomimimoProvider extends GenericModelProvider implements Language
                 try {
                     await usagesManager.updateActualTokens({ requestId, status: 'failed' });
                 } catch (err) {
-                    Logger.warn('更新Token统计失败状态失败:', err);
+                    Logger.warn('Failed to update Token statistics status:', err);
                 }
             }
             throw error;
         } finally {
-            Logger.info(`✅ ${this.providerConfig.displayName}: ${model.name} 请求已完成`);
+            Logger.info(`✅ ${this.providerConfig.displayName}: ${model.name} request completed`);
         }
     }
 }

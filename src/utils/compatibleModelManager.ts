@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  自定义模型管理器
- *  用于管理独立兼容提供商的自定义模型
+ *  Custom Model Manager
+ *  Manages custom models for standalone compatible providers
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -12,118 +12,118 @@ import { configProviders } from '../providers/config';
 import { ModelEditor } from '../ui/modelEditor';
 
 /**
- * 后退按钮点击事件
+ * Back button click event
  */
 interface BackButtonClick {
     back: true;
 }
 
 /**
- * 判断是否为后退按钮点击
+ * Check if back button click
  */
 function isBackButtonClick(value: unknown): value is BackButtonClick {
     return typeof value === 'object' && (value as BackButtonClick)?.back === true;
 }
 
 /**
- * 自定义模型配置接口
+ * Custom model configuration interface
  */
 export interface CompatibleModelConfig {
-    /** 模型ID */
+    /** Model ID */
     id: string;
-    /** 模型名称 */
+    /** Model name */
     name: string;
-    /** 提供商标识符 */
+    /** Provider identifier */
     provider: string;
-    /** 模型描述 */
+    /** Model description */
     tooltip?: string;
-    /** API基础URL */
+    /** API base URL */
     baseUrl?: string;
     /**
-     * 自定义 API 端点路径（可选）
-     * 用于替换默认附加到 baseUrl 后的路径（如 /chat/completions、/responses）。
-     * - 相对路径（如 /custom/path）：与 baseUrl 拼接使用
-     * - 完整 URL（如 https://api.example.com/custom）：直接作为请求地址
-     * 仅对 openai、openai-sse、openai-responses 模式生效。
+     * Custom API endpoint path (optional)
+     * Used to replace the default path appended to baseUrl (e.g., /chat/completions, /responses).
+     * - Relative path (e.g., /custom/path): concatenated with baseUrl
+     * - Full URL (e.g., https://api.example.com/custom): used directly as request address
+     * Only effective for openai, openai-sse, openai-responses modes.
      */
     endpoint?: string;
-    /** API请求时使用的模型名称（可选） */
+    /** Model name used in API requests (optional) */
     model?: string;
     /**
-     * 模型的 family 标识（可选）
-     * 用于确定模型使用的编辑工具模式
-     * 如果未设置，将根据 sdkMode 自动推断默认值：
+     * Model family identifier (optional)
+     * Used to determine the editing tool mode for the model
+     * If not set, default will be auto-inferred based on sdkMode:
      * - anthropic → claude-sonnet-4.6
-     * - openai/openai-sse: id/model 包含 gpt → gpt-5.2，否则 → claude-sonnet-4.6
+     * - openai/openai-sse: id/model contains gpt → gpt-5.2, otherwise → claude-sonnet-4.6
      * - openai-responses → gpt-5.2
      * - gemini-sse → gemini-3-pro
      */
     family?: string;
-    /** 最大输入token数 */
+    /** Maximum input token count */
     maxInputTokens: number;
-    /** 最大输出token数 */
+    /** Maximum output token count */
     maxOutputTokens: number;
-    /** SDK模式 */
+    /** SDK mode */
     sdkMode?: 'anthropic' | 'openai' | 'openai-sse' | 'openai-responses' | 'gemini-sse';
-    /** 模型能力 */
+    /** Model capabilities */
     capabilities: {
-        /** 工具调用 */
+        /** Tool calling */
         toolCalling: boolean;
-        /** 图像输入 */
+        /** Image input */
         imageInput: boolean;
     };
-    /** 自定义HTTP头部（可选） */
+    /** Custom HTTP headers (optional) */
     customHeader?: Record<string, string>;
-    /** 额外的请求体参数（可选） */
+    /** Additional request body parameters (optional) */
     extraBody?: Record<string, unknown>;
     /**
-     * 是否在 Responses API 中使用 instructions 参数（默认false）
-     *  - 当设置为 true 时，使用 instructions 参数传递系统指令
-     *  - 当设置为 false 时，使用用户消息传递系统消息指令
+     * Whether to use instructions parameter in Responses API (default false)
+     *  - When set to true, use instructions parameter to pass system instructions
+     *  - When set to false, pass system message instructions via user messages
      */
     useInstructions?: boolean;
-    /** 是否启用 Anthropic 原生 web_search 工具（仅 sdkMode=anthropic 生效） */
+    /** Whether to enable Anthropic native web_search tool (only effective for sdkMode=anthropic) */
     webSearchTool?: boolean;
     /**
-     * 深度思考模式选项列表（可选）
-     * 用于 UI 配置选择，决定用户可选择的思考模式范围：
-     * - disabled: 强制关闭深度思考能力
-     * - enabled: 强制开启深度思考能力
-     * - auto: 模型自行判断是否需要进行深度思考
-     * - adaptive: 模型根据上下文自适应调整深度思考模式
+     * Deep thinking mode options list (optional)
+     * Used for UI configuration selection, determines the thinking mode range users can choose:
+     * - disabled: Force disable deep thinking capability
+     * - enabled: Force enable deep thinking capability
+     * - auto: Model decides whether deep thinking is needed
+     * - adaptive: Model adaptively adjusts deep thinking mode based on context
      */
     thinking?: ('disabled' | 'enabled' | 'auto' | 'adaptive')[];
     /**
-     * 思考模式参数的传递格式（可选）
-     * - boolean: 使用布尔值格式 { enable_thinking: true/false }
-     * - object: 使用对象格式 { thinking: { type: 'enabled' | 'disabled' } }
-     * 默认值为 'boolean'，仅对 openai/openai-sse 模式生效
+     * Thinking mode parameter format (optional)
+     * - boolean: Use boolean format { enable_thinking: true/false }
+     * - object: Use object format { thinking: { type: 'enabled' | 'disabled' } }
+     * Default is 'boolean', only effective for openai/openai-sse modes
      */
     thinkingFormat?: 'boolean' | 'object';
     /**
-     * 思维链长度调节选项列表（可选）
-     * 用于 UI 配置选择，平衡不同场景对效果、时延、成本的需求：
-     * - none/minimal: 关闭思考，直接回答
-     * - low: 轻量思考，侧重快速响应
-     * - medium: 均衡模式，兼顾速度与深度
-     * - high: 深度分析，处理复杂问题
-     * - xhigh: 最大推理深度，速度较慢
-     * - max: 绝对最高能力，对 token 消耗没有限制
+     * Chain-of-thought length adjustment options (optional)
+     * Used for UI configuration selection, balancing effects, latency, and cost needs for different scenarios:
+     * - none/minimal: Disable thinking, answer directly
+     * - low: Lightweight thinking, focused on fast response
+     * - medium: Balanced mode, balancing speed and depth
+     * - high: Deep analysis for complex problems
+     * - xhigh: Maximum reasoning depth, slower speed
+     * - max: Absolute highest capability, no token consumption limit
      */
     reasoningEffort?: ('none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max')[];
-    /** 是否由向导创建（内部标记，不持久化） */
+    /** Whether created by wizard (internal flag, not persisted) */
     _isFromWizard?: boolean;
 }
 
 /**
- * 自定义模型管理器类
+ * Custom model manager class
  */
 export class CompatibleModelManager {
     private static models: CompatibleModelConfig[] = [];
     private static configListener: vscode.Disposable | null = null;
     private static _onDidChangeModels = new vscode.EventEmitter<void>();
     static readonly onDidChangeModels = CompatibleModelManager._onDidChangeModels.event;
-    private static isSaving = false; // 标记是否正在保存，避免触发配置监听器
+    private static isSaving = false; // Flag for saving to avoid triggering config listener
 
     static getSdkModeLabel(sdkMode: CompatibleModelConfig['sdkMode']): string {
         switch (sdkMode) {
@@ -140,16 +140,16 @@ export class CompatibleModelManager {
     }
 
     /**
-     * 初始化模型管理器
+     * Initialize model manager
      */
     static initialize(): void {
         this.loadModels();
         this.setupConfigListener();
-        Logger.debug('自定义模型管理器已初始化');
+        Logger.debug('Custom model manager initialized');
     }
 
     /**
-     * 清理资源
+     * Dispose resources
      */
     static dispose(): void {
         if (this.configListener) {
@@ -157,26 +157,26 @@ export class CompatibleModelManager {
             this.configListener = null;
         }
         this._onDidChangeModels.dispose();
-        Logger.trace('自定义模型管理器已清理');
+        Logger.trace('Custom model manager disposed');
     }
 
     /**
-     * 设置配置文件变化监听器
+     * Set up configuration file change listener
      */
     private static setupConfigListener(): void {
-        // 清理旧的监听器
+        // Dispose old listener
         if (this.configListener) {
             this.configListener.dispose();
         }
-        // 监听 ccmp 配置变化
+        // Listen for ccmp configuration changes
         this.configListener = vscode.workspace.onDidChangeConfiguration(event => {
             if (event.affectsConfiguration('ccmp.compatibleModels')) {
-                // 如果正在保存，忽略配置变化（避免重新加载覆盖内存中的数据）
+                // If saving, ignore config changes (avoid overwriting in-memory data with reload)
                 if (this.isSaving) {
-                    Logger.debug('正在保存配置，跳过重新加载');
+                    Logger.debug('Saving configuration, skipping reload');
                     return;
                 }
-                Logger.info('检测到自定义模型配置变化，正在重新加载...');
+                Logger.info('Detected custom model config change, reloading...');
                 this.loadModels();
                 this._onDidChangeModels.fire();
             }
@@ -184,7 +184,7 @@ export class CompatibleModelManager {
     }
 
     /**
-     * 从配置中加载模型
+     * Load models from configuration
      */
     private static loadModels(): void {
         try {
@@ -192,31 +192,31 @@ export class CompatibleModelManager {
             const modelsData = config.get<CompatibleModelConfig[]>('compatibleModels', []);
             this.models = (modelsData || []).filter(
                 model => model != null && typeof model === 'object' && model.id && model.name && model.provider
-            ); // 过滤掉无效模型
-            Logger.debug(`已加载 ${this.models.length} 个自定义模型`);
+            ); // Filter out invalid models
+            Logger.debug(`Loaded ${this.models.length} custom models`);
         } catch (error) {
-            Logger.error('加载自定义模型失败:', error);
+            Logger.error('Failed to load custom models:', error);
             this.models = [];
         }
     }
 
     /**
-     * 保存模型到配置
+     * Save models to configuration
      */
     private static async saveModels(): Promise<void> {
         try {
-            this.isSaving = true; // 设置保存标记
+            this.isSaving = true; // Set save flag
             const config = vscode.workspace.getConfiguration('ccmp');
-            // 保存时移除内部标记字段和值为 undefined 或 null 的字段
+            // Remove internal flag fields and undefined/null values when saving
             const modelsToSave = this.models
                 .filter(model => model != null && typeof model === 'object')
                 .map(model => {
                     // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const { _isFromWizard, ...rest } = model;
-                    // 移除值为 undefined 或 null 的字段（用户清空的字段）
+                    // Remove fields with undefined or null values (fields cleared by user)
                     const cleaned: Record<string, unknown> = {};
                     for (const [key, value] of Object.entries(rest)) {
-                        // 过滤掉 undefined 和 null 值
+                        // Filter out undefined and null values
                         if (value !== undefined && value !== null) {
                             cleaned[key] = value;
                         }
@@ -224,23 +224,23 @@ export class CompatibleModelManager {
                     return cleaned;
                 });
 
-            Logger.debug('准备保存模型，清理后的数据:', JSON.stringify(modelsToSave, null, 2));
+            Logger.debug('Preparing to save models, cleaned data:', JSON.stringify(modelsToSave, null, 2));
 
             await config.update('compatibleModels', modelsToSave, vscode.ConfigurationTarget.Global);
-            Logger.debug('自定义模型已保存到配置');
+            Logger.debug('Custom models saved to configuration');
 
-            // 保存成功后立即从配置文件重新加载，确保内存与配置文件同步
-            // 这样可以确保被清空的字段（undefined/null）从内存中也被移除
+            // Immediately reload from config file after successful save to ensure memory and config file sync
+            // This ensures cleared fields (undefined/null) are also removed from memory
             this.loadModels();
 
-            // 手动触发模型变化事件，通知所有监听器（如 CompatibleProvider）
+            // Manually trigger model change event to notify all listeners (e.g., CompatibleProvider)
             this._onDidChangeModels.fire();
-            Logger.debug('已触发模型变化事件');
+            Logger.debug('Model change event triggered');
         } catch (error) {
-            Logger.error('保存自定义模型失败:', error);
+            Logger.error('Failed to save custom models:', error);
             throw error;
         } finally {
-            // 延迟重置标记，确保配置变化事件已触发
+            // Delayed reset flag to ensure config change event has been triggered
             setTimeout(() => {
                 this.isSaving = false;
             }, 100);
@@ -248,16 +248,16 @@ export class CompatibleModelManager {
     }
 
     /**
-     * 获取所有模型
+     * Get all models
      */
     static getModels(): CompatibleModelConfig[] {
         return this.models;
     }
 
     /**
-     * 从配置文件获取指定模型的原始数据（未经处理）
-     * @param modelId 模型ID
-     * @returns 原始模型配置，或 undefined
+     * Get raw data (unprocessed) for specified model from configuration file
+     * @param modelId Model ID
+     * @returns Raw model config, or undefined
      */
     private static getRawModelFromConfig(modelId: string): CompatibleModelConfig | undefined {
         try {
@@ -265,38 +265,38 @@ export class CompatibleModelManager {
             const modelsData = config.get<CompatibleModelConfig[]>('compatibleModels', []);
             const rawModel = modelsData.find(model => model && model.id === modelId);
 
-            // 返回原始数据，不做任何处理（包括不添加默认 tooltip）
+            // Return raw data without any processing (including not adding default tooltip)
             return rawModel;
         } catch (error) {
-            Logger.error('从配置文件读取原始模型数据失败:', error);
+            Logger.error('Failed to read raw model data from config file:', error);
             return undefined;
         }
     }
     /**
-     * 添加模型
+     * Add model
      */
     static async addModel(model: CompatibleModelConfig): Promise<void> {
-        // 检查模型是否为空
+        // Check if model is empty
         if (!model) {
-            throw new Error('模型配置不能为空');
+            throw new Error('Model configuration cannot be empty');
         }
 
-        // 检查必需字段
+        // Check required fields
         if (!model.id || !model.name || !model.provider) {
-            throw new Error('模型配置缺少必需字段 (id, name, provider)');
+            throw new Error('Model configuration missing required fields (id, name, provider)');
         }
 
-        // 检查模型ID是否已存在
+        // Check if model ID already exists
         if (this.models.some(m => m.id === model.id)) {
-            throw new Error(`模型 ID "${model.id}" 已存在`);
+            throw new Error(`Model ID "${model.id}" already exists`);
         }
 
-        // 确保模型对象是有效的
+        // Ensure model object is valid
         if (typeof model !== 'object') {
-            throw new Error('模型配置必须是有效的对象');
+            throw new Error('Model configuration must be a valid object');
         }
 
-        // 确保capabilities对象存在
+        // Ensure capabilities object exists
         if (!model.capabilities || typeof model.capabilities !== 'object') {
             model.capabilities = {
                 toolCalling: false,
@@ -306,66 +306,66 @@ export class CompatibleModelManager {
 
         this.models.push(model);
         await this.saveModels();
-        Logger.info(`已添加自定义模型: ${model.name} (${model.provider}, ${model.sdkMode})`);
+        Logger.info(`Added custom model: ${model.name} (${model.provider}, ${model.sdkMode})`);
 
         StatusBarManager.compatible?.checkAndShowStatus();
     }
 
     /**
-     * 更新模型
+     * Update model
      */
     static async updateModel(id: string, updates: Partial<CompatibleModelConfig>): Promise<void> {
-        // 检查更新数据是否为空
+        // Check if update data is empty
         if (!updates) {
-            throw new Error('更新数据不能为空');
+            throw new Error('Update data cannot be empty');
         }
 
         const index = this.models.findIndex(m => m.id === id);
         if (index === -1) {
-            throw new Error(`未找到模型 ID "${id}"`);
+            throw new Error(`Model ID "${id}" not found`);
         }
 
-        // 确保现有模型不为空
+        // Ensure existing model is not empty
         if (!this.models[index]) {
-            throw new Error(`模型数据损坏，无法更新模型 ID "${id}"`);
+            throw new Error(`Model data corrupted, cannot update model ID "${id}"`);
         }
 
         this.models[index] = { ...this.models[index], ...updates };
         await this.saveModels();
-        Logger.info(`已更新自定义模型: ${id}`);
+        Logger.info(`Updated custom model: ${id}`);
 
         StatusBarManager.compatible?.checkAndShowStatus();
     }
 
     /**
-     * 删除模型
+     * Delete model
      */
     static async removeModel(id: string): Promise<void> {
         const index = this.models.findIndex(m => m.id === id);
         if (index === -1) {
-            throw new Error(`未找到模型 ID "${id}"`);
+            throw new Error(`Model ID "${id}" not found`);
         }
         const removedModel = this.models[index];
 
-        // 确保要删除的模型不为空
+        // Ensure model to delete is not empty
         if (!removedModel) {
-            throw new Error(`模型数据损坏，无法删除模型 ID "${id}"`);
+            throw new Error(`Model data corrupted, cannot delete model ID "${id}"`);
         }
 
         this.models.splice(index, 1);
         await this.saveModels();
-        Logger.info(`已删除自定义模型: ${removedModel.name}`);
+        Logger.info(`Deleted custom model: ${removedModel.name}`);
 
         await StatusBarManager.compatible?.checkAndShowStatus();
     }
 
     /**
-     * 配置模型或更新 API 密钥（主入口）
+     * Configure model or update API key (main entry)
      */
     static async configureModelOrUpdateAPIKey(): Promise<void> {
-        // 如果没有自定义模型，直接进入新增流程
+        // If no custom models, go directly to add flow
         if (this.models.length === 0) {
-            Logger.info('没有自定义模型，直接进入新增流程');
+            Logger.info('No custom models, going directly to add flow');
             await this.configureModels();
             return;
         }
@@ -375,20 +375,20 @@ export class CompatibleModelManager {
         }
         const options: BYOKQuickPickItem[] = [
             {
-                label: '$(key) 管理 API 密钥',
-                detail: '更新或配置提供商或模型的 API 密钥',
+                label: '$(key) Manage API Keys',
+                detail: 'Update or configure provider or model API keys',
                 action: 'apiKey'
             },
             {
-                label: '$(settings-gear) 配置模型',
-                detail: '添加、编辑或删除模型配置',
+                label: '$(settings-gear) Configure Models',
+                detail: 'Add, edit, or delete model configurations',
                 action: 'configureModels'
             }
         ];
 
         const quickPick = vscode.window.createQuickPick<BYOKQuickPickItem>();
-        quickPick.title = '管理 OpenAI / Anthropic Compatible 模型';
-        quickPick.placeholder = '选择一个操作';
+        quickPick.title = 'Manage OpenAI / Anthropic Compatible Models';
+        quickPick.placeholder = 'Select an action';
         quickPick.items = options;
         quickPick.ignoreFocusOut = true;
 
@@ -413,23 +413,23 @@ export class CompatibleModelManager {
     }
 
     /**
-     * 提示并设置 API 密钥 - 按提供商为单位设置
+     * Prompt and set API key - set by provider
      */
     private static async promptAndSetApiKey(): Promise<void> {
         try {
-            // 获取所有已配置的提供商
+            // Get all configured providers
             const providers = await this.getUniqueProviders();
             if (providers.length === 0) {
-                vscode.window.showWarningMessage('暂无自定义模型配置，请先添加模型');
+                vscode.window.showWarningMessage('No custom model configuration yet, please add models first');
                 return;
             }
-            // 如果只有一个提供商，直接设置该提供商的 API 密钥
+            // If only one provider, directly set that provider's API key
             if (providers.length === 1) {
                 await this.setApiKeyForProvider(providers[0]);
                 return;
             }
 
-            // 获取历史自定义提供商
+            // Get historical custom providers
             const historicalProviders = await this.getHistoricalCustomProviders();
 
             const customProviders: string[] = [];
@@ -444,23 +444,23 @@ export class CompatibleModelManager {
                 } else if (provider in configProviders) {
                     builtinProviders.push(provider);
                 } else {
-                    // 默认归类为自定义提供商
+                    // Default to custom provider
                     customProviders.push(provider);
                 }
             });
 
-            // 按自定义、已知、内置的顺序创建选择项，并添加分隔线
+            // Create selection items in order: custom, known, built-in, with separators
             const providerChoices = [];
 
-            // 自定义提供商
+            // Custom providers
             if (customProviders.length > 0) {
                 providerChoices.push(...customProviders.map(provider => ({ label: provider })));
             }
 
-            // 已知提供商（添加分隔线）
+            // Known providers (add separator)
             if (knownProviders.length > 0) {
                 if (customProviders.length > 0) {
-                    providerChoices.push({ label: '已知提供商', kind: vscode.QuickPickItemKind.Separator });
+                    providerChoices.push({ label: 'Known Providers', kind: vscode.QuickPickItemKind.Separator });
                 }
                 providerChoices.push(
                     ...knownProviders.map(provider => ({
@@ -470,10 +470,10 @@ export class CompatibleModelManager {
                 );
             }
 
-            // 内置提供商（添加分隔线）
+            // Built-in providers (add separator)
             if (builtinProviders.length > 0) {
                 if (customProviders.length > 0 || knownProviders.length > 0) {
-                    providerChoices.push({ label: '内置提供商', kind: vscode.QuickPickItemKind.Separator });
+                    providerChoices.push({ label: 'Built-in Providers', kind: vscode.QuickPickItemKind.Separator });
                 }
                 providerChoices.push(
                     ...builtinProviders.map(provider => ({
@@ -483,31 +483,31 @@ export class CompatibleModelManager {
                 );
             }
 
-            // 如果有多个提供商，让用户选择
+            // If multiple providers, let user select
             const selected = await vscode.window.showQuickPick(providerChoices, {
-                placeHolder: '选择要设置 API 密钥的提供商'
+                placeHolder: 'Select provider to set API key for'
             });
             if (!selected) {
                 return;
             }
             await this.setApiKeyForProvider(selected.label);
         } catch (error) {
-            Logger.error('设置 API 密钥失败:', error);
-            vscode.window.showErrorMessage(`设置 API 密钥失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error('Failed to set API key:', error);
+            vscode.window.showErrorMessage(`Failed to set API key: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     /**
-     * 获取所有唯一的提供商列表
+     * Get all unique provider list
      */
     private static async getUniqueProviders(): Promise<string[]> {
         const providers = new Set<string>();
-        // 从现有模型中获取所有提供商
+        // Get all providers from existing models
         for (const model of this.models) {
             if (model.provider && model.provider.trim()) {
                 providers.add(model.provider.trim());
             } else {
-                // 如果模型没有指定提供商，使用 'compatible' 作为默认值
+                // If model has no specified provider, use 'compatible' as default
                 providers.add('compatible');
             }
         }
@@ -515,7 +515,7 @@ export class CompatibleModelManager {
     }
 
     /**
-     * 获取提供商显示名称
+     * Get provider display name
      */
     private static getProviderDisplayName(provider: string): string {
         const knownProvider = KnownProviders[provider];
@@ -532,13 +532,13 @@ export class CompatibleModelManager {
     }
 
     /**
-     * 为指定提供商设置 API 密钥
+     * Set API key for specified provider
      */
     private static async setApiKeyForProvider(provider: string): Promise<void> {
         const displayName = this.getProviderDisplayName(provider);
         const apiKey = await vscode.window.showInputBox({
-            prompt: `请输入 "${displayName}" 的 API 密钥（留空则清除密钥）`,
-            title: `设置 ${displayName} API Key`,
+            prompt: `Enter API key for "${displayName}" (leave blank to clear)`,
+            title: `Set ${displayName} API Key`,
             placeHolder: 'sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
             password: true,
             ignoreFocusOut: true
@@ -548,21 +548,21 @@ export class CompatibleModelManager {
         }
 
         if (apiKey.trim().length === 0) {
-            // 清空密钥
+            // Clear key
             await ApiKeyManager.deleteApiKey(provider);
-            Logger.info(`提供商 "${provider}" 的 API 密钥已清除`);
+            Logger.info(`API key for provider "${provider}" has been cleared`);
         } else {
-            // 保存密钥
+            // Save key
             await ApiKeyManager.setApiKey(provider, apiKey.trim());
-            Logger.info(`提供商 "${provider}" 的 API 密钥已设置`);
+            Logger.info(`API key for provider "${provider}" has been set`);
         }
 
-        // 修改 API Key 后检查 Compatible 状态栏是否需要显示/隐藏
+        // After modifying API Key, check if Compatible status bar needs to show/hide
         await StatusBarManager.compatible?.checkAndShowStatus();
         await StatusBarManager.compatible?.delayedUpdate(provider, 0);
     } /**
-     * 配置模型 - 主要配置流程
-     */
+      * Configure models - main configuration flow
+      */
     private static async configureModels(): Promise<void> {
         while (true) {
             interface ModelQuickPickItem extends vscode.QuickPickItem {
@@ -570,17 +570,17 @@ export class CompatibleModelManager {
                 action?: 'add' | 'edit';
             }
             const items: ModelQuickPickItem[] = [];
-            // 添加现有模型
+            // Add existing models
             for (const model of this.models) {
                 const details: string[] = [
                     `$(arrow-up) ${model.maxInputTokens} $(arrow-down) ${model.maxOutputTokens}`,
                     `$(chip) ${this.getSdkModeLabel(model.sdkMode)}`
                 ];
                 if (model.capabilities.toolCalling) {
-                    details.push('$(plug) 工具调用');
+                    details.push('$(plug) Tool Calling');
                 }
                 if (model.capabilities.imageInput) {
-                    details.push('$(circuit-board) 图像理解');
+                    details.push('$(circuit-board) Image Understanding');
                 }
                 items.push({
                     label: model.name,
@@ -590,7 +590,7 @@ export class CompatibleModelManager {
                     action: 'edit'
                 });
             }
-            // 如果没有模型，直接使用可视化编辑器添加
+            // If no models, use visual editor to add directly
             if (items.length === 0) {
                 const newModel = await this.showVisualModelEditorForCreate();
                 if (newModel) {
@@ -599,20 +599,20 @@ export class CompatibleModelManager {
                 return;
             }
 
-            // 添加分隔符和操作
+            // Add separator and actions
             if (items.length > 0) {
                 const separator = { label: '', kind: vscode.QuickPickItemKind.Separator };
                 items.push(separator as ModelQuickPickItem);
             }
             items.push({
-                label: '$(add) 添加新模型',
-                detail: '创建新的自定义模型配置',
+                label: '$(add) Add New Model',
+                detail: 'Create new custom model configuration',
                 action: 'add'
             });
 
             const quickPick = vscode.window.createQuickPick<ModelQuickPickItem>();
-            quickPick.title = '自定义模型配置';
-            quickPick.placeholder = '选择一个模型进行编辑或添加新模型';
+            quickPick.title = 'Custom Model Configuration';
+            quickPick.placeholder = 'Select a model to edit or add new model';
             quickPick.items = items;
             quickPick.ignoreFocusOut = true;
 
@@ -663,12 +663,12 @@ export class CompatibleModelManager {
         modelId: string,
         currentConfig: CompatibleModelConfig
     ): Promise<{ action: 'update' | 'delete'; id: string; config?: Partial<CompatibleModelConfig> } | undefined> {
-        // 从配置文件读取原始数据（未经处理的）
+        // Read raw data from configuration file (unprocessed)
         const rawConfig = this.getRawModelFromConfig(modelId);
-        // 如果无法读取原始数据，使用内存中的数据作为后备
+        // If unable to read raw data, use in-memory data as fallback
         const configToEdit = rawConfig || currentConfig;
 
-        // 直接显示可视化表单编辑器
+        // Directly show visual form editor
         const updatedConfig = await this.showVisualModelEditor(configToEdit);
         if (updatedConfig) {
             return { action: 'update', id: modelId, config: updatedConfig };
@@ -677,15 +677,15 @@ export class CompatibleModelManager {
     }
 
     /**
-     * 显示可视化模型编辑器（创建模式）
-     * @returns 新模型配置，或 undefined 如果取消
+     * Show visual model editor (create mode)
+     * @returns New model config, or undefined if cancelled
      */
     private static async showVisualModelEditorForCreate(): Promise<CompatibleModelConfig | undefined> {
-        // 创建默认的新模型配置
+        // Create default new model configuration
         const defaultModel: CompatibleModelConfig = {
-            id: '', // 将在表单中由用户填写
-            name: '', // 将在表单中由用户填写
-            provider: '', // 将在表单中由用户选择填写
+            id: '', // To be filled by user in form
+            name: '', // To be filled by user in form
+            provider: '', // To be selected by user in form
             sdkMode: 'openai',
             maxInputTokens: 128000,
             maxOutputTokens: 4096,
@@ -699,10 +699,10 @@ export class CompatibleModelManager {
     }
 
     /**
-     * 显示可视化模型编辑器
-     * @param model 要编辑的模型配置
-     * @param isCreateMode 是否为创建模式
-     * @returns 更新后的模型配置，或 undefined 如果取消
+     * Show visual model editor
+     * @param model Model config to edit
+     * @param isCreateMode Whether in create mode
+     * @returns Updated model config, or undefined if cancelled
      */
     private static async showVisualModelEditor(
         model: CompatibleModelConfig,
@@ -710,29 +710,29 @@ export class CompatibleModelManager {
     ): Promise<CompatibleModelConfig | undefined> {
         const result = await ModelEditor.show(model, isCreateMode);
 
-        // 检查是否为删除操作
+        // Check if delete operation
         if (result && '_deleteModel' in result && result._deleteModel) {
-            // 执行删除操作
+            // Execute delete operation
             try {
                 await this.removeModel(result.modelId);
-                vscode.window.showInformationMessage('模型已删除');
+                vscode.window.showInformationMessage('Model deleted');
             } catch (error) {
-                vscode.window.showErrorMessage(`删除模型失败: ${error instanceof Error ? error.message : '未知错误'}`);
+                vscode.window.showErrorMessage(`Failed to delete model: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
             return undefined;
         }
 
-        // 如果用户填写了 API Key，保存到密钥管理器
+        // If user filled API Key, save to key manager
         if (result && 'apiKey' in result && result.apiKey && result.provider) {
             try {
                 await ApiKeyManager.setApiKey(result.provider, result.apiKey);
-                Logger.info(`已保存提供商 ${result.provider} 的 API 密钥到密钥管理器`);
-                // 从模型配置中移除 apiKey，因为已经保存到密钥管理器
+                Logger.info(`Saved API key for provider ${result.provider} to key manager`);
+                // Remove apiKey from model config as it has been saved to key manager
                 delete result.apiKey;
             } catch (error) {
-                Logger.error('保存 API 密钥失败:', error);
+                Logger.error('Failed to save API key:', error);
                 vscode.window.showErrorMessage(
-                    `保存 API 密钥失败: ${error instanceof Error ? error.message : '未知错误'}`
+                    `Failed to save API key: ${error instanceof Error ? error.message : 'Unknown error'}`
                 );
             }
         }
@@ -741,19 +741,19 @@ export class CompatibleModelManager {
     }
 
     /**
-     * 获取历史自定义提供商列表
+     * Get historical custom provider list
      */
     private static async getHistoricalCustomProviders(): Promise<string[]> {
         try {
-            // 导入提供商配置以获取内置提供商列表
+            // Import provider config to get built-in provider list
             const { configProviders } = await import('../providers/config/index.js');
             const builtinProviders = Object.keys(configProviders);
             const knownProviders = Object.keys(KnownProviders);
-            // 从现有模型中获取所有唯一的提供商标识
+            // Get all unique provider identifiers from existing models
             const allProviders = this.models
                 .map(model => model.provider)
                 .filter(provider => provider && provider.trim() !== '');
-            // 去重并排除内置提供商和 'compatible'
+            // Deduplicate and exclude built-in providers and 'compatible'
             const customProviders = [...new Set(allProviders)].filter(
                 provider =>
                     provider !== 'compatible' &&
@@ -762,7 +762,7 @@ export class CompatibleModelManager {
             );
             return customProviders;
         } catch (error) {
-            Logger.error('获取历史自定义提供商失败:', error);
+            Logger.error('Failed to get historical custom providers:', error);
             return [];
         }
     }

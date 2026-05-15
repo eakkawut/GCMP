@@ -1,23 +1,23 @@
 /*---------------------------------------------------------------------------------------------
- *  统计计算器
- *  专门负责日志聚合和统计计算，不涉及文件 I/O
- *  设计为静态类，所有方法直接调用，无需实例化
+ *  Statistics Calculator
+ *  Specifically responsible for log aggregation and statistics calculation, no file I/O involved
+ *  Designed as static class, all methods called directly without instantiation
  *--------------------------------------------------------------------------------------------*/
 
 import { UsageParser } from './usageParser';
 import type { TokenRequestLog, TokenUsageStatsFromFile } from './types';
 
 /**
- * 统计计算器
- * 负责日志聚合和统计计算的核心逻辑
- * 静态类，无需实例化
+ * Statistics Calculator
+ * Responsible for core logic of log aggregation and statistics calculation
+ * Static class, no instantiation needed
  */
 export abstract class StatsCalculator {
     private constructor() {
-        // 私有构造函数，防止实例化
+        // Private constructor to prevent instantiation
     }
 
-    /** 计算算术均值（忽略非正/非有限值） */
+    /** Calculate arithmetic mean (ignores non-positive/non-finite values) */
     static calculateMean(values: number[]): number {
         const cleaned = (values || []).filter(v => Number.isFinite(v) && v > 0);
         if (cleaned.length === 0) {
@@ -27,7 +27,7 @@ export abstract class StatsCalculator {
     }
 
     /**
-     * 计算鲁棒均值：先在 log 空间用 MAD 过滤离群点；若出现明显断层则保留包含中位数的主簇。
+     * Calculate Robust Mean: First filter outliers using MAD in log space; if obvious gaps appear, keep the main cluster containing the median.
      */
     static calculateRobustMean(values: number[]): number {
         const cleaned = (values || []).filter(v => Number.isFinite(v) && v > 0);
@@ -41,36 +41,36 @@ export abstract class StatsCalculator {
             return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
         };
 
-        // 样本太少时直接算术平均
+        // When sample size is too small, use arithmetic mean directly
         if (cleaned.length < 5) {
             return mean(cleaned);
         }
 
-        // 在 log 空间做鲁棒离群点检测（倍率异常更显著）
+        // Perform robust outlier detection in log space (rate anomalies are more pronounced)
         const pairs = cleaned.map(v => ({ v, log: Math.log(v) })).sort((a, b) => a.log - b.log);
         const logs = pairs.map(p => p.log);
         const medLog = medianOfSorted(logs);
         const absDevs = logs.map(l => Math.abs(l - medLog));
         const mad = medianOfSorted([...absDevs].sort((a, b) => a - b));
 
-        // MAD=0 说明数据极度集中，直接平均即可
+        // MAD=0 indicates data is highly concentrated, direct averaging is sufficient
         if (!Number.isFinite(mad) || mad <= 0) {
             return mean(cleaned);
         }
 
-        // 将 MAD 标准化为近似标准差（正态近似常数）
+        // Standardize MAD to approximate standard deviation (normal approximation constant)
         const sigma = mad * 1.4826;
-        // 对速度类右偏数据，k=3.5 在 log 空间过于宽松（容忍 ~33x 倍率），
-        // 降至 1.5 可将过滤阈值控制在约 4.5x，能更严格地拦截极端离群值。
+        // For right-skewed data like speeds, k=3.5 in log space is too lenient (tolerates ~33x ratio),
+        // reducing to 1.5 keeps filtering threshold at about 4.5x, enabling stricter interception of extreme outliers.
         const k = 1.5;
 
         const madFiltered = pairs.filter(p => Math.abs(p.log - medLog) / sigma <= k).map(p => p.v);
-        // 过滤后仍保留至少一半样本即可信任该结果，否则降级到断层识别
+        // If at least half the samples remain after filtering, the result can be trusted; otherwise degrade to gap detection
         if (madFiltered.length >= Math.max(3, Math.floor(cleaned.length * 0.5))) {
             return mean(madFiltered);
         }
 
-        // 断层识别：如果排序后存在巨大间隙，自动选主簇（包含中位数的簇）
+        // Gap detection: if there's a huge gap after sorting, automatically select the main cluster (the one containing the median)
         const diffs: number[] = [];
         for (let i = 0; i < logs.length - 1; i++) {
             diffs.push(logs[i + 1] - logs[i]);
@@ -84,8 +84,8 @@ export abstract class StatsCalculator {
         const absDiffDevs = sortedDiffs.map(d => Math.abs(d - medDiff));
         const madDiff = medianOfSorted([...absDiffDevs].sort((a, b) => a - b));
 
-        // gapThreshold 同时考虑绝对倍率（>2x）和相对“异常间隙”
-        const minGap = Math.log(2); // 相邻点倍率 >= 2
+        // gapThreshold considers both absolute ratio (>2x) and relative "abnormal gap"
+        const minGap = Math.log(2); // adjacent point ratio >= 2
         const gapThreshold = Math.max(minGap, medDiff + 6 * (madDiff || 0));
 
         let bestGapIndex = -1;
@@ -98,7 +98,7 @@ export abstract class StatsCalculator {
         }
 
         if (bestGapIndex >= 0) {
-            // 以中位数所在位置确定保留哪一侧（主簇）
+            // Determine which side to keep based on median position (main cluster)
             const midIndex = Math.floor((logs.length - 1) / 2);
             const keepLeft = bestGapIndex >= midIndex;
             const start = keepLeft ? 0 : bestGapIndex + 1;
@@ -109,15 +109,15 @@ export abstract class StatsCalculator {
             }
         }
 
-        // 最终兜底：算术平均
+        // Final fallback: arithmetic mean
         return mean(cleaned);
     }
 
     /**
-     * 合并同一requestId的多条流水记录,取最终状态
-     * 保留最后一条记录的状态（completed/failed），但使用第一条记录的时间戳（请求开始时间）
-     * @param logs 流水记录列表
-     * @returns 按requestId合并后的记录Map
+     * Merge Multiple Sequential Records with Same requestId, Take Final Status
+     * Keep the status of the last record (completed/failed), but use the timestamp of the first record (request start time)
+     * @param logs List of sequential records
+     * @returns RecordMap merged by requestId
      */
     static mergeLogsByRequestId(logs: TokenRequestLog[]): Map<string, TokenRequestLog> {
         const mergedMap = new Map<string, TokenRequestLog>();
@@ -126,27 +126,27 @@ export abstract class StatsCalculator {
             const existing = mergedMap.get(log.requestId);
 
             if (!existing) {
-                // 第一次遇到此requestId，记录初始时间戳
+                // First time encountering this requestId, record initial timestamp
                 mergedMap.set(log.requestId, { ...log });
             } else {
-                // 已存在，保留时间戳更早的（请求开始时间），但更新其他字段为最新状态
+                // Already exists, keep the earlier timestamp (request start time), but update other fields to latest status
                 if (log.timestamp < existing.timestamp) {
-                    // 当前记录时间戳更早，更新时间戳但保留其他字段
+                    // Current record timestamp is earlier, update timestamp but keep other fields
                     existing.timestamp = log.timestamp;
                     existing.isoTime = log.isoTime;
                 }
-                // 无论时间戳如何，都更新为最新状态（completed/failed 和 rawUsage）
+                // Regardless of timestamp, update to latest status (completed/failed and rawUsage)
                 existing.status = log.status;
                 existing.rawUsage = log.rawUsage;
-                // 更新流时间信息
+                // Update stream time information
                 if (log.streamStartTime !== undefined) {
                     existing.streamStartTime = log.streamStartTime;
                 }
                 if (log.streamEndTime !== undefined) {
                     existing.streamEndTime = log.streamEndTime;
                 } else {
-                    // 旧数据兼容：历史记录可能只有最终状态更新而未单独记录 streamEndTime。
-                    // 此处用该条流水记录时间作为结束时间兜底，避免历史数据在耗时/速度统计中完全缺失。
+                    // Legacy data compatibility: historical records may only have final status update without separate streamEndTime recording.
+                    // Here use this sequential record's time as fallback for end time, avoiding complete loss of historical data in duration/speed statistics.
                     existing.streamEndTime = log.timestamp;
                 }
             }
@@ -156,10 +156,10 @@ export abstract class StatsCalculator {
     }
 
     /**
-     * 聚合日志为统计数据
-     * 1. 先按requestId合并流水记录,取最终状态
-     * 2. 只统计成功(completed)的请求
-     * 3. 从 rawUsage 解析 token 统计
+     * Aggregate Logs into Statistics Data
+     * 1. First merge sequential records by requestId, take final status
+     * 2. Only count successful (completed) requests
+     * 3. Parse token statistics from rawUsage
      */
     static aggregateLogs(logs: TokenRequestLog[]): TokenUsageStatsFromFile {
         const stats: TokenUsageStatsFromFile = {
@@ -177,18 +177,18 @@ export abstract class StatsCalculator {
             providers: {}
         };
 
-        // 仅收集“模型级别”的请求速度；提供商/总计速度只对模型每小时速度做算术平均。
+        // Only collect "model-level" request speeds; provider/total speeds only do arithmetic mean of model's hourly speeds.
         const modelSpeedValues: Record<string, Record<string, number[]>> = {};
-        // 首 Token 延迟不做置信处理：模型/提供商/总计均为算术平均。
+        // First Token latency does not undergo confidence processing: model/provider/total are all arithmetic means.
         const modelFirstTokenLatencyAcc: Record<string, Record<string, { sum: number; count: number }>> = {};
 
-        // 1. 按requestId合并,取最终状态
+        // 1. Merge by requestId, take final status
         const mergedMap = this.mergeLogsByRequestId(logs);
         const finalLogs = Array.from(mergedMap.values());
 
-        // 2. 遍历合并后的日志
+        // 2. Iterate through merged logs
         for (const log of finalLogs) {
-            // 统计所有请求的状态到总计
+            // Count status of all requests to total
             stats.total.requests++;
 
             if (log.status === 'completed') {
@@ -197,7 +197,7 @@ export abstract class StatsCalculator {
                 stats.total.failedRequests++;
             }
 
-            // 初始化提供商统计（确保所有提供商都被记录，即使请求失败）
+            // Initialize provider statistics (ensure all providers are recorded, even if request failed)
             if (!stats.providers[log.providerKey]) {
                 stats.providers[log.providerKey] = {
                     providerName: log.providerName,
@@ -223,9 +223,9 @@ export abstract class StatsCalculator {
                 providerStats.failedRequests++;
             }
 
-            // 只统计成功的请求到 token 用量和速度
+            // Only count successful requests to token usage and speed
             if (log.status !== 'completed' || !log.rawUsage) {
-                // 如果没有 rawUsage，使用预估的 input
+                // If no rawUsage, use estimated input
                 if (log.status === 'completed') {
                     stats.total.estimatedInput += log.estimatedInput;
                     stats.total.actualInput += log.estimatedInput;
@@ -235,22 +235,22 @@ export abstract class StatsCalculator {
                 continue;
             }
 
-            // 从 rawUsage 解析 token 统计
+            // Parse token statistics from rawUsage
             const parsed = UsageParser.parseFromLog(log);
 
-            // 更新总计(仅成功的请求)
+            // Update total (only successful requests)
             stats.total.estimatedInput += log.estimatedInput;
             stats.total.actualInput += parsed.actualInput;
             stats.total.cacheTokens += parsed.cacheReadTokens;
             stats.total.outputTokens += parsed.outputTokens;
 
-            // 更新提供商的 token 统计
+            // Update provider's token statistics
             providerStats.estimatedInput += log.estimatedInput;
             providerStats.actualInput += parsed.actualInput;
             providerStats.cacheTokens += parsed.cacheReadTokens;
             providerStats.outputTokens += parsed.outputTokens;
 
-            // 按模型聚合(仅成功的请求)
+            // Aggregate by model (only successful requests)
             if (!providerStats.models[log.modelId]) {
                 providerStats.models[log.modelId] = {
                     modelName: log.modelName,
@@ -271,7 +271,7 @@ export abstract class StatsCalculator {
             modelStats.outputTokens += parsed.outputTokens;
             modelStats.requests++;
 
-            // 速度样本仅收集到“模型”维度。
+            // Speed samples only collected to "model" dimension.
             if (parsed.outputSpeed && parsed.outputSpeed > 0) {
                 if (!modelSpeedValues[log.providerKey]) {
                     modelSpeedValues[log.providerKey] = {};
@@ -282,7 +282,7 @@ export abstract class StatsCalculator {
                 modelSpeedValues[log.providerKey][log.modelId].push(parsed.outputSpeed);
             }
 
-            // 首 Token 延迟样本同样仅收集到“模型”维度（不做置信处理）。
+            // First Token latency samples also only collected to "model" dimension (no confidence processing).
             if (log.streamStartTime !== undefined && log.timestamp !== undefined) {
                 const firstTokenLatency = log.streamStartTime - log.timestamp;
                 if (Number.isFinite(firstTokenLatency) && firstTokenLatency >= 0) {
@@ -298,7 +298,7 @@ export abstract class StatsCalculator {
             }
         }
 
-        // 仅计算并写入“模型级别”的聚合值；provider/total 的聚合由上层在 hourly 缓存完成后统一计算。
+        // Only calculate and write "model-level" aggregated values; provider/total aggregation is uniformly calculated by upper layer after hourly cache completion.
         for (const [providerKey, providerStats] of Object.entries(stats.providers)) {
             for (const [modelId, modelStats] of Object.entries(providerStats.models)) {
                 const speedValues = modelSpeedValues[providerKey]?.[modelId] || [];

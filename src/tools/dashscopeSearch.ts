@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  阿里云百炼 (DashScope) 联网搜索工具
- *  通过 MCP 协议接入百炼 WebSearch MCP 服务
+ *  Alibaba Cloud DashScope Web Search Tool
+ *  Accesses DashScope WebSearch MCP service via MCP protocol
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -12,7 +12,7 @@ import {
 } from './mcp/dashscopeMCPClient';
 
 /**
- * 搜索请求参数
+ * Search request parameters
  */
 export interface DashscopeSearchRequest {
     query: string;
@@ -20,11 +20,11 @@ export interface DashscopeSearchRequest {
 }
 
 /**
- * 阿里云百炼联网搜索工具
+ * Alibaba Cloud DashScope Web Search Tool
  */
 export class DashscopeSearchTool {
     /**
-     * 通过 MCP 搜索
+     * Search via MCP
      */
     private async searchViaMCP(params: DashscopeSearchRequest): Promise<DashscopeSearchPage[]> {
         const mcpClient = await DashscopeMCPWebSearchClient.getInstance();
@@ -38,57 +38,57 @@ export class DashscopeSearchTool {
     }
 
     /**
-     * 工具调用处理器
+     * Tool invocation handler
      */
     async invoke(
         request: vscode.LanguageModelToolInvocationOptions<DashscopeSearchRequest>
     ): Promise<vscode.LanguageModelToolResult> {
         try {
-            Logger.info(`🚀 [工具调用] 阿里云百炼联网搜索工具被调用: ${JSON.stringify(request.input)}`);
+            Logger.info(`🚀 [Tool Invocation] Alibaba Cloud DashScope Web Search Tool invoked: ${JSON.stringify(request.input)}`);
 
             const params = request.input as DashscopeSearchRequest;
             if (!params.query) {
-                throw new Error('缺少必需参数: query');
+                throw new Error('Missing required parameter: query');
             }
 
-            Logger.info(`🔄 [DashScope 搜索] 使用MCP模式搜索: "${params.query}"`);
+            Logger.info(`🔄 [DashScope Search] Using MCP mode to search: "${params.query}"`);
             const searchResults = await this.searchViaMCP(params);
 
-            Logger.info('✅ [工具调用] 阿里云百炼联网搜索工具调用成功');
+            Logger.info('✅ [Tool Invocation] Alibaba Cloud DashScope Web Search Tool invoked successfully');
 
             return new vscode.LanguageModelToolResult([
                 new vscode.LanguageModelTextPart(JSON.stringify(searchResults))
             ]);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : '未知错误';
-            Logger.error('❌ [工具调用] 阿里云百炼联网搜索工具调用失败', error instanceof Error ? error : undefined);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            Logger.error('❌ [Tool Invocation] Alibaba Cloud DashScope Web Search Tool invocation failed', error instanceof Error ? error : undefined);
 
-            throw new vscode.LanguageModelError(`DashScope搜索失败: ${errorMessage}`);
+            throw new vscode.LanguageModelError(`DashScope search failed: ${errorMessage}`);
         }
     }
 
     /**
-     * 清理工具资源
+     * Clean up tool resources
      */
     async cleanup(): Promise<void> {
         try {
-            // MCP 客户端使用单例模式，不需要在这里清理
-            // 如果需要清理所有 MCP 客户端缓存，可以调用 DashscopeMCPWebSearchClient.clearCache()
-            Logger.info('✅ [DashScope 搜索] 工具资源已清理');
+            // MCP client uses singleton pattern, no cleanup needed here
+            // If needed to clear all MCP client cache, call DashscopeMCPWebSearchClient.clearCache()
+            Logger.info('✅ [DashScope Search] Tool resources cleaned up');
         } catch (error) {
-            Logger.error('❌ [DashScope 搜索] 资源清理失败', error instanceof Error ? error : undefined);
+            Logger.error('❌ [DashScope Search] Resource cleanup failed', error instanceof Error ? error : undefined);
         }
     }
 
     /**
-     * 获取 MCP 客户端缓存统计信息
+     * Get MCP client cache statistics
      */
     getMCPCacheStats() {
         return DashscopeMCPWebSearchClient.getCacheStats();
     }
 
     /**
-     * 清除 MCP 客户端缓存
+     * Clear MCP client cache
      */
     async clearMCPCache(apiKey?: string): Promise<void> {
         await DashscopeMCPWebSearchClient.clearCache(apiKey);

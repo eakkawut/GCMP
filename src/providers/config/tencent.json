@@ -1,5 +1,5 @@
 ﻿{
-    "displayName": "腾讯云",
+    "displayName": "Tencent Cloud",
     "baseUrl": "https://api.hunyuan.cloud.tencent.com/v1",
     "apiKeyTemplate": "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "codingKeyTemplate": "sk-sp-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -8,350 +8,487 @@
         {
             "id": "hunyuan-2.0-instruct-coding-plan",
             "name": "Tencent HY 2.0 Instruct (CodingPlan)",
-            "tooltip": "腾讯云 Coding Plan 专属接入点中的 Tencent HY 2.0 Instruct。",
+            "tooltip": "Tencent HY 2.0 Instruct in Tencent Cloud Coding Plan exclusive endpoint.",
             "provider": "tencent-coding",
             "sdkMode": "anthropic",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/coding/anthropic",
             "model": "hunyuan-2.0-instruct",
             "maxInputTokens": 128000,
             "maxOutputTokens": 16000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "hunyuan-2.0-thinking-coding-plan",
             "name": "Tencent HY 2.0 Think (CodingPlan)",
-            "tooltip": "腾讯云 Coding Plan 专属接入点中的 Tencent HY 2.0 Think。",
+            "tooltip": "Tencent HY 2.0 Think in Tencent Cloud Coding Plan exclusive endpoint.",
             "provider": "tencent-coding",
             "sdkMode": "anthropic",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/coding/anthropic",
             "model": "hunyuan-2.0-thinking",
             "maxInputTokens": 128000,
             "maxOutputTokens": 64000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "glm-5-coding-plan",
             "name": "GLM-5 (CodingPlan)",
-            "tooltip": "腾讯云 Coding Plan 专属接入点中的 GLM-5。",
+            "tooltip": "GLM-5 in Tencent Cloud Coding Plan exclusive endpoint.",
             "provider": "tencent-coding",
             "sdkMode": "anthropic",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/coding/anthropic",
             "model": "glm-5",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "minimax-m2.5-coding-plan",
             "name": "MiniMax-M2.5 (CodingPlan)",
-            "tooltip": "腾讯云 Coding Plan 专属接入点中的 MiniMax M2.5。",
+            "tooltip": "MiniMax M2.5 in Tencent Cloud Coding Plan exclusive endpoint.",
             "provider": "tencent-coding",
             "sdkMode": "anthropic",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/coding/anthropic",
             "model": "minimax-m2.5",
             "maxInputTokens": 200000,
             "maxOutputTokens": 192000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "kimi-k2.5-coding-plan",
             "name": "Kimi-K2.5 (CodingPlan)",
-            "tooltip": "腾讯云 Coding Plan 专属接入点中的 Kimi K2.5。",
+            "tooltip": "Kimi K2.5 in Tencent Cloud Coding Plan exclusive endpoint.",
             "provider": "tencent-coding",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/coding/v3",
             "model": "kimi-k2.5",
             "maxInputTokens": 256000,
             "maxOutputTokens": 256000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": true }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": true
+            }
         },
         {
             "id": "hy3-preview-token-plan",
             "name": "HY 3 Preview (TokenPlan)",
-            "tooltip": "腾讯云 Token Plan 按量付费中的 Hy3 preview。",
+            "tooltip": "Hy3 preview in Tencent Cloud Token Plan pay-per-use.",
             "provider": "tencent-token",
             "sdkMode": "anthropic",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/plan/anthropic",
             "model": "hy3-preview",
             "maxInputTokens": 192000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "glm-5.1-token-plan",
             "name": "GLM-5.1 (TokenPlan)",
-            "tooltip": "腾讯云 Token Plan 专属接入点中的 GLM-5.1。",
+            "tooltip": "GLM-5.1 in Tencent Cloud Token Plan exclusive endpoint.",
             "provider": "tencent-token",
             "sdkMode": "anthropic",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/plan/anthropic",
             "model": "glm-5.1",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "glm-5-token-plan",
             "name": "GLM-5 (TokenPlan)",
-            "tooltip": "腾讯云 Token Plan 专属接入点中的 GLM-5。",
+            "tooltip": "GLM-5 in Tencent Cloud Token Plan exclusive endpoint.",
             "provider": "tencent-token",
             "sdkMode": "anthropic",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/plan/anthropic",
             "model": "glm-5",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "minimax-m2.7-token-plan",
             "name": "MiniMax-M2.7 (TokenPlan)",
-            "tooltip": "腾讯云 Token Plan 专属接入点中的 MiniMax M2.7。",
+            "tooltip": "MiniMax M2.7 in Tencent Cloud Token Plan exclusive endpoint.",
             "provider": "tencent-token",
             "sdkMode": "anthropic",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/plan/anthropic",
             "model": "minimax-m2.7",
             "maxInputTokens": 200000,
             "maxOutputTokens": 192000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "minimax-m2.5-token-plan",
             "name": "MiniMax-M2.5 (TokenPlan)",
-            "tooltip": "腾讯云 Token Plan 专属接入点中的 MiniMax M2.5。",
+            "tooltip": "MiniMax M2.5 in Tencent Cloud Token Plan exclusive endpoint.",
             "provider": "tencent-token",
             "sdkMode": "anthropic",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/plan/anthropic",
             "model": "minimax-m2.5",
             "maxInputTokens": 200000,
             "maxOutputTokens": 192000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "kimi-k2.5-token-plan",
             "name": "Kimi-K2.5 (TokenPlan)",
-            "tooltip": "腾讯云 Token Plan 专属接入点中的 Kimi K2.5。",
+            "tooltip": "Kimi K2.5 in Tencent Cloud Token Plan exclusive endpoint.",
             "provider": "tencent-token",
             "sdkMode": "anthropic",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/plan/anthropic",
             "model": "kimi-k2.5",
             "maxInputTokens": 256000,
             "maxOutputTokens": 256000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": true }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": true
+            }
         },
         {
             "id": "glm-5",
             "name": "GLM-5 (PayGo)",
-            "tooltip": "腾讯云第三方大模型 OpenAI 兼容接口中的 GLM-5。",
+            "tooltip": "GLM-5 in Tencent Cloud third-party large model OpenAI compatible interface.",
             "provider": "tencent",
             "sdkMode": "openai",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/v3",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "minimax-m2.5",
             "name": "MiniMax-M2.5 (PayGo)",
-            "tooltip": "腾讯云第三方大模型 OpenAI 兼容接口中的 MiniMax M2.5。",
+            "tooltip": "MiniMax M2.5 in Tencent Cloud third-party large model OpenAI compatible interface.",
             "provider": "tencent",
             "sdkMode": "openai",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/v3",
             "maxInputTokens": 200000,
             "maxOutputTokens": 192000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "kimi-k2.5",
             "name": "Kimi-K2.5 (PayGo)",
-            "tooltip": "腾讯云第三方大模型 OpenAI 兼容接口中的 Kimi K2.5。",
+            "tooltip": "Kimi K2.5 in Tencent Cloud third-party large model OpenAI compatible interface.",
             "provider": "tencent",
             "sdkMode": "openai",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/v3",
             "maxInputTokens": 256000,
             "maxOutputTokens": 256000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": true }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": true
+            }
         },
         {
             "id": "deepseek-v3.2",
             "name": "DeepSeek-V3.2 (PayGo)",
-            "tooltip": "DeepSeek-V3.2 为 685B 参数 MoE 模型，其引入的稀疏注意力架构使长文本处理更高效，并在推理评测中达到GPT-5水平。",
+            "tooltip": "DeepSeek-V3.2 is a 685B parameter MoE model, whose introduced sparse attention architecture makes long-text processing more efficient, and reached GPT-5 level in reasoning evaluations.",
             "provider": "tencent-deepseek",
             "sdkMode": "openai",
             "baseUrl": "https://api.lkeap.cloud.tencent.com/v1",
             "maxInputTokens": 96000,
             "maxOutputTokens": 32000,
-            "thinking": ["disabled", "enabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "hunyuan-2.0-instruct-tokenhub",
             "name": "Tencent HY 2.0 Instruct (TokenHub)",
-            "tooltip": "腾讯云 TokenHub 按量付费中的 Tencent HY 2.0 Instruct。",
+            "tooltip": "Tencent HY 2.0 Instruct in Tencent Cloud TokenHub pay-per-use.",
             "provider": "tencent-tokenhub",
             "sdkMode": "anthropic",
             "baseUrl": "https://tokenhub.tencentmaas.com",
             "model": "hunyuan-2.0-instruct-20251111",
             "maxInputTokens": 128000,
             "maxOutputTokens": 16000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "hunyuan-2.0-thinking-tokenhub",
             "name": "Tencent HY 2.0 Think (TokenHub)",
-            "tooltip": "腾讯云 TokenHub 按量付费中的 Tencent HY 2.0 Think。",
+            "tooltip": "Tencent HY 2.0 Think in Tencent Cloud TokenHub pay-per-use.",
             "provider": "tencent-tokenhub",
             "sdkMode": "anthropic",
             "baseUrl": "https://tokenhub.tencentmaas.com",
             "model": "hunyuan-2.0-thinking-20251109",
             "maxInputTokens": 128000,
             "maxOutputTokens": 64000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "hy3-preview-tokenhub",
             "name": "HY 3 Preview (TokenHub)",
-            "tooltip": "腾讯云 TokenHub 按量付费中的 Hy3 preview。",
+            "tooltip": "Hy3 preview in Tencent Cloud TokenHub pay-per-use.",
             "provider": "tencent-tokenhub",
             "sdkMode": "anthropic",
             "baseUrl": "https://tokenhub.tencentmaas.com",
             "model": "hy3-preview",
             "maxInputTokens": 192000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "glm-5.1-tokenhub",
             "name": "GLM-5.1 (TokenHub)",
-            "tooltip": "腾讯云 TokenHub 按量付费中的 GLM-5.1。",
+            "tooltip": "GLM-5.1 in Tencent Cloud TokenHub pay-per-use.",
             "provider": "tencent-tokenhub",
             "sdkMode": "anthropic",
             "baseUrl": "https://tokenhub.tencentmaas.com",
             "model": "glm-5.1",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "glm-5-turbo-tokenhub",
             "name": "GLM-5-Turbo (TokenHub)",
-            "tooltip": "腾讯云 TokenHub 按量付费中的 GLM-5-Turbo。",
+            "tooltip": "GLM-5-Turbo in Tencent Cloud TokenHub pay-per-use.",
             "provider": "tencent-tokenhub",
             "sdkMode": "anthropic",
             "baseUrl": "https://tokenhub.tencentmaas.com",
             "model": "glm-5-turbo",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "glm-5-tokenhub",
             "name": "GLM-5 (TokenHub)",
-            "tooltip": "腾讯云 TokenHub 按量付费中的 GLM-5。",
+            "tooltip": "GLM-5 in Tencent Cloud TokenHub pay-per-use.",
             "provider": "tencent-tokenhub",
             "sdkMode": "anthropic",
             "baseUrl": "https://tokenhub.tencentmaas.com",
             "model": "glm-5",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "deepseek-v4-flash-tokenhub",
             "name": "DeepSeek-V4-Flash (TokenHub)",
-            "tooltip": "腾讯云 TokenHub 按量付费中的 DeepSeek-V4-Flash。",
+            "tooltip": "DeepSeek-V4-Flash in Tencent Cloud TokenHub pay-per-use.",
             "provider": "tencent-tokenhub",
             "sdkMode": "anthropic",
             "baseUrl": "https://tokenhub.tencentmaas.com",
-            "reasoningEffort": ["high", "max", "none"],
+            "reasoningEffort": [
+                "high",
+                "max",
+                "none"
+            ],
             "model": "deepseek-v4-flash",
             "maxInputTokens": 1000000,
             "maxOutputTokens": 384000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "deepseek-v4-pro-tokenhub",
             "name": "DeepSeek-V4-Pro (TokenHub)",
-            "tooltip": "腾讯云 TokenHub 按量付费中的 DeepSeek-V4-Pro。",
+            "tooltip": "DeepSeek-V4-Pro in Tencent Cloud TokenHub pay-per-use.",
             "provider": "tencent-tokenhub",
             "sdkMode": "anthropic",
             "baseUrl": "https://tokenhub.tencentmaas.com",
-            "reasoningEffort": ["high", "max", "none"],
+            "reasoningEffort": [
+                "high",
+                "max",
+                "none"
+            ],
             "model": "deepseek-v4-pro",
             "maxInputTokens": 1000000,
             "maxOutputTokens": 384000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "deepseek-v3.2-tokenhub",
             "name": "DeepSeek-V3.2 (TokenHub)",
-            "tooltip": "腾讯云 TokenHub 按量付费中的 DeepSeek-V3.2。",
+            "tooltip": "DeepSeek-V3.2 in Tencent Cloud TokenHub pay-per-use.",
             "provider": "tencent-tokenhub",
             "sdkMode": "anthropic",
             "baseUrl": "https://tokenhub.tencentmaas.com",
             "model": "deepseek-v3.2",
             "maxInputTokens": 96000,
             "maxOutputTokens": 32000,
-            "thinking": ["disabled", "enabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "kimi-k2.6-tokenhub",
             "name": "Kimi-K2.6 (TokenHub)",
-            "tooltip": "腾讯云 TokenHub 按量付费中的 Kimi K2.6。",
+            "tooltip": "Kimi K2.6 in Tencent Cloud TokenHub pay-per-use.",
             "provider": "tencent-tokenhub",
             "sdkMode": "anthropic",
             "baseUrl": "https://tokenhub.tencentmaas.com",
             "model": "kimi-k2.6",
             "maxInputTokens": 256000,
             "maxOutputTokens": 256000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": true }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": true
+            }
         },
         {
             "id": "kimi-k2.5-tokenhub",
             "name": "Kimi-K2.5 (TokenHub)",
-            "tooltip": "腾讯云 TokenHub 按量付费中的 Kimi K2.5。",
+            "tooltip": "Kimi K2.5 in Tencent Cloud TokenHub pay-per-use.",
             "provider": "tencent-tokenhub",
             "sdkMode": "anthropic",
             "baseUrl": "https://tokenhub.tencentmaas.com",
             "model": "kimi-k2.5",
             "maxInputTokens": 224000,
             "maxOutputTokens": 16000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": true }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": true
+            }
         },
         {
             "id": "minimax-m2.7-tokenhub",
             "name": "MiniMax-M2.7 (TokenHub)",
-            "tooltip": "腾讯云 TokenHub 按量付费中的 MiniMax M2.7。",
+            "tooltip": "MiniMax M2.7 in Tencent Cloud TokenHub pay-per-use.",
             "provider": "tencent-tokenhub",
             "sdkMode": "anthropic",
             "baseUrl": "https://tokenhub.tencentmaas.com",
             "model": "minimax-m2.7",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "minimax-m2.5-tokenhub",
             "name": "MiniMax-M2.5 (TokenHub)",
-            "tooltip": "腾讯云 TokenHub 按量付费中的 MiniMax M2.5。",
+            "tooltip": "MiniMax M2.5 in Tencent Cloud TokenHub pay-per-use.",
             "provider": "tencent-tokenhub",
             "sdkMode": "anthropic",
             "baseUrl": "https://tokenhub.tencentmaas.com",
             "model": "minimax-m2.5",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         }
     ]
 }

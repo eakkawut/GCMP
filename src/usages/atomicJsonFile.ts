@@ -34,7 +34,7 @@ export class AtomicJsonFile {
 
         try {
             await fs.writeFile(tempPath, serialized, 'utf-8');
-            // rename 在 POSIX 上原子替换已存在目标；Windows (NTFS) 上同样会替换已存在文件
+            // rename atomically replaces existing target on POSIX; Windows (NTFS) also replaces existing files
             await fs.rename(tempPath, filePath);
         } catch (error) {
             await fs.rm(tempPath, { force: true }).catch(() => undefined);

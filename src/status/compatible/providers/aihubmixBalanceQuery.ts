@@ -1,5 +1,5 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  AIHubMix 余额查询器
+ *  AIHubMix Balance Query Handler
  *--------------------------------------------------------------------------------------------*/
 
 import { IBalanceQuery, BalanceQueryResult } from '../balanceQuery';
@@ -8,48 +8,48 @@ import { ApiKeyManager } from '../../../utils/apiKeyManager';
 import { Logger, KnownProviders } from '../../../utils';
 
 /**
- * AIHubMix API 响应类型
+ * AIHubMix API response type
  */
 interface AiHubMixBalanceResponse {
-    /** 对象类型 */
+    /** Object type */
     object: string;
-    /** 剩余额度，单位为美元 */
+    /** Remaining quota, in USD */
     total_usage: number;
 }
 
 /**
- * AIHubMix 错误响应类型
+ * AIHubMix error response type
  */
 interface AiHubMixErrorResponse {
-    /** 错误响应 */
+    /** Error response */
     error: {
-        /** 错误消息 */
+        /** Error message */
         message: string;
-        /** 错误类型 */
+        /** Error type */
         type: string;
     };
 }
 
 /**
- * AIHubMix 余额查询器
+ * AIHubMix balance query handler
  */
 export class AiHubMixBalanceQuery implements IBalanceQuery {
     /**
-     * 查询 AIHubMix 余额
-     * @param providerId 提供商标识符
-     * @returns AIHubMix 余额查询结果
+     * Query AIHubMix balance
+     * @param providerId Provider identifier
+     * @returns AIHubMix balance query result
      */
     async queryBalance(providerId: string): Promise<BalanceQueryResult> {
-        StatusLogger.debug(`[AiHubMixBalanceQuery] 查询提供商 ${providerId} 的余额`);
+        StatusLogger.debug(`[AiHubMixBalanceQuery] Querying balance for provider ${providerId}`);
 
         try {
-            // 获取 API 密钥
+            // Get API key
             const apiKey = await ApiKeyManager.getApiKey(providerId);
             if (!apiKey) {
-                throw new Error(`未找到 ${providerId} 的 API 密钥`);
+                throw new Error(`API key not found for ${providerId}`);
             }
 
-            // 调用 AIHubMix 余额查询 API
+            // Call AIHubMix balance query API
             const response = await fetch('https://aihubmix.com/dashboard/billing/remain', {
                 method: 'GET',
                 headers: {
@@ -60,36 +60,36 @@ export class AiHubMixBalanceQuery implements IBalanceQuery {
             });
 
             if (!response.ok) {
-                // 尝试解析错误响应
-                let errorMessage = `API 请求失败: ${response.status} ${response.statusText}`;
+                // Try to parse error response
+                let errorMessage = `API request failed: ${response.status} ${response.statusText}`;
                 try {
                     const errorData = (await response.json()) as AiHubMixErrorResponse;
                     errorMessage = errorData?.error?.message || errorMessage;
 
-                    // 检测欠费错误：quota exhausted
+                    // Detect insufficient funds error: quota exhausted
                     if (errorData.error?.message?.includes('quota exhausted')) {
-                        StatusLogger.warn(`[AiHubMixBalanceQuery] 账户额度已用尽 (欠费): ${errorData.error.message}`);
+                        StatusLogger.warn(`[AiHubMixBalanceQuery] Account quota exhausted (insufficient funds): ${errorData.error.message}`);
                         return {
-                            balance: Number.MIN_SAFE_INTEGER, // 使用特殊负值表示欠费
+                            balance: Number.MIN_SAFE_INTEGER, // Use special negative value to indicate insufficient funds
                             currency: 'USD'
                         };
                     }
                 } catch {
-                    // 如果无法解析错误响应，使用默认错误消息
+                    // If error response cannot be parsed, use default error message
                 }
                 throw new Error(errorMessage);
             }
 
             const data = (await response.json()) as AiHubMixBalanceResponse;
 
-            // 解析响应数据
-            // API 返回格式: {"object":"list","total_usage":0.06495}
-            // total_usage 表示剩余额度，单位为美元
-            // 特殊值: -0.000002 表示无限额度
-            const remainingAmount = data.total_usage; // 检查是否为无限额度
+            // Parse response data
+            // API return format: {"object":"list","total_usage":0.06495}
+            // total_usage represents remaining quota, in USD
+            // Special value: -0.000002 indicates unlimited quota
+            const remainingAmount = data.total_usage; // Check if unlimited quota
             const isInfinite = remainingAmount === -0.000002;
 
-            // 如果是无限额度，返回特殊标记
+            // If unlimited quota, return special marker
             if (isInfinite) {
                 return {
                     balance: Number.MAX_SAFE_INTEGER,
@@ -97,21 +97,21 @@ export class AiHubMixBalanceQuery implements IBalanceQuery {
                 };
             }
 
-            // 对于其他负值，记录警告但仍处理为有限额度
+            // For other negative values, log warning but still process as limited quota
             if (remainingAmount < 0 && !isInfinite) {
-                StatusLogger.warn(`[AiHubMixBalanceQuery] 检测到异常负值余额: ${remainingAmount}，将其设置为 0`);
+                StatusLogger.warn(`[AiHubMixBalanceQuery] Detected abnormal negative balance: ${remainingAmount}, setting to 0`);
             }
 
-            StatusLogger.debug('[AiHubMixBalanceQuery] 余额查询成功');
+            StatusLogger.debug('[AiHubMixBalanceQuery] Balance query successful');
 
-            // 正常情况：返回剩余额度
+            // Normal case: return remaining quota
             return {
                 balance: remainingAmount,
                 currency: 'USD'
             };
         } catch (error) {
-            Logger.error('[AiHubMixBalanceQuery] 查询余额失败', error);
-            throw new Error(`AIHubMix 余额查询失败: ${error instanceof Error ? error.message : String(error)}`);
+            Logger.error('[AiHubMixBalanceQuery] Failed to query balance', error);
+            throw new Error(`AIHubMix balance query failed: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 }

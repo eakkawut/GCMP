@@ -1,5 +1,5 @@
 {
-    "displayName": "百度千帆",
+    "displayName": "Baidu Qianfan",
     "baseUrl": "https://qianfan.baidubce.com/v2",
     "apiKeyTemplate": "bce-v3/ALTAK-xxxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "codingKeyTemplate": "bce-v3/ALTAKSP-xxxxxxxxxxxxxxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -7,167 +7,254 @@
         {
             "id": "deepseek-v4-flash-coding-plan",
             "name": "DeepSeek-V4-Flash (CodingPlan)",
-            "tooltip": "百度千帆 Coding Plan 专属接入点中的 DeepSeek-V4-Flash。DeepSeek 最新轻量推理模型，适用于通用问答、日常 Agent 任务及基础开发辅助。",
+            "tooltip": "DeepSeek-V4-Flash in Baidu Qianfan Coding Plan exclusive endpoint. DeepSeek's latest lightweight reasoning model, suitable for general Q&A, daily Agent tasks, and basic development assistance.",
             "provider": "baidu-coding",
             "sdkMode": "anthropic",
             "baseUrl": "https://qianfan.baidubce.com/anthropic/coding",
             "model": "deepseek-v4-flash",
             "maxInputTokens": 1000000,
             "maxOutputTokens": 128000,
-            "reasoningEffort": ["high", "max", "none"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "reasoningEffort": [
+                "high",
+                "max",
+                "none"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "deepseek-v3.2-coding-plan",
             "name": "DeepSeek-V3.2 (CodingPlan)",
-            "tooltip": "百度千帆 Coding Plan 专属接入点中的 DeepSeek-V3.2。兼顾推理效果与响应效率，适用于通用问答、日常 Agent 任务及基础开发辅助。",
+            "tooltip": "DeepSeek-V3.2 in Baidu Qianfan Coding Plan exclusive endpoint. Balances reasoning effectiveness and response efficiency, suitable for general Q&A, daily Agent tasks, and basic development assistance.",
             "provider": "baidu-coding",
             "sdkMode": "anthropic",
             "baseUrl": "https://qianfan.baidubce.com/anthropic/coding",
             "model": "deepseek-v3.2",
             "maxInputTokens": 96000,
             "maxOutputTokens": 32000,
-            "thinking": ["disabled", "enabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "glm-5.1-coding-plan",
             "name": "GLM-5.1 (CodingPlan)",
-            "tooltip": "百度千帆 Coding Plan 专属接入点中的 GLM-5.1。智谱新一代旗舰基座，Coding能力和Agent能力进一步提升。抵扣系数较高，仅推荐在复杂任务场景使用。",
+            "tooltip": "GLM-5.1 in Baidu Qianfan Coding Plan exclusive endpoint. Zhipu's new generation flagship foundation model, with enhanced Coding and Agent capabilities. Higher deduction coefficient, only recommended for complex task scenarios.",
             "provider": "baidu-coding",
             "sdkMode": "anthropic",
             "baseUrl": "https://qianfan.baidubce.com/anthropic/coding",
             "model": "glm-5.1",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "glm-5-coding-plan",
             "name": "GLM-5 (CodingPlan)",
-            "tooltip": "百度千帆 Coding Plan 专属接入点中的 GLM-5。智谱新一代旗舰基座模型，面向 Agentic Engineering 打造，能够在复杂系统工程与长程 Agent 任务中提供可靠生产力。",
+            "tooltip": "GLM-5 in Baidu Qianfan Coding Plan exclusive endpoint. Zhipu's new generation flagship foundation model, built for Agentic Engineering, capable of providing reliable productivity in complex engineering systems and long-range Agent tasks.",
             "provider": "baidu-coding",
             "sdkMode": "anthropic",
             "baseUrl": "https://qianfan.baidubce.com/anthropic/coding",
             "model": "glm-5",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "kimi-k2.5-coding-plan",
             "name": "Kimi-K2.5 (CodingPlan)",
-            "tooltip": "百度千帆 Coding Plan 专属接入点中的 Kimi K2.5。Kimi 最新全能模型，原生多模态架构，支持文本输入（暂不支持图像理解），强化基于视觉的编程能力与 Agent 任务协同执行能力。",
+            "tooltip": "Kimi K2.5 in Baidu Qianfan Coding Plan exclusive endpoint. Kimi's latest all-around model with native multimodal architecture, supporting text input (image understanding not yet supported), enhancing visual-based programming capabilities and Agent task collaborative execution.",
             "provider": "baidu-coding",
             "sdkMode": "anthropic",
             "baseUrl": "https://qianfan.baidubce.com/anthropic/coding",
             "model": "kimi-k2.5",
             "maxInputTokens": 224000,
             "maxOutputTokens": 64000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "minimax-m2.5-coding-plan",
             "name": "MiniMax-M2.5 (CodingPlan)",
-            "tooltip": "百度千帆 Coding Plan 专属接入点中的 MiniMax M2.5。MiniMax 推出的新一代旗舰编程模型，致力于提升真实世界复杂任务中的表现。在编程、工具调用、搜索以及办公等生产场景达到行业SOTA。",
+            "tooltip": "MiniMax M2.5 in Baidu Qianfan Coding Plan exclusive endpoint. MiniMax's new generation flagship programming model, committed to improving performance in real-world complex tasks. Achieves industry SOTA in programming, tool calling, search, and office production scenarios.",
             "provider": "baidu-coding",
             "sdkMode": "anthropic",
             "baseUrl": "https://qianfan.baidubce.com/anthropic/coding",
             "model": "minimax-m2.5",
             "maxInputTokens": 192000,
             "maxOutputTokens": 128000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "deepseek-v4-flash",
             "name": "DeepSeek-V4-Flash (PayGo)",
-            "tooltip": "DeepSeek-V4 拥有百万字超长上下文，在 Agent 能力、世界知识和推理性能上均实现国内与开源领域的领先。DeepSeek-V4-Flash 是 DeepSeek-V4 系列的轻量高效版本，在保持 1M 超长上下文能力的同时，通过更小的模型参数与激活规模，提供更为快捷、经济的 API 服务。",
+            "tooltip": "DeepSeek-V4 has million-character super long context, achieving leadership in domestic and open-source fields in Agent capabilities, world knowledge, and reasoning performance. DeepSeek-V4-Flash is the lightweight efficient version of DeepSeek-V4 series, maintaining 1M super long context capability while providing faster, more economical API service through smaller model parameters and activation scale.",
             "maxInputTokens": 1000000,
             "maxOutputTokens": 128000,
-            "reasoningEffort": ["high", "max", "none"],
+            "reasoningEffort": [
+                "high",
+                "max",
+                "none"
+            ],
             "thinkingFormat": "object",
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "deepseek-v4-pro",
             "name": "DeepSeek-V4-Pro (PayGo)",
-            "tooltip": "DeepSeek-V4 拥有百万字超长上下文，在 Agent 能力、世界知识和推理性能上均实现国内与开源领域的领先。",
+            "tooltip": "DeepSeek-V4 has million-character super long context, achieving leadership in domestic and open-source fields in Agent capabilities, world knowledge, and reasoning performance.",
             "maxInputTokens": 1000000,
             "maxOutputTokens": 128000,
-            "reasoningEffort": ["high", "max", "none"],
+            "reasoningEffort": [
+                "high",
+                "max",
+                "none"
+            ],
             "thinkingFormat": "object",
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "deepseek-v3.2",
             "name": "DeepSeek-V3.2 (PayGo)",
-            "tooltip": "DeepSeek-V3.2 正式版目标是平衡推理能力与输出长度，适合日常使用，例如问答场景和通用 Agent 任务场景。在公开的推理类 Benchmark 测试中，DeepSeek-V3.2 达到了 GPT-5 的水平，仅略低于 Gemini-3.0-Pro；相比 Kimi-K2-Thinking，V3.2 的输出长度大幅降低，显著减少了计算开销与用户等待时间。",
+            "tooltip": "DeepSeek-V3.2 official version aims to balance reasoning capability and output length, suitable for daily use, such as Q&A scenarios and general Agent task scenarios. In public reasoning Benchmark tests, DeepSeek-V3.2 reached GPT-5 level, only slightly below Gemini-3.0-Pro; compared to Kimi-K2-Thinking, V3.2 significantly reduces output length, substantially decreasing computational overhead and user waiting time.",
             "maxInputTokens": 96000,
             "maxOutputTokens": 32000,
-            "thinking": ["disabled", "enabled"],
+            "thinking": [
+                "disabled",
+                "enabled"
+            ],
             "thinkingFormat": "object",
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "glm-5",
             "name": "GLM-5 (PayGo)",
-            "tooltip": "GLM-5 是智谱新一代的旗舰基座模型，面向 Agentic Engineering 打造，能够在复杂系统工程与长程 Agent 任务中提供可靠生产力。在 Coding 与 Agent 能力上，GLM-5 取得开源 SOTA 表现，在真实编程场景的使用体感逼近 Claude Opus 4.5，擅长复杂系统工程与长程 Agent 任务，是通用 Agent 助手的理想基座。",
+            "tooltip": "GLM-5 is Zhipu's new generation flagship foundation model, built for Agentic Engineering, capable of providing reliable productivity in complex engineering systems and long-range Agent tasks. In Coding and Agent capabilities, GLM-5 achieves open-source SOTA performance, with usage experience in real programming scenarios approaching Claude Opus 4.5, excelling in complex engineering systems and long-range Agent tasks, making it an ideal foundation for general Agent assistants.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "thinkingFormat": "object",
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "glm-5.1",
             "name": "GLM-5.1 (PayGo)",
-            "tooltip": "GLM-5.1 是智谱新一代旗舰基座，长程任务显著提升，可自主工作长达8小时，闭环交付工程级成果，整体表现对齐Claude Opus 4.6。",
+            "tooltip": "GLM-5.1 is Zhipu's new generation flagship foundation, with significantly improved long-range tasks, capable of autonomous work for up to 8 hours, delivering engineering-level results comprehensively, with overall performance aligning with Claude Opus 4.6.",
             "maxInputTokens": 200000,
             "maxOutputTokens": 128000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "thinkingFormat": "object",
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "kimi-k2.5",
             "name": "Kimi-K2.5 (PayGo)",
-            "tooltip": "Kimi-K2.5 是 Kimi 迄今最全能的模型，原生的多模态架构设计，支持文本输入（当前暂不支持图像理解）、思考与非思考模式、对话与 Agent 任务。",
+            "tooltip": "Kimi-K2.5 is Kimi's most capable model to date, with native multimodal architecture design, supporting text input (currently image understanding not supported), thinking and non-thinking modes, conversation and Agent tasks.",
             "maxInputTokens": 224000,
             "maxOutputTokens": 64000,
-            "thinking": ["enabled", "disabled"],
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
             "thinkingFormat": "object",
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "minimax-m2.5",
             "name": "MiniMax-M2.5 (PayGo)",
-            "tooltip": "MiniMax-M2.5 是 MiniMax 推出的新一代旗舰编程模型，致力于提升真实世界复杂任务中的表现。在编程、工具调用和搜索、办公等生产力场景都达到或刷新了行业的 SOTA。",
+            "tooltip": "MiniMax-M2.5 is MiniMax's new generation flagship programming model, committed to improving performance in real-world complex tasks. Achieves or refreshes industry SOTA in programming, tool calling and search, office and other productivity scenarios.",
             "maxInputTokens": 192000,
             "maxOutputTokens": 128000,
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         },
         {
             "id": "ernie-5.0",
             "name": "ERNIE-5.0 (PayGo)",
             "model": "ernie-5.0",
-            "tooltip": "文心新一代模型文心5.0是原生全模态大模型，采用原生的全模态统一建模技术，将文本、图像、音频、视频联合建模，具备综合的全模态能力。文心5.0基础能力全面升级，基准测试集表现出色，多模态理解、指令遵循、创意写作、事实性、智能体规划与工具应用等表现尤其出色。",
+            "tooltip": "ERNIE 5.0 is the new generation model from Wenxin, a native full-modality large model, adopting native full-modality unified modeling technology, jointly modeling text, images, audio, and video, possessing comprehensive full-modality capabilities. ERNIE 5.0's foundational capabilities are comprehensively upgraded, with outstanding performance in benchmark tests, especially in multimodal understanding, instruction following, creative writing, factuality, agent planning and tool application.",
             "maxInputTokens": 119000,
             "maxOutputTokens": 64000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": true }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": true
+            }
         },
         {
             "id": "ernie-5.1",
             "name": "ERNIE-5.1 (PayGo)",
             "model": "ernie-5.1",
-            "tooltip": "ERNIE 5.1是文心系列最新模型，基础能力全面升级，在智能体、知识、推理、深度搜索等方面均有显著提升。此次升级发布，采用分离式全异步强化学习技术，针对性解决大模型向智能体自主决策演进中面临的训推数值偏差、异构资源利用率低及长尾效应导致的全局等挑战。配套采用规模化智能体后训练技术来提升模型能力与泛化表现，让环境、专家、融合三步协同 ，既保证了训练效率，也显著提升模型在复杂任务中的稳定性与表现。",
+            "tooltip": "ERNIE 5.1 is the latest model in the Wenxin series, with comprehensively upgraded foundational capabilities, significant improvements in agents, knowledge, reasoning, and deep search. This upgrade adopts decoupled asynchronous reinforcement learning technology, specifically addressing challenges in large model evolution to agent autonomous decision-making, including training-inference numerical deviation, heterogeneous resource utilization efficiency, and global waiting caused by long-tail effects. Supporting scaled agent post-training technology to enhance model capabilities and generalization performance, coordinating environment, experts, and fusion in three steps, ensuring training efficiency while significantly improving stability and performance in complex tasks.",
             "maxInputTokens": 119000,
             "maxOutputTokens": 64000,
-            "thinking": ["enabled", "disabled"],
-            "capabilities": { "toolCalling": true, "imageInput": false }
+            "thinking": [
+                "enabled",
+                "disabled"
+            ],
+            "capabilities": {
+                "toolCalling": true,
+                "imageInput": false
+            }
         }
     ]
 }

@@ -1,7 +1,7 @@
 ﻿/**
- * UsagesView 样式
- * Token 用量详细视图样式
- * 保持原有样式模式
+ * UsagesView Styles
+ * Token Usage Detailed View Styles
+ * Maintain original style patterns
  */
 
 body {
@@ -187,7 +187,8 @@ body {
 
             th,
             td {
-                /* 提供商表格和小时表格：数值列右对齐（第2-8列） */
+
+                /* Provider table and hourly table: numeric columns right-aligned (columns 2-8) */
                 &:nth-child(n + 2):nth-child(-n + 8) {
                     width: 60px;
                     text-align: right;
@@ -203,7 +204,7 @@ body {
     }
 }
 
-/* 小时统计图表样式 */
+/* Hourly statistics chart styles */
 .hourly-chart-section {
     margin: 20px 0;
     padding: 15px;
@@ -283,7 +284,7 @@ body {
     }
 }
 
-/* 小时统计区域样式 */
+/* Hourly statistics section styles */
 .hourly-stats-section {
     position: relative;
 
@@ -326,7 +327,7 @@ body {
     }
 }
 
-/* 小时统计表格嵌套样式 */
+/* Hourly statistics table nested styles */
 .hourly-stats-table {
     .provider-row {
         background-color: var(--vscode-sideBar-background);
@@ -358,62 +359,64 @@ body {
         }
     }
 
-    /* 嵌套行悬停效果 */
+    /* Nested row hover effects */
     .provider-row:hover,
     .model-row:hover {
         background-color: var(--vscode-list-hoverBackground);
     }
 }
 
-/* 记录表格特定样式 */
+/* Records table specific styles */
 #records-container {
-    /* 列宽分配 */
+
+    /* Column width allocation */
     .records-table {
-        /* 第1列（时间）固定宽度 */
+
+        /* Column 1 (time) fixed width */
         th:nth-child(1),
         td:nth-child(1) {
             width: 50px;
         }
 
-        /* 第2列（提供商）*/
+        /* Column 2 (provider) */
         th:nth-child(2),
         td:nth-child(2) {
             width: 12%;
             min-width: 100px;
         }
 
-        /* 第3列（模型） */
+        /* Column 3 (model) */
         th:nth-child(3),
         td:nth-child(3) {
             width: 24%;
             min-width: 120px;
         }
 
-        /* 第4-7列（输入、缓存、输出、消耗）数值列固定宽度 */
+        /* Columns 4-7 (input, cache, output, consumption) numeric columns fixed width */
         th:nth-child(n + 4):nth-child(-n + 7),
         td:nth-child(n + 4):nth-child(-n + 7) {
             width: 55px;
         }
 
-        /* 第8列（首Token延迟）特殊宽度 */
+        /* Column 8 (firstToken latency) special width */
         th:nth-child(n + 8),
         td:nth-child(n + 8) {
             width: 110px;
         }
 
-        /* 第9列（输出速度）特殊宽度 */
+        /* Column 9 (output speed) special width */
         th:nth-child(n + 9),
         td:nth-child(n + 9) {
             width: 55px;
         }
 
-        /* 第8-9列（首Token延迟、输出速度）文本宽度 */
+        /* Columns 8-9 (firstToken latency, output speed) text width */
         td:nth-child(n + 8):nth-child(-n + 9) span {
             display: inline-block;
             width: 4em;
         }
 
-        /* 最后末尾（状态）固定宽度 */
+        /* Last column (status) fixed width */
         th:last-child,
         td:last-child {
             width: 38px;
@@ -422,23 +425,24 @@ body {
 
     td,
     th {
-        /* 第1列（时间）居中 */
+
+        /* Column 1 (time) centered */
         &:nth-child(1) {
             text-align: center;
         }
 
-        /* 第2-3列（提供商、模型）左对齐 */
+        /* Columns 2-3 (provider, model) left-aligned */
         &:nth-child(2),
         &:nth-child(3) {
             text-align: left;
         }
 
-        /* 第4-9列（输入、缓存、输出、消耗、首Token、速度）右对齐 */
+        /* Columns 4-9 (input, cache, output, consumption, firstToken, speed) right-aligned */
         &:nth-child(n + 4):nth-child(-n + 9) {
             text-align: right;
         }
 
-        /* 第10列（状态）居中对齐 */
+        /* Column 10 (status) center-aligned */
         &:nth-child(10) {
             text-align: center;
         }
@@ -541,7 +545,7 @@ button {
     }
 }
 
-/* 加载状态遮罩 */
+/* Loading state overlay */
 .loading-overlay {
     position: fixed;
     top: 0;
@@ -584,7 +588,7 @@ button {
     }
 }
 
-/* 响应式设计 */
+/* Responsive design */
 @media (max-width: 768px) {
     .container {
         .sidebar {
@@ -603,7 +607,7 @@ button {
         }
     }
 
-    /* 侧边栏遮罩层 */
+    /* Sidebar overlay */
     .sidebar-overlay {
         position: fixed;
         top: 0;

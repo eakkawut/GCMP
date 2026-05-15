@@ -301,7 +301,7 @@ button {
     color: var(--vscode-list-activeSelectionForeground);
 }
 
-/* 全局错误提示条样式 */
+/* global error banner styles */
 .error-banner {
     display: none;
     position: sticky;
@@ -359,7 +359,7 @@ button {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* 模型下拉框样式 */
+/* model dropdown styles */
 .model-dropdown {
     position: relative;
 }

@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
  *  CommitMessage
- *  UI 协调器：负责进度展示、仓库选择、写入输入框与提示反馈。
+ *  UI Coordinator: responsible for progress display, repository selection, writing to input box and feedback.
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -18,19 +18,19 @@ import { ConfigManager, Logger } from '../utils';
 import { Repository } from '../types/git';
 
 /**
- * CommitMessage - 提交消息生成的 UI 协调器。
+ * CommitMessage - UI coordinator for commit message generation.
  */
 export class CommitMessage {
     private static isGenerating: boolean = false;
 
     private static normalizeFsPath(p: string): string {
-        // Windows 下 fsPath 大小写不敏感，做一次规范化方便匹配。
+        // On Windows, fsPath is case-insensitive, normalize for matching.
         const normalized = path
             .normalize(p)
             .replace(/[\\/]+/g, path.sep)
             .toLowerCase();
 
-        // 去掉末尾分隔符（保留盘符根目录，如 c:\）
+        // Remove trailing separator (preserve drive root like c:\)
         let out = normalized;
         while (out.length > 3 && out.endsWith(path.sep)) {
             out = out.slice(0, -1);
@@ -56,55 +56,55 @@ export class CommitMessage {
     }
 
     /**
-     * 生成并设置提交消息（主入口）。
+     * Generate and set commit message (main entry point).
      *
-     * 职责说明：
-     * - UI 协调：进度展示、仓库选择、写入 Git 输入框、提示反馈
-     * - 业务流程：在本类内完成（diff/blame/生成），避免跨文件跳转
+     * Responsibilities:
+     * - UI coordination: progress display, repository selection, writing to Git input box, feedback
+     * - Business logic: completed within this class (diff/blame/generation), avoiding cross-file jumps
      *
-     * 参数：
-     * - sourceControlRepository：VS Code Git 扩展传入的仓库对象；若未传入则会自动选择（单仓库直接取，多仓库按 resContext 尝试匹配，否则弹出选择）。
-     * - options.scope：控制分析范围
-     *   - undefined（默认）：优先读取暂存区，若无暂存变更则自动回退到未提交工作树
-     *   - 'staged'：仅分析已暂存（staged），无回退
-     *   - 'workingTree'：仅分析工作区变更（tracked + untracked），不包含 staged
-     * - options.resContext：SCM 菜单/按钮回调常带的 ResourceGroup，用于多仓库场景推断当前仓库。
+     * Parameters:
+     * - sourceControlRepository: Repository object passed from VS Code Git extension; if not provided, automatically selected (single repo used directly, multiple repos matched by resContext, otherwise popup selection).
+     * - options.scope: Controls analysis scope
+     *   - undefined (default): prioritize reading staged changes, fallback to unstaged working tree if no staged changes
+     *   - 'staged': Only analyze staged changes, no fallback
+     *   - 'workingTree': Only analyze working tree changes (tracked + untracked), excluding staged
+     * - options.resContext: ResourceGroup often carried by SCM menu/button callbacks, used to infer current repository in multi-repository scenarios.
      *
-     * 取消：
-     * - 进度通知支持取消；取消会抛出 vscode.CancellationError 并被静默处理。
+     * Cancellation:
+     * - Progress notification supports cancellation; cancellation throws vscode.CancellationError and is handled silently.
      */
     static async generateAndSetCommitMessage(
         sourceControlRepository?: Repository,
         options?: { scope?: 'staged' | 'workingTree'; resContext?: vscode.SourceControlResourceGroup }
     ): Promise<void> {
         if (this.isGenerating) {
-            vscode.window.showInformationMessage('正在生成提交消息，请稍候或点击“停止”中止');
+            vscode.window.showInformationMessage('Generating commit message, please wait or click "Stop" to abort');
             return;
         }
 
         this.isGenerating = true;
 
         try {
-            // 进度展示应尽早开始，避免点击后出现“无响应”的感知延迟
+            // Progress display should start early to avoid perceived delay of "unresponsive" after click
             await this.executeWithProgress(async (progress, token) => {
-                // 1. 初始化和验证
-                progress.report({ message: '正在初始化...', increment: 2 });
+                // 1. Initialize and validate
+                progress.report({ message: 'Initializing...', increment: 2 });
                 await this.initializeAndValidate();
                 this.throwIfCancelled(token);
 
-                // 2. 选择仓库
-                progress.report({ message: '正在选择仓库...', increment: 3 });
+                // 2. Select repository
+                progress.report({ message: 'Selecting repository...', increment: 3 });
                 if (!sourceControlRepository) {
                     const repos = await GitService.getRepositories();
                     this.throwIfCancelled(token);
 
-                    // 只有一个仓库时直接使用它，避免不必要的路径推断。
+                    // When there is only one repository, use it directly to avoid unnecessary path inference.
                     if (repos.length === 1) {
                         sourceControlRepository = repos[0];
                     } else {
-                        // SCM 菜单（title/resourceGroup/title 等）通常会把当前 SourceControl/ResourceGroup 作为参数传入。
-                        // SourceControlResourceGroup 没有 rootUri/provider，但 resourceStates 里有 resourceUri。
-                        // 通过第一个资源的 resourceUri.fsPath 推断当前仓库。
+                        // SCM menu (title/resourceGroup/title etc.) usually passes the current SourceControl/ResourceGroup as a parameter.
+                        // SourceControlResourceGroup does not have rootUri/provider, but resourceStates has resourceUri.
+                        // Infer the current repository through the first resource's resourceUri.fsPath.
                         const first = options?.resContext?.resourceStates?.[0];
                         const fsPath = first?.resourceUri?.fsPath;
                         const rootFsPath = typeof fsPath === 'string' && fsPath.trim() ? fsPath.trim() : undefined;
@@ -112,9 +112,9 @@ export class CommitMessage {
                             const target = this.normalizeFsPath(rootFsPath);
                             const matched = repos
                                 .map(r => ({ r, root: this.normalizeFsPath(r.rootUri.fsPath) }))
-                                // rootFsPath 既可能是 repo root，也可能是某个变更文件路径。
+                                // rootFsPath could be either repo root or a path to a changed file.
                                 .filter(x => this.isSameOrChildPath(target, x.root))
-                                // 嵌套仓库时选择路径更长（更具体）的那个。
+                                // For nested repositories, select the one with longer (more specific) path.
                                 .sort((a, b) => b.root.length - a.root.length)[0]?.r;
                             if (matched) {
                                 sourceControlRepository = matched;
@@ -129,7 +129,7 @@ export class CommitMessage {
 
                 this.throwIfCancelled(token);
 
-                // 3. 生成提交消息
+                // 3. Generate commit message
                 const commitMessage = await this.generateCommitMessage(
                     progress,
                     sourceControlRepository!,
@@ -138,17 +138,17 @@ export class CommitMessage {
                 );
                 this.throwIfCancelled(token);
 
-                // 4. 应用提交消息
-                progress.report({ message: '正在应用提交消息...', increment: 10 });
+                // 4. Apply commit message
+                progress.report({ message: 'Applying commit message...', increment: 10 });
                 sourceControlRepository!.inputBox.value = commitMessage.message;
                 const sourceLabel: Record<string, string> = {
-                    staged: '暂存区',
-                    workingTree: '工作树'
+                    staged: 'Staged',
+                    workingTree: 'Working Tree'
                 };
-                vscode.window.showInformationMessage(`提交消息已生成（基于${sourceLabel[commitMessage.diffSource]}）`);
+                vscode.window.showInformationMessage(`Commit message generated (based on ${sourceLabel[commitMessage.diffSource]})`);
 
                 Logger.info(
-                    `[CommitMessage] 提交消息已生成 [${commitMessage.diffSource}]: ${commitMessage.message.substring(0, 50)}...`
+                    `[CommitMessage] Commit message generated [${commitMessage.diffSource}]: ${commitMessage.message.substring(0, 50)}...`
                 );
             });
         } catch (error: unknown) {
@@ -159,23 +159,23 @@ export class CommitMessage {
     }
 
     /**
-     * 初始化和验证
+     * Initialize and validate
      */
     private static async initializeAndValidate(): Promise<void> {
         if (!vscode.workspace.workspaceFolders) {
-            throw new Error('没有打开的工作区');
+            throw new Error('No workspace opened');
         }
-        // 验证 Git 扩展
+        // Validate Git extension
         await GitService.validateGitExtension();
     }
 
     /**
-     * 业务流程：生成提交消息（diff/blame/生成）。
+     * Business flow: generate commit message (diff/blame/generation).
      *
-     * scope 取值：
-     * - undefined（默认）：优先读取暂存区，若无暂存变更则自动回退到未提交工作树
-     * - 'staged'：仅分析暂存区（无回退）
-     * - 'workingTree'：仅分析工作树变更（tracked + untracked），不包含暂存
+     * scope values:
+     * - undefined (default): prioritize reading staged changes, auto fallback to unstaged working tree if no staged changes
+     * - 'staged': Only analyze staged changes (no fallback)
+     * - 'workingTree': Only analyze working tree changes (tracked + untracked), excluding staged
      */
     private static async generateCommitMessage(
         progress: vscode.Progress<{ message?: string; increment?: number }>,
@@ -186,19 +186,19 @@ export class CommitMessage {
         const repoPath = repository.rootUri.fsPath;
         const commitConfig = ConfigManager.getCommitConfig();
 
-        // 1. 获取 Git 变更
-        progress.report({ message: '正在分析 Git 变更...', increment: 10 });
+        // 1. Get Git changes
+        progress.report({ message: 'Analyzing Git changes...', increment: 10 });
         let diffParts: Awaited<ReturnType<typeof GitService.getDiff>>;
 
-        /** 实际使用的 diff 来源维度，用于提示用户 */
+        /** Actual diff source dimension used, for user notification */
         let diffSource: 'staged' | 'workingTree';
 
         if (scope === 'staged') {
-            // 显式仅暂存：不回退
+            // Explicit staged only: no fallback
             diffParts = await GitService.getDiff(repoPath, true, token);
             diffSource = 'staged';
         } else if (scope === 'workingTree') {
-            // 仅工作树：tracked + untracked，不含 staged
+            // Working tree only: tracked + untracked, excluding staged
             diffParts = await GitService.getDiff(repoPath, false, token);
             diffParts = {
                 staged: { uri: [], diff: [] },
@@ -207,13 +207,13 @@ export class CommitMessage {
             };
             diffSource = 'workingTree';
         } else {
-            // 默认：优先暂存区，无暂存时自动回退到未提交工作树
+            // Default: prioritize staged, auto fallback to unstaged working tree when no staged changes
             try {
                 diffParts = await GitService.getDiff(repoPath, true, token);
                 diffSource = 'staged';
             } catch (error) {
                 if (error instanceof NoChangesDetectedError) {
-                    Logger.info('[CommitMessage] 暂存区无变更，自动回退到未提交工作树');
+                    Logger.info('[CommitMessage] No staged changes, auto fallback to unstaged working tree');
                     diffParts = await GitService.getDiff(repoPath, false, token);
                     diffSource = 'workingTree';
                 } else {
@@ -223,16 +223,16 @@ export class CommitMessage {
         }
         this.throwIfCancelled(token);
 
-        // 2. 文件改动相关历史（用于理解修改内容；与“风格推断”无关）
-        progress.report({ message: '正在分析文件改动历史...', increment: 10 });
+        // 2. File change related history (for understanding modification content; unrelated to "style inference")
+        progress.report({ message: 'Analyzing file change history...', increment: 10 });
         const blameAnalysis = await this.analyzeChanges(repoPath, diffParts, token);
         this.throwIfCancelled(token);
 
-        // 3. 仓库级别最近 50 条提交历史（与文件无关；仅用于 auto 推断提交规范）
-        // auto 使用 subjects-only，以尽量保留仓库风格中可能存在的“前置 emoji”。
+        // 3. Repository level recent 50 commit history (unrelated to files; only used for auto inference of commit conventions)
+        // auto uses subjects-only, to preserve possible "leading emoji" in repository style.
         let recentCommitHistory = '';
         if (commitConfig.format === 'auto') {
-            progress.report({ message: '正在获取仓库最近提交历史...', increment: 10 });
+            progress.report({ message: 'Fetching recent repository commit history...', increment: 10 });
             recentCommitHistory = await GitService.getRecentCommits(repoPath, token, {
                 maxEntries: 50,
                 format: 'subject'
@@ -240,7 +240,7 @@ export class CommitMessage {
             this.throwIfCancelled(token);
         }
 
-        // 4. 生成提交消息
+        // 4. Generate commit message
         const commitMessage = await GeneratorService.generateCommitMessages(
             diffParts,
             blameAnalysis,
@@ -254,7 +254,7 @@ export class CommitMessage {
     }
 
     /**
-     * 分析代码变更的历史（用于提供上下文）。
+     * Analyze history of code changes (for providing context).
      */
     private static async analyzeChanges(
         repoPath: string,
@@ -284,9 +284,9 @@ export class CommitMessage {
                 return 'No files to analyze';
             }
 
-            // 将“未跟踪的新文件”和“历史上下文”拆开：
-            // - untracked 文件本身没有 HEAD 历史，混入会导致上下文噪音
-            // - tracked 文件才需要拉取最近提交历史
+            // Separate "untracked new files" and "history context":
+            // - untracked files have no HEAD history themselves, mixing them would cause context noise
+            // - tracked files need to pull recent commit history
             const lines: string[] = [];
             if (trackedUnique.length > 0) {
                 lines.push('Changed files (tracked):');
@@ -310,13 +310,13 @@ export class CommitMessage {
 
             return lines.join('\n').trim();
         } catch (error) {
-            Logger.warn('[CommitMessage] Blame 分析失败:', error);
+            Logger.warn('[CommitMessage] Blame analysis failed:', error);
             return 'Blame analysis not available';
         }
     }
 
     /**
-     * 执行带进度显示的操作
+     * Execute operation with progress display
      */
     private static async executeWithProgress(
         action: (
@@ -324,9 +324,9 @@ export class CommitMessage {
             token: vscode.CancellationToken
         ) => Promise<void>
     ): Promise<void> {
-        // 双通道进度展示：
-        // - SCM 视图显示进行中进度条（不支持 title/message/cancel）
-        // - 通知弹窗显示可取消的详细进度信息
+        // Dual channel progress display:
+        // - SCM view displays in-progress progress bar (does not support title/message/cancel)
+        // - Notification popup displays cancellable detailed progress information
         await vscode.window.withProgress({ location: vscode.ProgressLocation.SourceControl }, async () => {
             await vscode.window.withProgress(
                 {
@@ -342,42 +342,42 @@ export class CommitMessage {
     }
 
     /**
-     * 处理错误
+     * Handle errors
      */
     private static async handleError(error: unknown): Promise<void> {
-        // 用户取消 - 静默处理
+        // User cancelled - handle silently
         if (error instanceof UserCancelledError) {
-            Logger.trace('[CommitMessage] 用户取消操作');
+            Logger.trace('[CommitMessage] User cancelled operation');
             return;
         }
-        // VS Code 取消
+        // VS Code cancellation
         if (error instanceof vscode.CancellationError) {
-            Logger.trace('[CommitMessage] 操作被取消');
+            Logger.trace('[CommitMessage] Operation cancelled');
             return;
         }
-        // 无变更
+        // No changes
         if (error instanceof NoChangesDetectedError) {
-            vscode.window.showWarningMessage('没有检测到需要提交的变更');
+            vscode.window.showWarningMessage('No changes detected that need to be committed');
             return;
         }
-        // 无仓库
+        // No repositories
         if (error instanceof NoRepositoriesFoundError) {
-            vscode.window.showWarningMessage('没有找到 Git 仓库');
+            vscode.window.showWarningMessage('No Git repository found');
             return;
         }
-        // Git 扩展未找到
+        // Git extension not found
         if (error instanceof GitExtensionNotFoundError) {
-            vscode.window.showErrorMessage('Git 扩展未找到或未激活');
+            vscode.window.showErrorMessage('Git extension not found or not activated');
             return;
         }
-        // 模型未找到
+        // Model not found
         if (error instanceof ModelNotFoundError) {
             vscode.window.showErrorMessage(error.message);
             return;
         }
-        // 其他错误
+        // Other errors
         const errorMessage = error instanceof Error ? error.message : String(error);
-        Logger.error('[CommitMessage] 生成失败:', error);
-        vscode.window.showErrorMessage(`生成提交消息失败: ${errorMessage}`);
+        Logger.error('[CommitMessage] Generation failed:', error);
+        vscode.window.showErrorMessage(`Failed to generate commit message: ${errorMessage}`);
     }
 }

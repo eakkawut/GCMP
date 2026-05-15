@@ -1,10 +1,10 @@
 /*---------------------------------------------------------------------------------------------
- *  智谱AI用量状态栏项
- *  继承 ProviderStatusBarItem，显示智谱AI Coding Plan 用量信息
- *  - 显示周限额 (unit=6): 7天代币用量限制
- *  - 显示5小时限额 (unit=3): 5小时代币用量限制（在 nextResetTime 时自动重置）
- *  - 显示MCP月度限额 (TIME_LIMIT): MCP搜索使用次数
- *  参考实现验证: unit=3 对应5小时，unit=6 对应7天（周限额）
+ *  ZhipuAI Usage Status Bar Item
+ *  Extends ProviderStatusBarItem, displays ZhipuAI Coding Plan usage information
+ *  - Displays weekly limit (unit=6): 7-day token usage limit
+ *  - Displays 5-hour limit (unit=3): 5-hour token usage limit (auto-resets at nextResetTime)
+ *  - Displays MCP monthly limit (TIME_LIMIT): MCP search usage count
+ *  Reference implementation verification: unit=3 corresponds to 5 hours, unit=6 corresponds to 7 days (weekly limit)
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -14,32 +14,32 @@ import { Logger } from '../utils/logger';
 import { ConfigManager, ApiKeyManager, VersionManager } from '../utils';
 
 /**
- * 用量限制项数据结构
- * 根据智谱API文档及开源实现验证：
- * - unit=3: 5小时限额
- * - unit=6: 7天限额（周限额）
+ * Usage limit item data structure
+ * Verified according to Zhipu API documentation and open source implementation:
+ * - unit=3: 5-hour limit
+ * - unit=6: 7-day limit (weekly limit)
  */
 export interface UsageLimitItem {
-    /** 限制类型：
-     *  - TOKENS_LIMIT: 代币用量（根据 unit 判断时间窗口）
-     *  - TIME_LIMIT: MCP 搜索使用次数
+    /** Limit type:
+     *  - TOKENS_LIMIT: Token usage (time window determined by unit)
+     *  - TIME_LIMIT: MCP search usage count
      */
     type: 'TIME_LIMIT' | 'TOKENS_LIMIT';
-    /** 时间单位类型: 3=5小时限额, 6=7天周限额 */
+    /** Time unit type: 3=5-hour limit, 6=7-day weekly limit */
     unit: number;
-    /** 时间周期数 */
+    /** Time period count */
     number: number;
-    /** 总配额/限制数（TIME_LIMIT 必有，TOKENS_LIMIT 可选） */
+    /** Total quota/limit (required for TIME_LIMIT, optional for TOKENS_LIMIT) */
     usage?: number;
-    /** 当前已使用（TIME_LIMIT 必有，TOKENS_LIMIT 可选） */
+    /** Currently used (required for TIME_LIMIT, optional for TOKENS_LIMIT) */
     currentValue?: number;
-    /** 剩余额度（TIME_LIMIT 必有，TOKENS_LIMIT 可选） */
+    /** Remaining quota (required for TIME_LIMIT, optional for TOKENS_LIMIT) */
     remaining?: number;
-    /** 使用百分比 */
+    /** Usage percentage */
     percentage: number;
-    /** 下次重置时间戳 (ms，仅 TOKENS_LIMIT 有效) */
+    /** Next reset timestamp (ms, only valid for TOKENS_LIMIT) */
     nextResetTime?: number;
-    /** 用量详情（按模型或功能划分） */
+    /** Usage details (grouped by model or feature) */
     usageDetails?: Array<{
         modelCode: string;
         usage: number;
@@ -47,21 +47,21 @@ export interface UsageLimitItem {
 }
 
 /**
- * 智谱 状态数据
+ * Zhipu status data
  */
 interface ZhipuStatusData {
-    /** 用量限制列表 */
+    /** Usage limits list */
     limits: UsageLimitItem[];
-    /** 最近的下次重置时间戳 (ms) */
+    /** Most recent next reset timestamp (ms) */
     nextResetTime?: number;
 }
 
 /**
- * 智谱AI Coding Plan 状态栏项
- * - 显示格式：剩余可用百分比
- * - 周限额 (unit=6): 显示为 "周限% (5h%)" 或 "周限%"
- * - 5小时限额 (unit=3): 括号内显示
- * - 优先显示周限额，其次是5小时限额
+ * ZhipuAI Coding Plan Status Bar Item
+ * - Display format: remaining available percentage
+ * - Weekly limit (unit=6): Displayed as "Weekly remaining% (5h%)" or "Weekly remaining%"
+ * - 5-hour limit (unit=3): Displayed in parentheses
+ * - Priority: weekly limit first, then 5-hour limit
  */
 export class ZhipuStatusBar extends ProviderStatusBarItem<ZhipuStatusData> {
     constructor() {
@@ -73,14 +73,14 @@ export class ZhipuStatusBar extends ProviderStatusBarItem<ZhipuStatusData> {
             refreshCommand: 'ccmp.refreshZhipuUsage',
             apiKeyProvider: 'zhipu',
             cacheKeyPrefix: 'zhipu',
-            logPrefix: '智谱AI状态栏',
+            logPrefix: 'ZhipuAI StatusBar',
             icon: '$(ccmp-zhipu)'
         };
         super(config);
     }
 
     /**
-     * 获取显示文本
+     * Get display text
      */
     protected getDisplayText(data: ZhipuStatusData): string {
         const tokensLimits = data.limits.filter(l => l.type === 'TOKENS_LIMIT');
@@ -100,30 +100,30 @@ export class ZhipuStatusBar extends ProviderStatusBarItem<ZhipuStatusData> {
     }
 
     /**
-     * 生成 Tooltip 内容
-     * 参考 Kimi 的组织方式：限频类型、上限值、剩余量、重置时间
+     * Generate tooltip content
+     * Reference Kimi's organization: rate limit type, limit value, remaining amount, reset time
      */
     protected generateTooltip(data: ZhipuStatusData): vscode.MarkdownString {
         const md = new vscode.MarkdownString();
         md.supportHtml = true;
-        md.appendMarkdown('#### GLM Coding Plan 使用情况\n\n');
-        md.appendMarkdown('| 限频类型 | 上限值 | 剩余量 | 重置时间 |\n');
+        md.appendMarkdown('#### GLM Coding Plan Usage\n\n');
+        md.appendMarkdown('| Rate Limit Type | Limit Value | Remaining | Reset Time |\n');
         md.appendMarkdown('| :---: | ---: | ---: | :---: |\n');
 
-        // 遍历所有限制，按顺序显示
+        // Iterate through all limits, display in order
         for (const limit of data.limits) {
             let typeLabel: string;
             let usage: string;
             let remaining: string;
 
             if (limit.type === 'TIME_LIMIT') {
-                // MCP 额度：直接显示数值
-                typeLabel = 'MCP每月';
+                // MCP quota: display value directly
+                typeLabel = 'MCP Monthly';
                 usage = limit.usage !== undefined ? String(limit.usage) : '-';
                 remaining = limit.remaining !== undefined ? String(limit.remaining) : '-';
             } else {
-                typeLabel = this.getWindowLabel(limit, '限额');
-                // TOKENS_LIMIT：官方已不再输出具体 usage 和 remaining，仅显示百分比
+                typeLabel = this.getWindowLabel(limit, 'Limit');
+                // TOKENS_LIMIT: Official API no longer outputs specific usage and remaining, only displays percentage
                 usage = '-';
                 remaining = `${100 - (limit.percentage ?? 0)}%`;
             }
@@ -135,50 +135,50 @@ export class ZhipuStatusBar extends ProviderStatusBarItem<ZhipuStatusData> {
 
         md.appendMarkdown('\n');
         md.appendMarkdown('---\n');
-        md.appendMarkdown('点击状态栏可手动刷新\n');
+        md.appendMarkdown('Click status bar to manually refresh\n');
         return md;
     }
 
     /**
-     * 执行 API 查询
-     * 直接实现智谱AI用量查询逻辑
+     * Execute API query
+     * Directly implements ZhipuAI usage query logic
      */
     protected async performApiQuery(): Promise<{ success: boolean; data?: ZhipuStatusData; error?: string }> {
         const QUOTA_QUERY_URL = 'https://bigmodel.cn/api/monitor/usage/quota/limit';
         const PROVIDER_KEY = 'zhipu';
 
         try {
-            // 检查 API Key 是否存在
+            // Check if API Key exists
             const hasApiKey = await ApiKeyManager.hasValidApiKey(PROVIDER_KEY);
             if (!hasApiKey) {
                 return {
                     success: false,
-                    error: '智谱AI API密钥未配置，请先设置 API 密钥'
+                    error: 'ZhipuAI API key not configured, please set API key first'
                 };
             }
 
-            // 获取 API 密钥
+            // Get API key
             const apiKey = await ApiKeyManager.getApiKey(PROVIDER_KEY);
             if (!apiKey) {
                 return {
                     success: false,
-                    error: '无法获取智谱AI API密钥'
+                    error: 'Unable to get ZhipuAI API key'
                 };
             }
 
-            Logger.debug('触发查询智谱AI用量');
-            StatusLogger.debug(`[${this.config.logPrefix}] 开始查询智谱AI用量...`);
+            Logger.debug('Triggered ZhipuAI usage query');
+            StatusLogger.debug(`[${this.config.logPrefix}] Starting ZhipuAI usage query...`);
 
-            // 获取当前的接入点
+            // Get current endpoint
             const endpoint = ConfigManager.getZhipuEndpoint();
             let requestUrl = QUOTA_QUERY_URL;
 
-            // 如果使用国际站，调整URL
+            // Adjust URL if using international site
             if (endpoint === 'api.z.ai') {
                 requestUrl = 'https://api.z.ai/api/monitor/usage/quota/limit';
             }
 
-            // 构建请求
+            // Build request
             const requestOptions: RequestInit = {
                 method: 'GET',
                 headers: {
@@ -188,15 +188,15 @@ export class ZhipuStatusBar extends ProviderStatusBarItem<ZhipuStatusData> {
                 }
             };
 
-            // 发送请求
+            // Send request
             const response = await fetch(requestUrl, requestOptions);
             const responseText = await response.text();
 
             StatusLogger.debug(
-                `[${this.config.logPrefix}] 用量查询响应状态: ${response.status} ${response.statusText}`
+                `[${this.config.logPrefix}] Usage query response status: ${response.status} ${response.statusText}`
             );
 
-            // 解析响应
+            // Parse response
             interface QuotaLimitResponse {
                 code: number;
                 msg: string;
@@ -223,38 +223,38 @@ export class ZhipuStatusBar extends ProviderStatusBarItem<ZhipuStatusData> {
             try {
                 parsedResponse = JSON.parse(responseText);
             } catch (parseError) {
-                Logger.error(`解析响应 JSON 失败: ${parseError}`);
+                Logger.error(`Failed to parse response JSON: ${parseError}`);
                 return {
                     success: false,
-                    error: `响应格式错误: ${responseText.substring(0, 200)}`
+                    error: `Response format error: ${responseText.substring(0, 200)}`
                 };
             }
 
-            // 检查响应状态
+            // Check response status
             if (!response.ok || !parsedResponse.success || parsedResponse.code !== 200) {
                 let errorMessage = `HTTP ${response.status}`;
                 if (parsedResponse.msg) {
                     errorMessage = parsedResponse.msg;
                 }
-                Logger.error(`用量查询失败: ${errorMessage}`);
+                Logger.error(`Usage query failed: ${errorMessage}`);
                 return {
                     success: false,
-                    error: `查询失败: ${errorMessage}`
+                    error: `Query failed: ${errorMessage}`
                 };
             }
 
-            // 解析成功响应
-            StatusLogger.debug(`[${this.config.logPrefix}] 用量查询成功`);
+            // Parse successful response
+            StatusLogger.debug(`[${this.config.logPrefix}] Usage query successful`);
 
             const limits = parsedResponse.data.limits;
             if (!limits || limits.length === 0) {
                 return {
                     success: false,
-                    error: '未获取到用量限制数据'
+                    error: 'Failed to retrieve usage limit data'
                 };
             }
 
-            // 计算最近的重置时间
+            // Calculate most recent reset time
             const resetTimes = limits.filter(l => l.nextResetTime !== undefined).map(l => l.nextResetTime as number);
             const nextResetTime = resetTimes.length > 0 ? Math.min(...resetTimes) : undefined;
 
@@ -266,29 +266,29 @@ export class ZhipuStatusBar extends ProviderStatusBarItem<ZhipuStatusData> {
                 }
             };
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : '未知错误';
-            Logger.error(`用量查询异常: ${errorMessage}`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            Logger.error(`Usage query exception: ${errorMessage}`);
             return {
                 success: false,
-                error: `查询异常: ${errorMessage}`
+                error: `Query exception: ${errorMessage}`
             };
         }
     }
 
     /**
-     * 检查是否需要高亮警告
-     * 当任一限制的使用率高于阈值时高亮显示
+     * Check if highlight warning is needed
+     * Highlight when any limit's usage rate exceeds threshold
      */
     protected shouldHighlightWarning(data: ZhipuStatusData): boolean {
-        // 检查所有 limits 中的最高使用率
+        // Check maximum usage rate among all limits
         const maxPercentage = Math.max(...data.limits.map(l => l.percentage));
         return maxPercentage >= this.HIGH_USAGE_THRESHOLD;
     }
 
     /**
-     * 检查是否需要刷新缓存
-     * TOKENS_LIMIT: 根据 nextResetTime（下次重置时间）判断
-     * TIME_LIMIT: 使用固定5分钟缓存过期时间
+     * Check if cache refresh is needed
+     * TOKENS_LIMIT: Determine based on nextResetTime (next reset time)
+     * TIME_LIMIT: Use fixed 5-minute cache expiry time
      */
     protected shouldRefresh(): boolean {
         if (!this.lastStatusData) {
@@ -296,24 +296,24 @@ export class ZhipuStatusBar extends ProviderStatusBarItem<ZhipuStatusData> {
         }
 
         const dataAge = Date.now() - this.lastStatusData.timestamp;
-        const CACHE_EXPIRY_THRESHOLD = (5 * 60 - 10) * 1000; // 缓存过期阈值 5 分钟
+        const CACHE_EXPIRY_THRESHOLD = (5 * 60 - 10) * 1000; // Cache expiry threshold 5 minutes
 
-        // 1. 检查 nextResetTime 是否需要触发刷新
+        // 1. Check if nextResetTime needs to trigger refresh
         const { nextResetTime } = this.lastStatusData.data;
         if (nextResetTime) {
             const timeUntilReset = nextResetTime - Date.now();
             if (timeUntilReset > 0 && dataAge > timeUntilReset) {
                 StatusLogger.debug(
-                    `[${this.config.logPrefix}] 缓存时间(${(dataAge / 1000).toFixed(1)}秒)超过重置时间差(${(timeUntilReset / 1000).toFixed(1)}秒)，触发API刷新`
+                    `[${this.config.logPrefix}] Cache time (${(dataAge / 1000).toFixed(1)}s) exceeds reset time difference (${(timeUntilReset / 1000).toFixed(1)}s), triggering API refresh`
                 );
                 return true;
             }
         }
 
-        // 2. 检查缓存是否超过5分钟固定过期时间
+        // 2. Check if cache exceeds 5-minute fixed expiry time
         if (dataAge > CACHE_EXPIRY_THRESHOLD) {
             StatusLogger.debug(
-                `[${this.config.logPrefix}] 缓存时间(${(dataAge / 1000).toFixed(1)}秒)超过5分钟固定过期时间，触发API刷新`
+                `[${this.config.logPrefix}] Cache time (${(dataAge / 1000).toFixed(1)}s) exceeds 5-minute fixed expiry time, triggering API refresh`
             );
             return true;
         }
@@ -322,14 +322,14 @@ export class ZhipuStatusBar extends ProviderStatusBarItem<ZhipuStatusData> {
     }
 
     /**
-     * 访问器：获取最后的状态数据（用于测试和调试）
+     * Getter: Get the last status data (for testing and debugging)
      */
     getLastStatusData(): { data: ZhipuStatusData; timestamp: number } | null {
         return this.lastStatusData;
     }
 
     /**
-     * 格式化日期时间
+     * Format date time
      */
     private formatDateTime(date: Date): string {
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -340,16 +340,16 @@ export class ZhipuStatusBar extends ProviderStatusBarItem<ZhipuStatusData> {
     }
 
     /**
-     * 获取时间窗口标签
-     * 根据 unit 值生成时间窗口描述
-     * - unit=3: 5 小时限额
-     * - unit=6: 7 天限额（周限额）
+     * Get time window label
+     * Generate time window description based on unit value
+     * - unit=3: 5-hour limit
+     * - unit=6: 7-day limit (weekly limit)
      */
     private getWindowLabel(limit: UsageLimitItem, defaultLabel: string): string {
         if (limit.unit === 3) {
-            return '每 5 小时';
+            return 'Per 5 Hours';
         } else if (limit.unit === 6) {
-            return '每周限额';
+            return 'Weekly Limit';
         }
         return defaultLabel;
     }

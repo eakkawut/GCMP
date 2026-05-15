@@ -1,18 +1,18 @@
 /*---------------------------------------------------------------------------------------------
- *  版本管理工具
- *  提供统一的版本号获取方法
+ *  Version Management Utility
+ *  Provides unified version number retrieval methods
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
 
 /**
- * 版本管理器
+ * Version Manager
  */
 export class VersionManager {
     private static _version: string | null = null;
 
     /**
-     * 获取扩展版本号
+     * Get extension version number
      */
     static getVersion(): string {
         if (this._version === null) {
@@ -23,14 +23,14 @@ export class VersionManager {
     }
 
     /**
-     * 获取用户代理字符串
+     * Get user agent string
      */
     static getUserAgent(component: string): string {
         return `CCMP-${component}/${this.getVersion()}`;
     }
 
     /**
-     * 获取客户端信息
+     * Get client information
      */
     static getClientInfo(): { name: string; version: string } {
         return {
@@ -40,7 +40,7 @@ export class VersionManager {
     }
 
     /**
-     * 重置缓存（主要用于测试）
+     * Reset cache (mainly for testing)
      */
     static resetCache(): void {
         this._version = null;

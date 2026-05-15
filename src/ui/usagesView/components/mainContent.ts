@@ -1,6 +1,6 @@
 ﻿/**
- * 主内容区组件
- * 负责渲染右侧主内容区域
+ * Main Content Area Component
+ * Responsible for rendering the right-side main content area
  */
 
 import { createProviderStats } from './providerStats';
@@ -8,34 +8,34 @@ import { createHourlyStats } from './hourlyStats';
 import { createHourlyChart } from './hourlyChart';
 import { createElement } from '../../utils';
 
-// ============= 工具函数 =============
+// ============= Utility Functions =============
 
 /**
- * 判断是否是今天
+ * Check if the date is today
  */
 function isToday(date: string): boolean {
     return date === window.usagesState?.today;
 }
 
-// ============= 组件渲染 =============
+// ============= Component Rendering =============
 
 /**
- * 创建空内容提示
+ * Create empty content placeholder
  */
 function createEmptyContent(dateText: string): HTMLElement {
     const content = createElement('div', 'empty-message');
-    content.innerHTML = `💡 ${dateText} 暂无 Token 消耗记录`;
+    content.innerHTML = `💡 No Token consumption records for ${dateText}`;
     return content;
 }
 
 /**
- * 创建主内容区
+ * Create main content area
  */
 export function createMainContent(): HTMLElement {
     const content = createElement('div', 'content');
 
     const title = createElement('h2', '', { id: 'details-title' });
-    title.textContent = '加载中...';
+    title.textContent = 'Loading...';
 
     const detailsContent = createElement('div', '', { id: 'details-content' });
 
@@ -46,7 +46,7 @@ export function createMainContent(): HTMLElement {
 }
 
 /**
- * 更新主内容区
+ * Update main content area
  */
 export function updateMainContent(): void {
     const content = document.querySelector('.content');
@@ -57,14 +57,14 @@ export function updateMainContent(): void {
     const title = content.querySelector('#details-title') as HTMLElement;
     const detailsContent = content.querySelector('#details-content') as HTMLElement;
 
-    // 更新标题
+    // Update title
     const dateDetails = window.usagesState.dateDetails;
-    const displayText = dateDetails?.date && isToday(dateDetails.date) ? '今日' : dateDetails?.date || '加载中...';
-    title.textContent = `${displayText} 使用详情`;
+    const displayText = dateDetails?.date && isToday(dateDetails.date) ? 'Today' : dateDetails?.date || 'Loading...';
+    title.textContent = `${displayText} Usage Details`;
 
-    // 更新内容
+    // Update content
     if (dateDetails && dateDetails.providers && dateDetails.providers.length > 0) {
-        // 查找并移除已存在的容器（避免被 innerHTML 清空）
+        // Find and remove existing containers (to prevent them from being cleared by innerHTML)
         const existingChartSection = detailsContent.querySelector('.hourly-chart-section') as HTMLElement;
         const existingStatsSection = detailsContent.querySelector('.hourly-stats-section') as HTMLElement;
 
@@ -75,10 +75,10 @@ export function updateMainContent(): void {
             existingStatsSection.remove();
         }
 
-        // 清空内容
+        // Clear content
         detailsContent.innerHTML = '';
 
-        // 创建各部分内容
+        // Create each section
         const providerSection = createProviderStats(dateDetails.providers);
         const hourlyChartSection = createHourlyChart(dateDetails.hourlyStats, existingChartSection || undefined);
         const hourlySection = createHourlyStats(
@@ -87,12 +87,12 @@ export function updateMainContent(): void {
             existingStatsSection || undefined
         );
 
-        // 添加到 DOM
+        // Append to DOM
         detailsContent.appendChild(providerSection);
         detailsContent.appendChild(hourlyChartSection);
         detailsContent.appendChild(hourlySection);
     } else {
-        const displayText2 = dateDetails?.date && isToday(dateDetails.date) ? '今日' : dateDetails?.date || '今日';
+        const displayText2 = dateDetails?.date && isToday(dateDetails.date) ? 'Today' : dateDetails?.date || 'Today';
         detailsContent.innerHTML = '';
         detailsContent.appendChild(createEmptyContent(displayText2));
     }

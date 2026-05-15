@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
  *  Gemini Converter
- *  将 VS Code LLM 接口结构转换为 Gemini HTTP（GenerateContent）请求结构
+ *  Convert VS Code LLM interface structures to Gemini HTTP (GenerateContent) request structures
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -14,14 +14,14 @@ function getThinkingSignature(part: vscode.LanguageModelThinkingPart): string {
 }
 
 /**
- * 将 VS Code 的 tools（LanguageModelChatTool）转换为 Gemini `tools.functionDeclarations`。
+ * Convert VS Code's tools (LanguageModelChatTool) to Gemini `tools.functionDeclarations`.
  *
- * 关键点：
- * - VS Code tool 的 `inputSchema` 是 JSON Schema，需要转换为 Gemini Schema（type 大写枚举）。
- * - 对缺少 schema 的工具，提供一个最小可用的 OBJECT schema，避免网关拒绝请求。
+ * Key points:
+ * - VS Code tool's `inputSchema` is JSON Schema, needs to be converted to Gemini Schema (type with uppercase enums).
+ * - For tools missing schema, provide a minimal usable OBJECT schema to avoid gateway rejecting requests.
  */
 export function convertToolsToGemini(tools?: readonly vscode.LanguageModelChatTool[]): GeminiTool[] {
-    // 用途：把 VS Code 提供的 tool schema（JSON Schema）转换成 Gemini functionDeclarations。
+    // Purpose: Convert tool schema (JSON Schema) provided by VS Code to Gemini functionDeclarations.
     if (!tools || tools.length === 0) {
         return [];
     }
@@ -54,15 +54,15 @@ export function convertMessagesToGemini(messages: readonly vscode.LanguageModelC
     contents: GeminiContent[];
     systemInstruction: string;
 } {
-    // 用途：将 VS Code 的 chat message 列表转换为 Gemini 的 contents + systemInstruction。
-    // 关键点：Gemini 的 tool response 需要作为单独的 user turn 且顺序与 functionCall 对齐。
+    // Purpose: Convert VS Code's chat message list to Gemini's contents + systemInstruction.
+    // Key point: Gemini's tool response needs to be a separate user turn with order aligned to functionCall.
     const contents: GeminiContent[] = [];
     let systemInstruction = '';
 
     const toolNameByCallId = new Map<string, string>();
 
     const collectText = (m: vscode.LanguageModelChatMessage): string => {
-        // 用途：将一个 message 中的文本/（可选）thinking 汇总成纯文本。
+        // Purpose: Summarize text/(optional) thinking in a message into plain text.
         const parts: string[] = [];
         for (const p of m.content ?? []) {
             if (p instanceof vscode.LanguageModelTextPart) {
@@ -78,7 +78,7 @@ export function convertMessagesToGemini(messages: readonly vscode.LanguageModelC
     };
 
     const extract = (m: vscode.LanguageModelChatMessage) => {
-        // 用途：拆分 message 内容为 text / images / toolCalls / toolResults 方便后续组装。
+        // Purpose: Split message content into text / images / toolCalls / toolResults for subsequent assembly.
         const textParts: string[] = [];
         const imageParts: vscode.LanguageModelDataPart[] = [];
         const thinkingParts: Array<{ text: string; signature?: string }> = [];
@@ -95,7 +95,7 @@ export function convertMessagesToGemini(messages: readonly vscode.LanguageModelC
                 const signature = getThinkingSignature(part) || undefined;
                 thinkingParts.push({ text: v || '', signature });
             } else if (part instanceof vscode.LanguageModelToolCallPart) {
-                // 关键说明：Gemini functionResponse 需要 name，因此后续需要 callId -> name 的映射。
+                // Key note: Gemini functionResponse requires name, so callId -> name mapping is needed subsequently.
                 const callId = part.callId || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
                 const args =
                     part.input && typeof part.input === 'object' ? (part.input as Record<string, unknown>) : {};
@@ -117,7 +117,7 @@ export function convertMessagesToGemini(messages: readonly vscode.LanguageModelC
     };
 
     const isToolResultOnly = (extracted: ReturnType<typeof extract>): boolean => {
-        // 用途：识别“只包含 tool result”的 message，便于合并为一个 user turn。
+        // Purpose: Identify messages "containing only tool result" for merging into a single user turn.
         return Boolean(
             extracted.toolResults.length > 0 &&
             !extracted.text &&
@@ -127,8 +127,8 @@ export function convertMessagesToGemini(messages: readonly vscode.LanguageModelC
     };
 
     const toolResultToFunctionResponsePart = (callId: string, outputText: string): GeminiPart | null => {
-        // 用途：将 VS Code tool result 转换为 Gemini functionResponse part。
-        // 关键说明：优先把 output 解析为 JSON 对象；失败时以 `{ output: string }` 兜底。
+        // Purpose: Convert VS Code tool result to Gemini functionResponse part.
+        // Key note: Try to parse output as JSON object first; fall back to `{ output: string }` on failure.
         if (!callId) {
             return null;
         }
@@ -146,7 +146,7 @@ export function convertMessagesToGemini(messages: readonly vscode.LanguageModelC
         const role = mapRole(m.role);
         const extracted = extract(m);
 
-        // 用途：汇总系统消息为 systemInstruction（多段 system message 拼接）。
+        // Purpose: Aggregate system messages into systemInstruction (concatenate multiple system messages).
         if (role === 'system') {
             const sysText = collectText(m).trim();
             if (sysText) {
@@ -155,9 +155,9 @@ export function convertMessagesToGemini(messages: readonly vscode.LanguageModelC
             continue;
         }
 
-        // 用途：合并连续的 tool results 为单个 user turn（Gemini 要求）。
+        // Purpose: Merge consecutive tool results into a single user turn (Gemini requirement).
         if (isToolResultOnly(extracted)) {
-            // 关键说明：Gemini tool 响应必须作为 user role，一次性提交多条 functionResponse。
+            // Key note: Gemini tool response must be as user role, submitting multiple functionResponse at once.
             const respParts: GeminiPart[] = [];
             let j = i;
             while (j < messages.length) {
@@ -180,9 +180,9 @@ export function convertMessagesToGemini(messages: readonly vscode.LanguageModelC
             continue;
         }
 
-        // 用途：普通 user 消息（文本 + 图片）转换为 Gemini user contents。
+        // Purpose: Convert regular user messages (text + images) to Gemini user contents.
         if (role === 'user') {
-            // 关键说明：这里把文本与图片合并到一个 user turn，保证语义一致。
+            // Key note: Here text and images are merged into one user turn to ensure semantic consistency.
             const parts: GeminiPart[] = [];
             const t = extracted.text.trim();
             if (t) {
@@ -198,12 +198,12 @@ export function convertMessagesToGemini(messages: readonly vscode.LanguageModelC
             continue;
         }
 
-        // 用途：assistant 消息转换为 Gemini model contents，并将 tool calls 转为 functionCall。
+        // Purpose: Convert assistant messages to Gemini model contents, and convert tool calls to functionCall.
         const parts: GeminiPart[] = [];
 
         let lastThinkingSignature: string | undefined;
         for (const tp of extracted.thinkingParts) {
-            // 保留 signature 供后续 functionCall 关联
+            // Preserve signature for subsequent functionCall association
             lastThinkingSignature = tp.signature;
             const t = (tp.text || '').trim();
             if (t) {
@@ -226,8 +226,8 @@ export function convertMessagesToGemini(messages: readonly vscode.LanguageModelC
             toolNameByCallId.set(tc.callId, tc.name);
             callOrder.push({ callId: tc.callId, name: tc.name });
 
-            // Gemini CLI/部分网关要求 functionCall 带 thought signature。
-            // 优先使用同一条 assistant message 中最近的 thinking signature
+            // Gemini CLI/some gateways require functionCall with thought signature.
+            // Prefer using the most recent thinking signature from the same assistant message
             parts.push({
                 functionCall: { name: tc.name, args: tc.args },
                 thoughtSignature: lastThinkingSignature,
@@ -239,9 +239,9 @@ export function convertMessagesToGemini(messages: readonly vscode.LanguageModelC
             contents.push({ role: 'model', parts });
         }
 
-        // 用途：确保 tool response 作为单个 user turn，且与 preceding functionCall 顺序一致。
+        // Purpose: Ensure tool response as a single user turn, with order consistent with preceding functionCall.
         if (callOrder.length > 0) {
-            // 关键说明：按 callOrder 重排 tool response，避免网关因顺序不一致而拒绝。
+            // Key note: Reorder tool response by callOrder to avoid gateway rejection due to order inconsistency.
             const responsesByCallId = new Map<string, GeminiPart>();
             let j = i + 1;
             while (j < messages.length) {
@@ -277,8 +277,8 @@ export function convertMessagesToGemini(messages: readonly vscode.LanguageModelC
 }
 
 /**
- * 将 VS Code 的 role enum 转为语义角色。
- * 注意：Gemini contents 的 role 实际使用的是 'user' | 'model'；此处保留 'assistant' 供上层映射。
+ * Convert VS Code's role enum to semantic role.
+ * Note: Gemini contents' role actually uses 'user' | 'model'; 'assistant' is retained here for upper-level mapping.
  */
 function mapRole(role: number): 'user' | 'assistant' | 'system' {
     switch (role) {
@@ -293,7 +293,7 @@ function mapRole(role: number): 'user' | 'assistant' | 'system' {
     }
 }
 
-/** 仅处理图片 DataPart（mimeType 以 image/ 开头） */
+/** Only process image DataPart (mimeType starting with image/) */
 function isImageMimeType(mimeType: string | undefined): boolean {
     if (!mimeType) {
         return false;
@@ -302,8 +302,8 @@ function isImageMimeType(mimeType: string | undefined): boolean {
 }
 
 /**
- * 将 tool result 的 content 汇总为字符串。
- * 关键点：content 可能包含 TextPart 及其他结构体，尽量 JSON.stringify 以保留信息。
+ * Summarize tool result content into string.
+ * Key point: content may contain TextPart and other structures, use JSON.stringify as much as possible to preserve information.
  */
 function collectToolResultText(part: vscode.LanguageModelToolResultPart): string {
     if (!part.content || part.content.length === 0) {
@@ -325,8 +325,8 @@ function collectToolResultText(part: vscode.LanguageModelToolResultPart): string
 }
 
 /**
- * 尝试把字符串解析成 JSON 对象（只接受 object，不接受数组）。
- * 用途：为 Gemini functionResponse 构造结构化 response。
+ * Try to parse string into JSON object (only accept object, not array).
+ * Purpose: Construct structured response for Gemini functionResponse.
  */
 function tryParseJSONObject(text: string): { ok: true; value: Record<string, unknown> } | { ok: false } {
     const v = (text || '').trim();

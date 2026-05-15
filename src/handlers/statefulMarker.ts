@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  模型消息中的 Stateful Marker 处理器
- *  参考: Microsoft vscode-copilot-chat src/platform/endpoint/common/statefulMarkerContainer.tsx
+ *  Stateful Marker Handler in Model Messages
+ *  Reference: Microsoft vscode-copilot-chat src/platform/endpoint/common/statefulMarkerContainer.tsx
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -19,40 +19,40 @@ export interface StatefulMarkerContainer {
     provider: string;
     modelId: string;
     sdkMode: 'openai' | 'openai-responses' | 'anthropic' | 'gemini';
-    /** 会话ID，标识会话上下文 */
+    /** Session ID, identifies session context */
     sessionId: string;
-    /** 响应ID，模型返回响应标识 */
+    /** Response ID, model's response identifier */
     responseId: string;
-    /** 记录过期时间，单位毫秒(豆包专用) */
+    /** Record expiration time, in milliseconds (for Doubao/Volcengine only) */
     expireAt?: number;
-    /** 需要跨轮次稳定回传的完整思考内容 */
+    /** Complete thinking content that needs to be stably relayed across turns */
     completeThinking?: string;
-    /** 需要跨轮次稳定回传的完整签名内容（signature_delta 累积） */
+    /** Complete signature content that needs to be stably relayed across turns (accumulated from signature_delta) */
     completeSignature?: string;
-    /** 当前 assistant 轮次是否发生过工具调用 */
+    /** Whether tool calls occurred in the current assistant turn */
     hasToolCalls?: boolean;
 }
 
 export interface StatefulMarkerWithModel {
-    /** 这个值不可靠，不代表实际使用的模型ID */
+    /** This value is unreliable and does not represent the actually used model ID */
     modelId: string;
-    /** 实际传递保存的 marker */
+    /** The marker actually passed and saved */
     marker: StatefulMarkerContainer;
 }
 
 export function encodeStatefulMarker(modelId: string, marker: Omit<StatefulMarkerContainer, 'extension'>): Uint8Array {
-    // MARK: copilot 内部始终会自动处理 modelId, 这里无论传递什么 modelId 都会被重置
-    //       我们只需要确保 marker 的数据传递即可
+    // MARK: copilot internally always automatically handles modelId, whatever modelId is passed here will be reset
+    //       We only need to ensure the marker data is passed through
 
     return encodeStatefulMarkerPayload(modelId, { ...marker, extension: StatefulMarkerExtension });
 }
 
 export function decodeStatefulMarker(data: Uint8Array): StatefulMarkerWithModel | undefined {
-    // MARK: 这里获取到的 modelId 始终为 copilot 内部重置后的值
+    // MARK: The modelId obtained here is always the value reset by copilot internally
     return decodeStatefulMarkerPayload<StatefulMarkerContainer>(data);
 }
 
-/** Gets stateful markers from the messages, from the most to least recent */
+/** Get stateful markers from messages, from most to least recent */
 export function* getAllStatefulMarkersAndIndicies(messages: readonly vscode.LanguageModelChatMessage[]) {
     for (let idx = messages.length - 1; idx >= 0; idx--) {
         const message = messages[idx];

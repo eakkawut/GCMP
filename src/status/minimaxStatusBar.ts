@@ -1,9 +1,9 @@
 /*---------------------------------------------------------------------------------------------
- *  MiniMax Coding Plan 状态栏项
- *  继承 ProviderStatusBarItem，显示 MiniMax Coding Plan 使用量信息
- *  - 显示每 5 小时限额（interval）
- *  - 显示每周限额（weekly，仅新开通用户有值）
- *  参照智谱的扁平限频列表模式
+ *  MiniMax Coding Plan Status Bar Item
+ *  Extends ProviderStatusBarItem, displays MiniMax Coding Plan usage information
+ *  - Displays per 5-hour limit (interval)
+ *  - Displays weekly limit (weekly, only has value for newly activated users)
+ *  Reference Zhipu's flat rate limit list mode
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -13,38 +13,38 @@ import { Logger } from '../utils/logger';
 import { ConfigManager, ApiKeyManager, VersionManager } from '../utils';
 
 /**
- * 单条限频项（扁平列表，参照智谱模式）
+ * Single rate limit item (flat list, referencing Zhipu mode)
  */
 export interface MiniMaxLimitItem {
-    /** 限频类型标签，如 "每 5 小时"、"每周限额" */
+    /** Rate limit type label, e.g., "Per 5 Hours", "Weekly Limit" */
     label: string;
-    /** 限频类型: 5h=每5小时, weekly=每周 */
+    /** Rate limit type: 5h=per 5 hours, weekly=per week */
     limitType: '5h' | 'weekly';
-    /** 总配额 */
+    /** Total quota */
     total: number;
-    /** 剩余次数 */
+    /** Remaining count */
     remaining: number;
-    /** 已使用(百分比) */
+    /** Used (percentage) */
     percentage: number;
-    /** 重置剩余时间(ms) */
+    /** Remaining reset time (ms) */
     remainMs: number;
-    /** 重置时间（绝对时间戳 ms） */
+    /** Reset time (absolute timestamp ms) */
     resetTime: number;
 }
 
 /**
- * MiniMax 状态数据（扁平限频列表）
+ * MiniMax status data (flat rate limit list)
  */
 interface MiniMaxStatusData {
-    /** 限频项列表 */
+    /** Rate limit items list */
     limits: MiniMaxLimitItem[];
 }
 
 /**
- * MiniMax Coding Plan 状态栏项
- * 显示 MiniMax Coding Plan 的使用量信息
- * - 有周限额：状态栏显示 "周限剩余% (5h剩余%)"
- * - 无周限额：状态栏只显示 "5h剩余%"
+ * MiniMax Coding Plan Status Bar Item
+ * Displays MiniMax Coding Plan usage information
+ * - With weekly limit: status bar shows "Weekly remaining% (5h remaining%)"
+ * - Without weekly limit: status bar only shows "5h remaining%"
  */
 export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
     constructor() {
@@ -56,16 +56,16 @@ export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
             refreshCommand: 'ccmp.refreshMiniMaxUsage',
             apiKeyProvider: 'minimax-coding',
             cacheKeyPrefix: 'minimax',
-            logPrefix: 'MiniMax状态栏',
+            logPrefix: 'MiniMax StatusBar',
             icon: '$(ccmp-minimax)'
         };
         super(config);
     }
 
     /**
-     * 获取显示文本
-     * 有周限额：icon 周限剩余% (5h剩余%)
-     * 无周限额：icon 5h剩余%
+     * Get display text
+     * With weekly limit: icon Weekly remaining% (5h remaining%)
+     * Without weekly limit: icon 5h remaining%
      */
     protected getDisplayText(data: MiniMaxStatusData): string {
         const items5h = data.limits.filter(l => l.limitType === '5h');
@@ -79,14 +79,14 @@ export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
     }
 
     /**
-     * 生成 Tooltip 内容
-     * 参照智谱模式：限频类型 | 上限值 | 剩余量 | 使用率
+     * Generate tooltip content
+     * Reference Zhipu mode: Rate limit type | Limit value | Remaining amount | Usage rate
      */
     protected generateTooltip(data: MiniMaxStatusData): vscode.MarkdownString {
         const md = new vscode.MarkdownString();
         md.supportHtml = true;
-        md.appendMarkdown('#### MiniMax Coding Plan 使用情况\n\n');
-        md.appendMarkdown('| 限频类型 | 上限值 | 剩余量 | 重置时间 |\n');
+        md.appendMarkdown('#### MiniMax Coding Plan Usage\n\n');
+        md.appendMarkdown('| Rate Limit Type | Limit Value | Remaining | Reset Time |\n');
         md.appendMarkdown('| :--- | ----: | ----: | :---: |\n');
 
         for (const item of data.limits) {
@@ -95,13 +95,13 @@ export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
         }
 
         md.appendMarkdown('\n---\n');
-        md.appendMarkdown('点击状态栏可手动刷新\n');
+        md.appendMarkdown('Click status bar to manually refresh\n');
         return md;
     }
 
     /**
-     * 执行 API 查询
-     * 将 API 响应拆分为扁平限频列表
+     * Execute API query
+     * Split API response into flat rate limit list
      */
     protected async performApiQuery(): Promise<{ success: boolean; data?: MiniMaxStatusData; error?: string }> {
         const REMAIN_QUERY_URL = 'https://www.minimaxi.com/v1/api/openplatform/coding_plan/remains';
@@ -110,16 +110,16 @@ export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
         try {
             const hasCodingKey = await ApiKeyManager.hasValidApiKey(CODING_PLAN_KEY);
             if (!hasCodingKey) {
-                return { success: false, error: 'Coding Plan 专用密钥未配置，请先设置 Coding Plan API 密钥' };
+                return { success: false, error: 'Coding Plan dedicated key not configured, please set Coding Plan API key first' };
             }
 
             const apiKey = await ApiKeyManager.getApiKey(CODING_PLAN_KEY);
             if (!apiKey) {
-                return { success: false, error: '无法获取 Coding Plan 专用密钥' };
+                return { success: false, error: 'Unable to get Coding Plan dedicated key' };
             }
 
-            Logger.debug('触发查询 MiniMax Coding Plan 余量');
-            StatusLogger.debug(`[${this.config.logPrefix}] 开始查询 MiniMax Coding Plan 余量...`);
+            Logger.debug('Triggered MiniMax Coding Plan balance query');
+            StatusLogger.debug(`[${this.config.logPrefix}] Starting MiniMax Coding Plan balance query...`);
 
             const requestOptions: RequestInit = {
                 method: 'GET',
@@ -139,10 +139,10 @@ export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
             const responseText = await response.text();
 
             StatusLogger.debug(
-                `[${this.config.logPrefix}] 余量查询响应状态: ${response.status} ${response.statusText}`
+                `[${this.config.logPrefix}] Balance query response status: ${response.status} ${response.statusText}`
             );
 
-            // 解析响应
+            // Parse response
             interface ModelRemainInfo {
                 start_time: number;
                 end_time: number;
@@ -166,38 +166,38 @@ export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
             try {
                 parsedResponse = JSON.parse(responseText);
             } catch (parseError) {
-                Logger.error(`解析响应 JSON 失败: ${parseError}`);
-                return { success: false, error: `响应格式错误: ${responseText.substring(0, 200)}` };
+                Logger.error(`Failed to parse response JSON: ${parseError}`);
+                return { success: false, error: `Response format error: ${responseText.substring(0, 200)}` };
             }
 
             if (!response.ok) {
                 const errorMessage = parsedResponse.base_resp?.status_msg || `HTTP ${response.status}`;
-                Logger.error(`余量查询失败: ${errorMessage}`);
-                return { success: false, error: `查询失败: ${errorMessage}` };
+                Logger.error(`Balance query failed: ${errorMessage}`);
+                return { success: false, error: `Query failed: ${errorMessage}` };
             }
 
             if (parsedResponse.base_resp && parsedResponse.base_resp.status_code !== 0) {
-                const errorMessage = parsedResponse.base_resp.status_msg || '未知业务错误';
-                Logger.error(`余量查询业务失败: ${errorMessage}`);
-                return { success: false, error: `业务查询失败: ${errorMessage}` };
+                const errorMessage = parsedResponse.base_resp.status_msg || 'Unknown business error';
+                Logger.error(`Balance query business failed: ${errorMessage}`);
+                return { success: false, error: `Business query failed: ${errorMessage}` };
             }
 
-            StatusLogger.debug(`[${this.config.logPrefix}] 余量查询成功`);
+            StatusLogger.debug(`[${this.config.logPrefix}] Balance query successful`);
 
             const modelRemains = parsedResponse.model_remains;
             if (!modelRemains || modelRemains.length === 0) {
-                return { success: false, error: '未获取到模型余量数据' };
+                return { success: false, error: 'Failed to retrieve model balance data' };
             }
 
-            // 拆分为扁平限频列表
+            // Split into flat rate limit list
             const limits: MiniMaxLimitItem[] = [];
             const mSeriesModels = modelRemains.filter(m => m.model_name?.startsWith('MiniMax-M'));
 
             for (const m of mSeriesModels) {
-                // 每 5 小时限额
+                // Per 5-hour limit
                 limits.push(
                     this.buildLimitItem(
-                        '每 5 小时',
+                        'Per 5 Hours',
                         '5h',
                         m.current_interval_total_count,
                         m.current_interval_usage_count,
@@ -205,11 +205,11 @@ export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
                         m.end_time
                     )
                 );
-                // 每周限额（仅 total > 0 时添加，老用户为 0 不显示）
+                // Weekly limit (only add when total > 0, old users show 0 and are not displayed)
                 if ((m.current_weekly_total_count ?? 0) > 0) {
                     limits.push(
                         this.buildLimitItem(
-                            '每周限额',
+                            'Weekly Limit',
                             'weekly',
                             m.current_weekly_total_count,
                             m.current_weekly_usage_count,
@@ -222,14 +222,14 @@ export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
 
             return { success: true, data: { limits } };
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : '未知错误';
-            Logger.error(`余量查询异常: ${errorMessage}`);
-            return { success: false, error: `查询异常: ${errorMessage}` };
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            Logger.error(`Balance query exception: ${errorMessage}`);
+            return { success: false, error: `Query exception: ${errorMessage}` };
         }
     }
 
     /**
-     * 构建单条限频项
+     * Build single rate limit item
      */
     private buildLimitItem(
         label: string,
@@ -256,7 +256,7 @@ export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
     }
 
     /**
-     * 取列表中最大使用率
+     * Get maximum usage rate from list
      */
     private maxPercentage(items: MiniMaxLimitItem[]): number {
         if (items.length === 0) {
@@ -266,7 +266,7 @@ export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
     }
 
     /**
-     * 格式化日期时间
+     * Format date time
      */
     private formatDateTime(date: Date): string {
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -277,14 +277,14 @@ export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
     }
 
     /**
-     * 检查是否需要高亮警告
+     * Check if highlight warning is needed
      */
     protected shouldHighlightWarning(data: MiniMaxStatusData): boolean {
         return this.maxPercentage(data.limits) >= this.HIGH_USAGE_THRESHOLD;
     }
 
     /**
-     * 检查是否需要刷新缓存
+     * Check if cache refresh is needed
      */
     protected shouldRefresh(): boolean {
         if (!this.lastStatusData) {
@@ -294,20 +294,20 @@ export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
         const dataAge = Date.now() - this.lastStatusData.timestamp;
         const CACHE_EXPIRY_THRESHOLD = (5 * 60 - 10) * 1000;
 
-        // 根据 remainMs 判断是否需要刷新
+        // Determine if refresh is needed based on remainMs
         const remainTimes = this.lastStatusData.data.limits.map(l => l.remainMs).filter(v => v > 0);
         const minRemainMs = remainTimes.length > 0 ? Math.min(...remainTimes) : 0;
 
         if (minRemainMs > 0 && dataAge > minRemainMs) {
             StatusLogger.debug(
-                `[${this.config.logPrefix}] 缓存时间(${(dataAge / 1000).toFixed(1)}秒)超过最短重置时间(${(minRemainMs / 1000).toFixed(1)}秒)，触发API刷新`
+                `[${this.config.logPrefix}] Cache time (${(dataAge / 1000).toFixed(1)}s) exceeds shortest reset time (${(minRemainMs / 1000).toFixed(1)}s), triggering API refresh`
             );
             return true;
         }
 
         if (dataAge > CACHE_EXPIRY_THRESHOLD) {
             StatusLogger.debug(
-                `[${this.config.logPrefix}] 缓存时间(${(dataAge / 1000).toFixed(1)}秒)超过5分钟固定过期时间，触发API刷新`
+                `[${this.config.logPrefix}] Cache time (${(dataAge / 1000).toFixed(1)}s) exceeds 5-minute fixed expiry time, triggering API refresh`
             );
             return true;
         }
@@ -316,7 +316,7 @@ export class MiniMaxStatusBar extends ProviderStatusBarItem<MiniMaxStatusData> {
     }
 
     /**
-     * 访问器：获取最后的状态数据（用于测试和调试）
+     * Getter: Get the last status data (for testing and debugging)
      */
     getLastStatusData(): { data: MiniMaxStatusData; timestamp: number } | null {
         return this.lastStatusData;

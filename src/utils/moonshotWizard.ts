@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  MoonshotAI 配置向导
- *  提供交互式向导来配置 Moonshot 密钥和 Kimi For Coding 专用密钥
+ *  MoonshotAI Configuration Wizard
+ *  Provides interactive wizard to configure Moonshot key and Kimi For Coding dedicated key
  *--------------------------------------------------------------------------------------------*/
 
 // cSpell:ignore kimi
@@ -14,34 +14,34 @@ export class MoonshotWizard {
     private static readonly KIMI_KEY = 'kimi';
 
     /**
-     * 启动 MoonshotAI 配置向导
-     * 允许用户选择配置哪种密钥类型
+     * Start MoonshotAI configuration wizard
+     * Allows user to select which key type to configure
      */
     static async startWizard(displayName: string, apiKeyTemplate: string, codingKeyTemplate?: string): Promise<void> {
         try {
             const choice = await vscode.window.showQuickPick(
                 [
                     {
-                        label: '$(key) 设置 Moonshot API 密钥',
-                        detail: '用于 Moonshot AI 开放平台调用 Kimi-K2 系列付费模型的 API 密钥',
+                        label: '$(key) Set Moonshot API Key',
+                        detail: 'API key for calling Kimi-K2 series paid models via Moonshot AI Open Platform',
                         value: 'moonshot'
                     },
                     {
-                        label: '$(key) 设置 Kimi For Coding 专用密钥',
-                        detail: '用于 Kimi 会员计划中面向代码开发场景提供的增值会员权益的专用密钥',
+                        label: '$(key) Set Kimi For Coding Dedicated Key',
+                        detail: 'Dedicated key for Kimi membership plan value-added benefits for code development scenarios',
                         value: 'kimi'
                     },
                     {
-                        label: '$(check-all) 同时设置两种密钥',
-                        detail: '按顺序配置 Moonshot API 密钥和 Kimi For Coding 专用密钥',
+                        label: '$(check-all) Set Both Keys',
+                        detail: 'Configure Moonshot API key and Kimi For Coding dedicated key in sequence',
                         value: 'both'
                     }
                 ],
-                { title: `${displayName} 密钥配置`, placeHolder: '请选择要配置的项目' }
+                { title: `${displayName} Key Configuration`, placeHolder: 'Select items to configure' }
             );
 
             if (!choice) {
-                Logger.debug('用户取消了 MoonshotAI 配置向导');
+                Logger.debug('User cancelled MoonshotAI configuration wizard');
                 return;
             }
 
@@ -53,81 +53,81 @@ export class MoonshotWizard {
                 await this.setKimiApiKey(displayName, codingKeyTemplate);
             }
         } catch (error) {
-            Logger.error(`MoonshotAI 配置向导出错: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error(`MoonshotAI configuration wizard error: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
     /**
-     * 设置 Moonshot API 密钥
+     * Set Moonshot API key
      */
     static async setMoonshotApiKey(displayName: string, apiKeyTemplate: string): Promise<void> {
         const result = await vscode.window.showInputBox({
-            prompt: `请输入 ${displayName} 的 API Key（留空可清除）`,
-            title: `设置 ${displayName} API Key`,
+            prompt: `Enter API Key for ${displayName} (leave blank to clear)`,
+            title: `Set ${displayName} API Key`,
             placeHolder: apiKeyTemplate,
             password: true,
             ignoreFocusOut: true
         });
 
-        // 用户取消了输入
+        // User cancelled input
         if (result === undefined) {
             return;
         }
 
         try {
-            // 允许空值，用于清除 API Key
+            // Allow empty value to clear API Key
             if (result.trim() === '') {
-                Logger.info(`${displayName} API Key 已清除`);
+                Logger.info(`${displayName} API Key has been cleared`);
                 await ApiKeyManager.deleteApiKey(this.PROVIDER_KEY);
-                vscode.window.showInformationMessage(`${displayName} API Key 已清除`);
+                vscode.window.showInformationMessage(`${displayName} API Key has been cleared`);
             } else {
                 await ApiKeyManager.setApiKey(this.PROVIDER_KEY, result.trim());
-                Logger.info(`${displayName} API Key 已设置`);
-                vscode.window.showInformationMessage(`${displayName} API Key 已设置`);
+                Logger.info(`${displayName} API Key has been set`);
+                vscode.window.showInformationMessage(`${displayName} API Key has been set`);
             }
         } catch (error) {
-            Logger.error(`Moonshot API Key 操作失败: ${error instanceof Error ? error.message : '未知错误'}`);
-            vscode.window.showErrorMessage(`设置失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error(`Moonshot API Key operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            vscode.window.showErrorMessage(`Setup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
 
-        // 检查并显示状态栏
+        // Check and display status bar
         await StatusBarManager.checkAndShowStatus('moonshot');
     }
 
     /**
-     * 设置 Kimi For Coding 专用密钥
+     * Set Kimi For Coding dedicated key
      */
     static async setKimiApiKey(_displayName: string, codingKeyTemplate?: string): Promise<void> {
         const result = await vscode.window.showInputBox({
-            prompt: '请输入 Kimi For Coding 专用 API Key(留空可清除)',
-            title: '设置 Kimi For Coding 专用 API Key',
+            prompt: 'Enter Kimi For Coding dedicated API Key (leave blank to clear)',
+            title: 'Set Kimi For Coding dedicated API Key',
             placeHolder: codingKeyTemplate,
             password: true,
             ignoreFocusOut: true
         });
 
-        // 用户取消了输入
+        // User cancelled input
         if (result === undefined) {
             return;
         }
 
         try {
-            // 允许空值，用于清除 API Key
+            // Allow empty value to clear API Key
             if (result.trim() === '') {
-                Logger.info('Kimi For Coding 专用 API Key 已清除');
+                Logger.info('Kimi For Coding dedicated API Key has been cleared');
                 await ApiKeyManager.deleteApiKey(this.KIMI_KEY);
-                vscode.window.showInformationMessage('Kimi For Coding 专用 API Key 已清除');
+                vscode.window.showInformationMessage('Kimi For Coding dedicated API Key has been cleared');
             } else {
                 await ApiKeyManager.setApiKey(this.KIMI_KEY, result.trim());
-                Logger.info('Kimi For Coding 专用 API Key 已设置');
-                vscode.window.showInformationMessage('Kimi For Coding 专用 API Key 已设置');
+                Logger.info('Kimi For Coding dedicated API Key has been set');
+                vscode.window.showInformationMessage('Kimi For Coding dedicated API Key has been set');
             }
         } catch (error) {
-            Logger.error(`Kimi For Coding API Key 操作失败: ${error instanceof Error ? error.message : '未知错误'}`);
-            vscode.window.showErrorMessage(`设置失败: ${error instanceof Error ? error.message : '未知错误'}`);
+            Logger.error(`Kimi For Coding API Key operation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            vscode.window.showErrorMessage(`Setup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
 
-        // 检查并显示状态栏
+        // Check and display status bar
         await StatusBarManager.checkAndShowStatus('kimi');
     }
 }

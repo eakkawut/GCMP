@@ -1,17 +1,17 @@
 ﻿import { ModelOverride, ProviderConfig, ProviderOverride } from '../types/sharedTypes';
 
 export interface KnownProviderConfig extends Partial<ProviderConfig & ProviderOverride> {
-    /** 针对 OpenAI SDK 的兼容策略 */
+    /** Compatibility strategy for OpenAI SDK */
     openai?: Omit<ModelOverride, 'id'>;
-    /** 针对 Anthropic SDK 的兼容策略 */
+    /** Compatibility strategy for Anthropic SDK */
     anthropic?: Omit<ModelOverride, 'id'>;
 }
 
 /**
- * 内置已知的提供商及部分适配信息
+ * Built-in known providers and partial adaptation information
  *
- * 模型配置合并时，优先级：模型配置 > 提供商配置 > 已知提供商配置
- * 已处理的合并参数包括：
+ * During model config merge, priority order: model config > provider config > known provider config
+ * Processed merge parameters include:
  *   - customHeader,
  *   - override.extraBody
  *
@@ -35,7 +35,7 @@ export const KnownProviders: Record<string, KnownProviderConfig> = {
     },
     aiping: { displayName: 'AIPing' },
     openrouter: { displayName: 'OpenRouter' },
-    siliconflow: { displayName: '硅基流动' },
-    infini: { displayName: '无问芯穹' },
+    siliconflow: { displayName: 'SiliconFlow' },
+    infini: { displayName: 'Infini' },
     mistral: { displayName: 'MistralAI' }
 };

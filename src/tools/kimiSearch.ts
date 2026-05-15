@@ -1,6 +1,6 @@
 ﻿/*-----------------------------------------------------------------
- *  Kimi 网络搜索工具
- * 使用 Kimi Code search API 进行 HTTP 请求
+ *  Kimi Web Search Tool
+ *  Uses Kimi Code search API for HTTP requests
  *--------------------------------------------------------------------------------*/
 import * as vscode from 'vscode';
 import * as https from 'https';
@@ -9,28 +9,28 @@ import { ApiKeyManager } from '../utils/apiKeyManager';
 import { StatusBarManager } from '../status';
 
 /**
- * Kimi 搜索请求参数
+ * Kimi search request parameters
  */
 export interface KimiSearchRequest {
-    query: string; // 搜索查询词
-    limit?: number; // 返回结果数量 (1-50, 默认 10)
-    includeContent?: boolean; // 是否抓取页面内容
+    query: string; // Search query term
+    limit?: number; // Number of results to return (1-50, default 10)
+    includeContent?: boolean; // Whether to fetch page content
 }
 
 /**
- * Kimi 搜索结果项
+ * Kimi search result item
  */
 export interface KimiSearchResult {
     title: string;
     url: string;
-    snippet?: string; // 内容摘要
-    content?: string; // 页面内容 (如果 includeContent 为 true)
-    date?: string; // 发布日期
-    siteName?: string; // 网站名称
+    snippet?: string; // Content summary
+    content?: string; // Page content (if includeContent is true)
+    date?: string; // Publication date
+    siteName?: string; // Website name
 }
 
 /**
- * Kimi 搜索响应
+ * Kimi search response
  */
 export interface KimiSearchResponse {
     searchResults: KimiSearchResult[];
@@ -38,7 +38,7 @@ export interface KimiSearchResponse {
 }
 
 /**
- * Kimi API 原始响应格式
+ * Kimi API raw response format
  */
 interface KimiApiResponse {
     search_results?: Array<{
@@ -56,13 +56,13 @@ const MAX_NUM_RESULTS = 50;
 const DEFAULT_TIMEOUT_SECONDS = 30;
 
 /**
- * Kimi 网络搜索工具
+ * Kimi web search tool
  */
 export class KimiSearchTool {
     private readonly baseURL = 'https://api.kimi.com/coding/v1/search';
 
     /**
-     * 限制结果数量在有效范围内
+     * Clamp result count to valid range
      */
     private clampNumResults(value: number | undefined): number {
         if (!value || Number.isNaN(value)) {
@@ -73,7 +73,7 @@ export class KimiSearchTool {
     }
 
     /**
-     * 获取 API Key
+     * Get API Key
      */
     private async getApiKey(): Promise<string | undefined> {
         let apiKey = await ApiKeyManager.getApiKey('kimi');
@@ -86,12 +86,12 @@ export class KimiSearchTool {
     }
 
     /**
-     * 执行搜索
+     * Execute search
      */
     async search(params: KimiSearchRequest): Promise<KimiSearchResponse> {
         const apiKey = await this.getApiKey();
         if (!apiKey) {
-            throw new Error('Kimi API 密钥未设置，请先运行命令"CCMP: 设置 Kimi For Coding API 密钥"');
+            throw new Error('Kimi API key not set, please run command "CCMP: Set Kimi For Coding API Key" first');
         }
 
         const limit = this.clampNumResults(params.limit);
@@ -112,8 +112,8 @@ export class KimiSearchTool {
             }
         };
 
-        Logger.info(`🔍 [Kimi 搜索] 开始搜索: "${params.query}"`);
-        Logger.debug(`📝 [Kimi 搜索] 请求数据: ${requestData}`);
+        Logger.info(`🔍 [Kimi Search] Starting search: "${params.query}"`);
+        Logger.debug(`📝 [Kimi Search] Request data: ${requestData}`);
 
         return new Promise((resolve, reject) => {
             const req = https.request(this.baseURL, options, res => {
@@ -125,11 +125,11 @@ export class KimiSearchTool {
 
                 res.on('end', () => {
                     try {
-                        Logger.debug(`📊 [Kimi 搜索] 响应状态码: ${res.statusCode}`);
-                        // Logger.debug(`📄 [Kimi 搜索] 响应数据: ${data}`);
+                        Logger.debug(`📊 [Kimi Search] Response status code: ${res.statusCode}`);
+                        // Logger.debug(`📄 [Kimi Search] Response data: ${data}`);
 
                         if (res.statusCode !== 200) {
-                            let errorMessage = `Kimi 搜索 API 错误 ${res.statusCode}`;
+                            let errorMessage = `Kimi search API error ${res.statusCode}`;
                             try {
                                 const errorData = JSON.parse(data);
                                 errorMessage += `: ${errorData.error?.message || JSON.stringify(errorData)}`;
@@ -137,7 +137,7 @@ export class KimiSearchTool {
                                 errorMessage += `: ${data}`;
                             }
 
-                            Logger.error('❌ [Kimi 搜索] API 返回错误', new Error(errorMessage));
+                            Logger.error('❌ [Kimi Search] API returned error', new Error(errorMessage));
                             reject(new Error(errorMessage));
                             return;
                         }
@@ -164,28 +164,28 @@ export class KimiSearchTool {
                             });
                         }
 
-                        Logger.info(`✅ [Kimi 搜索] 搜索完成: 找到 ${searchResults.length} 个结果`);
+                        Logger.info(`✅ [Kimi Search] Search completed: found ${searchResults.length} results`);
                         resolve({
                             searchResults,
                             requestId
                         });
                     } catch (error) {
-                        Logger.error('❌ [Kimi 搜索] 解析响应失败', error instanceof Error ? error : undefined);
+                        Logger.error('❌ [Kimi Search] Failed to parse response', error instanceof Error ? error : undefined);
                         reject(
-                            new Error(`解析 Kimi 搜索响应失败: ${error instanceof Error ? error.message : '未知错误'}`)
+                            new Error(`Failed to parse Kimi search response: ${error instanceof Error ? error.message : 'Unknown error'}`)
                         );
                     }
                 });
             });
 
             req.on('error', error => {
-                Logger.error('❌ [Kimi 搜索] 请求失败', error);
-                reject(new Error(`Kimi 搜索请求失败: ${error.message}`));
+                Logger.error('❌ [Kimi Search] Request failed', error);
+                reject(new Error(`Kimi search request failed: ${error.message}`));
             });
 
             req.setTimeout(DEFAULT_TIMEOUT_SECONDS * 1000, () => {
                 req.destroy();
-                reject(new Error('Kimi 搜索请求超时'));
+                reject(new Error('Kimi search request timed out'));
             });
 
             req.write(requestData);
@@ -194,20 +194,20 @@ export class KimiSearchTool {
     }
 
     /**
-     * 工具调用处理器
+     * Tool invocation handler
      */
     async invoke(
         request: vscode.LanguageModelToolInvocationOptions<KimiSearchRequest>
     ): Promise<vscode.LanguageModelToolResult> {
         try {
-            Logger.info(`🚀 [工具调用] Kimi 网络搜索工具被调用: ${JSON.stringify(request.input)}`);
+            Logger.info(`🚀 [Tool Invocation] Kimi web search tool invoked: ${JSON.stringify(request.input)}`);
             const params = request.input as KimiSearchRequest;
             if (!params.query) {
-                throw new Error('缺少必需参数: query');
+                throw new Error('Missing required parameter: query');
             }
 
             const response = await this.search(params);
-            Logger.info('✅ [工具调用] Kimi 网络搜索工具调用成功');
+            Logger.info('✅ [Tool Invocation] Kimi web search tool invoked successfully');
 
             StatusBarManager.kimi?.delayedUpdate();
 
@@ -216,20 +216,20 @@ export class KimiSearchTool {
                 new vscode.LanguageModelTextPart(JSON.stringify(searchResults))
             ]);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : '未知错误';
-            Logger.error('❌ [工具调用] Kimi 网络搜索工具调用失败', error instanceof Error ? error : undefined);
-            throw new vscode.LanguageModelError(`Kimi 搜索失败: ${errorMessage}`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            Logger.error('❌ [Tool Invocation] Kimi web search tool invocation failed', error instanceof Error ? error : undefined);
+            throw new vscode.LanguageModelError(`Kimi search failed: ${errorMessage}`);
         }
     }
 
     /**
-     * 清理工具资源
+     * Clean up tool resources
      */
     async cleanup(): Promise<void> {
         try {
-            Logger.info('✅ [Kimi 搜索] 工具资源已清理');
+            Logger.info('✅ [Kimi Search] Tool resources cleaned up');
         } catch (error) {
-            Logger.error('❌ [Kimi 搜索] 资源清理失败', error instanceof Error ? error : undefined);
+            Logger.error('❌ [Kimi Search] Resource cleanup failed', error instanceof Error ? error : undefined);
         }
     }
 }

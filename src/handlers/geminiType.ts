@@ -1,13 +1,13 @@
 ﻿/*---------------------------------------------------------------------------------------------
  *  Gemini (Generative Language) HTTP Types
- *  为第三方 Gemini 网关提供类型定义（不依赖 Google SDK）
+ *  Provide type definitions for third-party Gemini gateways (without depending on Google SDK)
  *--------------------------------------------------------------------------------------------*/
 
 export type GeminiRole = 'user' | 'model';
 
 export interface GeminiInlineData {
     mimeType: string;
-    data: string; // base64 编码
+    data: string; // base64 encoded
 }
 
 export interface GeminiFileData {
@@ -30,10 +30,10 @@ export interface GeminiPart {
     inlineData?: GeminiInlineData;
     fileData?: GeminiFileData;
 
-    // 思考/追踪字段
+    // Thinking/tracking fields
     thought?: boolean;
     thoughtSignature?: string;
-    // 部分网关/CLI 使用 snake_case
+    // Some gateways/CLI use snake_case
     thought_signature?: string;
 
     functionCall?: GeminiFunctionCall;
@@ -46,7 +46,7 @@ export interface GeminiContent {
 }
 
 export interface GeminiSchema {
-    // Google 风格的 schema：type 枚举为 STRING/NUMBER/INTEGER/BOOLEAN/OBJECT/ARRAY
+    // Google-style schema: type enum is STRING/NUMBER/INTEGER/BOOLEAN/OBJECT/ARRAY
     type?: string;
     format?: string;
     description?: string;
@@ -95,7 +95,7 @@ export interface GeminiGenerateContentRequest {
 
 export interface GeminiUsageMetadata {
     promptTokenCount?: number;
-    // 不同的网关 / API 版本可能使用任一字段名
+    // Different gateways / API versions may use any of these field names
     responseTokenCount?: number;
     candidatesTokenCount?: number;
     totalTokenCount?: number;
@@ -120,7 +120,7 @@ export interface GeminiGenerateContentResponse {
     usageMetadata?: GeminiUsageMetadata;
     responseId?: string;
 
-    // 某些网关在流中嵌入错误
+    // Some gateways embed errors in streaming
     error?: {
         message?: string;
         code?: number | string;

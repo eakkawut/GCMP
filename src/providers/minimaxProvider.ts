@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  MiniMax 专用 Provider
- *  为 MiniMax 提供商提供多密钥管理和专属配置向导功能
+ *  MiniMax Dedicated Provider
+ *  Provides multi-key management and dedicated configuration wizard functionality for MiniMax provider
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -21,8 +21,8 @@ import { TokenUsagesManager } from '../usages/usagesManager';
 import { MiniMaxVisionBridge } from '../handlers/visionBridge/minimaxVisionBridge';
 
 /**
- * MiniMax 专用模型提供商类
- * 继承 GenericModelProvider，添加多密钥管理和配置向导功能
+ * MiniMax Dedicated Model Provider Class
+ * Extends GenericModelProvider with multi-key management and configuration wizard functionality
  */
 export class MiniMaxProvider extends GenericModelProvider implements LanguageModelChatProvider {
     constructor(context: vscode.ExtensionContext, providerKey: string, providerConfig: ProviderConfig) {
@@ -30,52 +30,52 @@ export class MiniMaxProvider extends GenericModelProvider implements LanguageMod
     }
 
     /**
-     * 静态工厂方法 - 创建并激活 MiniMax 提供商
+     * Static Factory Method - Create and Activate MiniMax Provider
      */
     static createAndActivate(
         context: vscode.ExtensionContext,
         providerKey: string,
         providerConfig: ProviderConfig
     ): { provider: MiniMaxProvider; disposables: vscode.Disposable[] } {
-        Logger.trace(`${providerConfig.displayName} 专用模型扩展已激活!`);
-        // 创建提供商实例
+        Logger.trace(`${providerConfig.displayName} Dedicated Model Extension Activated!`);
+        // Create provider instance
         const provider = new MiniMaxProvider(context, providerKey, providerConfig);
-        // 注册语言模型聊天提供商
+        // Register language model chat provider
         const providerDisposable = vscode.lm.registerLanguageModelChatProvider(`ccmp.${providerKey}`, provider);
 
-        // 注册设置普通 API 密钥命令
+        // Register command to set normal API key
         const setApiKeyCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.setApiKey`, async () => {
             await MiniMaxWizard.setNormalApiKey(providerConfig.displayName, providerConfig.apiKeyTemplate);
-            // API 密钥变更后清除缓存
+            // Clear cache after API key change
             await provider.modelInfoCache?.invalidateCache(providerKey);
-            // 触发模型信息变更事件
+            // Trigger model information change event
             provider._onDidChangeLanguageModelChatInformation.fire();
         });
 
-        // 注册设置 Coding Plan 专用密钥命令
+        // Register command to set Coding Plan dedicated key
         const setCodingKeyCommand = vscode.commands.registerCommand(
             `ccmp.${providerKey}.setCodingPlanApiKey`,
             async () => {
                 await MiniMaxWizard.setCodingPlanApiKey(providerConfig.displayName, providerConfig.codingKeyTemplate);
-                // API 密钥变更后清除缓存
+                // Clear cache after API key change
                 await provider.modelInfoCache?.invalidateCache('minimax-coding');
-                // 触发模型信息变更事件
+                // Trigger model information change event
                 provider._onDidChangeLanguageModelChatInformation.fire();
             }
         );
 
-        // 注册设置 Coding Plan 接入点命令
+        // Register command to set Coding Plan endpoint
         const setCodingPlanEndpointCommand = vscode.commands.registerCommand(
             `ccmp.${providerKey}.setCodingPlanEndpoint`,
             async () => {
-                Logger.info(`用户手动打开 ${providerConfig.displayName} Coding Plan 接入点选择`);
+                Logger.info(`User manually opened ${providerConfig.displayName} Coding Plan endpoint selection`);
                 await MiniMaxWizard.setCodingPlanEndpoint(providerConfig.displayName);
             }
         );
 
-        // 注册配置向导命令
+        // Register configuration wizard command
         const configWizardCommand = vscode.commands.registerCommand(`ccmp.${providerKey}.configWizard`, async () => {
-            Logger.info(`启动 ${providerConfig.displayName} 配置向导`);
+            Logger.info(`Starting ${providerConfig.displayName} Configuration Wizard`);
             await MiniMaxWizard.startWizard(
                 providerConfig.displayName,
                 providerConfig.apiKeyTemplate,
@@ -95,35 +95,35 @@ export class MiniMaxProvider extends GenericModelProvider implements LanguageMod
     }
 
     /**
-     * 获取 MiniMax 状态栏实例（用于 delayedUpdate 调用）
+     * Get MiniMax status bar instance (for delayedUpdate call)
      */
     static getMiniMaxStatusBar() {
         return StatusBarManager.minimax;
     }
 
     /**
-     * 获取模型对应的 provider key（考虑 provider 字段和默认值）
+     * Get provider key for model (considering provider field and defaults)
      */
     private getProviderKeyForModel(modelConfig: ModelConfig): string {
-        // 优先使用模型特定的 provider 字段
+        // Prefer model-specific provider field
         if (modelConfig.provider) {
             return modelConfig.provider;
         }
-        // 否则使用提供商默认的 provider key
+        // Otherwise use provider's default provider key
         return this.providerKey;
     }
 
     /**
-     * 获取模型对应的密钥，确保存在有效密钥
-     * @param modelConfig 模型配置
-     * @returns 返回可用的 API 密钥
+     * Get the key corresponding to the model, ensuring a valid key exists
+     * @param modelConfig Model configuration
+     * @returns Returns the available API key
      */
     private async ensureApiKeyForModel(modelConfig: ModelConfig): Promise<string> {
         const providerKey = this.getProviderKeyForModel(modelConfig);
         const isCodingPlan = providerKey === 'minimax-coding';
-        const keyType = isCodingPlan ? 'Coding Plan 专用' : '普通';
+        const keyType = isCodingPlan ? 'Coding Plan Dedicated' : 'Normal';
 
-        // 检查是否已有密钥
+        // Check if key already exists
         const hasApiKey = await ApiKeyManager.hasValidApiKey(providerKey);
         if (hasApiKey) {
             const apiKey = await ApiKeyManager.getApiKey(providerKey);
@@ -132,57 +132,57 @@ export class MiniMaxProvider extends GenericModelProvider implements LanguageMod
             }
         }
 
-        // 密钥不存在，直接进入设置流程（不弹窗确认）
-        Logger.warn(`模型 ${modelConfig.name} 缺少 ${keyType} API 密钥，进入设置流程`);
+        // Key does not exist, directly enter setup flow (no confirmation dialog)
+        Logger.warn(`Model ${modelConfig.name} missing ${keyType} API key, entering setup flow`);
 
         if (isCodingPlan) {
-            // Coding Plan 模型直接进入专用密钥设置
+            // Coding Plan model directly enters dedicated key setup
             await MiniMaxWizard.setCodingPlanApiKey(
                 this.providerConfig.displayName,
                 this.providerConfig.codingKeyTemplate
             );
         } else {
-            // 普通模型直接进入普通密钥设置
+            // Normal model directly enters normal key setup
             await MiniMaxWizard.setNormalApiKey(this.providerConfig.displayName, this.providerConfig.apiKeyTemplate);
         }
 
-        // 重新检查密钥是否设置成功
+        // Re-check if key was set successfully
         const apiKey = await ApiKeyManager.getApiKey(providerKey);
         if (apiKey) {
-            Logger.info(`${keyType}密钥设置成功`);
+            Logger.info(`${keyType} key set successfully`);
             return apiKey;
         }
 
-        // 用户未设置或设置失败
-        throw new Error(`${this.providerConfig.displayName}: 用户未设置 ${keyType} API 密钥`);
+        // User did not set or setup failed
+        throw new Error(`${this.providerConfig.displayName}: User has not set ${keyType} API key`);
     }
 
     /**
-     * 重写：获取模型信息 - 添加密钥检查
-     * 只要有任意密钥存在就返回所有模型，不进行过滤
-     * 具体的密钥验证在实际使用时（provideLanguageModelChatResponse）进行
+     * Override: Get model information - Add key check
+     * Return all models as long as any key exists, without filtering
+     * Specific key validation is performed when actually in use (provideLanguageModelChatResponse)
      */
     override async provideLanguageModelChatInformation(
         options: PrepareLanguageModelChatModelOptions,
         _token: CancellationToken
     ): Promise<LanguageModelChatInformation[]> {
         if (options.configuration) {
-            // 如果请求中包含 configuration，不返回模型列表
+            // If request contains configuration, do not return model list
             return [];
         }
 
-        // 检查是否有任意密钥
+        // Check if any key exists
         const hasNormalKey = await ApiKeyManager.hasValidApiKey(this.providerKey);
         const hasCodingKey = await ApiKeyManager.hasValidApiKey('minimax-coding');
         const hasAnyKey = hasNormalKey || hasCodingKey;
 
-        // 如果是静默模式且没有任何密钥，直接返回空列表
+        // If in silent mode and no keys exist, directly return empty list
         if (options.silent && !hasAnyKey) {
-            Logger.debug(`${this.providerConfig.displayName}: 静默模式下，未检测到任何密钥，返回空模型列表`);
+            Logger.debug(`${this.providerConfig.displayName}: In silent mode, no keys detected, returning empty model list`);
             return [];
         }
 
-        // 非静默模式：启动配置向导
+        // Non-silent mode: Start configuration wizard
         if (!options.silent) {
             await MiniMaxWizard.startWizard(
                 this.providerConfig.displayName,
@@ -190,30 +190,30 @@ export class MiniMaxProvider extends GenericModelProvider implements LanguageMod
                 this.providerConfig.codingKeyTemplate
             );
 
-            // 重新检查是否设置了密钥
+            // Re-check if keys were set
             const normalKeyValid = await ApiKeyManager.hasValidApiKey(this.providerKey);
             const codingKeyValid = await ApiKeyManager.hasValidApiKey('minimax-coding');
 
-            // 如果用户仍未设置任何密钥，返回空列表
+            // If user still hasn't set any keys, return empty list
             if (!normalKeyValid && !codingKeyValid) {
-                Logger.warn(`${this.providerConfig.displayName}: 用户未设置任何密钥，返回空模型列表`);
+                Logger.warn(`${this.providerConfig.displayName}: User has not set any keys, returning empty model list`);
                 return [];
             }
         }
 
-        // 返回所有模型，不进行过滤
-        // 具体的密钥验证会在用户选择模型后的 provideLanguageModelChatResponse 中进行
-        Logger.debug(`${this.providerConfig.displayName}: 返回全部 ${this.providerConfig.models.length} 个模型`);
+        // Return all models without filtering
+        // Specific key validation will be performed in provideLanguageModelChatResponse after user selects a model
+        Logger.debug(`${this.providerConfig.displayName}: Returning all ${this.providerConfig.models.length} models`);
 
-        // 将配置中的模型转换为 VS Code 所需的格式
+        // Convert models in configuration to VS Code required format
         const models = this.providerConfig.models.map(model => this.modelConfigToInfo(model));
 
         return models;
     }
 
     /**
-     * 重写：提供语言模型聊天响应 - 添加请求前密钥确保机制
-     * 在处理请求前确保对应的密钥存在
+     * Override: Provide language model chat response - Add pre-request key assurance mechanism
+     * Ensure corresponding key exists before processing request
      */
     async provideLanguageModelChatResponse(
         model: LanguageModelChatInformation,
@@ -222,30 +222,30 @@ export class MiniMaxProvider extends GenericModelProvider implements LanguageMod
         progress: Progress<vscode.LanguageModelResponsePart>,
         _token: CancellationToken
     ): Promise<void> {
-        // 查找对应的模型配置
+        // Find corresponding model configuration
         const modelConfig = this.findModelConfigById(model);
         if (!modelConfig) {
-            const errorMessage = `未找到模型: ${model.id}`;
+            const errorMessage = `Model not found: ${model.id}`;
             Logger.error(errorMessage);
             throw new Error(errorMessage);
         }
 
-        // 请求前：确保模型对应的密钥存在
-        // 这会在没有密钥时弹出设置对话框
+        // Pre-request: Ensure key corresponding to model exists
+        // This will show setup dialog when no key is available
         const providerKey = this.getProviderKeyForModel(modelConfig);
         const apiKey = await this.ensureApiKeyForModel(modelConfig);
 
         if (!apiKey) {
-            const keyType = providerKey === 'minimax-coding' ? 'Coding Plan 专用' : '普通';
-            throw new Error(`${this.providerConfig.displayName}: 无效的 ${keyType} API 密钥`);
+            const keyType = providerKey === 'minimax-coding' ? 'Coding Plan Dedicated' : 'Normal';
+            throw new Error(`${this.providerConfig.displayName}: Invalid ${keyType} API key`);
         }
 
         Logger.debug(
-            `${this.providerConfig.displayName}: 即将处理请求，使用 ${providerKey === 'minimax-coding' ? 'Coding Plan' : '普通'} 密钥 - 模型: ${modelConfig.name}`
+            `${this.providerConfig.displayName}: About to process request, using ${providerKey === 'minimax-coding' ? 'Coding Plan' : 'Normal'} key - Model: ${modelConfig.name}`
         );
 
-        // 图片桥接：预处理消息中的图片
-        // 注：当 MiniMax 模型支持视觉识别后，移除此桥接调用及 minimaxVisionBridge.ts
+        // Image bridge: Preprocess images in messages
+        // Note: After MiniMax models support visual recognition, remove this bridge call and minimaxVisionBridge.ts
         const visionBridgeResult = await MiniMaxVisionBridge.preprocessImages(
             messages,
             modelConfig,
@@ -254,10 +254,10 @@ export class MiniMaxProvider extends GenericModelProvider implements LanguageMod
         );
         const processedMessages = visionBridgeResult.messages;
 
-        // 计算输入 token 数量并更新状态栏（使用桥接后的消息，图片已被替换为文本描述）
+        // Calculate input token count and update status bar (using bridged messages, images have been replaced with text descriptions)
         const totalInputTokens = await this.updateContextUsageStatusBar(model, processedMessages, modelConfig, options);
 
-        // === Token 统计: 记录预估输入 token ===
+        // === Token Statistics: Record estimated input token ===
         const usagesManager = TokenUsagesManager.instance;
         let requestId: string | null = null;
         try {
@@ -269,15 +269,15 @@ export class MiniMaxProvider extends GenericModelProvider implements LanguageMod
                 estimatedInputTokens: totalInputTokens
             });
         } catch (err) {
-            Logger.warn('记录预估Token失败，继续执行请求:', err);
+            Logger.warn('Failed to record estimated Token, continuing with request:', err);
         }
 
-        // 根据模型的 sdkMode 选择使用的 handler
-        // 注：此处不调用 super.provideLanguageModelChatResponse，而是直接处理
-        // 避免双重密钥检查，因为我们已经在 ensureApiKeyForModel 中检查过了
+        // Select handler based on model's sdkMode
+        // Note: Do not call super.provideLanguageModelChatResponse here, handle directly instead
+        // Avoid double key check, as we have already checked in ensureApiKeyForModel
         const sdkMode = modelConfig.sdkMode || 'openai';
         const sdkName = this.getSdkDisplayName(sdkMode);
-        Logger.info(`${this.providerConfig.displayName} Provider 开始处理请求 (${sdkName}): ${modelConfig.name}`);
+        Logger.info(`${this.providerConfig.displayName} Provider starting to process request (${sdkName}): ${modelConfig.name}`);
 
         try {
             await this.executeModelRequest(
@@ -291,10 +291,10 @@ export class MiniMaxProvider extends GenericModelProvider implements LanguageMod
                 providerKey
             );
         } catch (error) {
-            const errorMessage = `错误: ${error instanceof Error ? error.message : '未知错误'}`;
+            const errorMessage = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
             Logger.error(errorMessage);
 
-            // === Token 统计: 更新失败状态 ===
+            // === Token Statistics: Update failed status ===
             if (requestId) {
                 try {
                     await usagesManager.updateActualTokens({
@@ -302,15 +302,15 @@ export class MiniMaxProvider extends GenericModelProvider implements LanguageMod
                         status: 'failed'
                     });
                 } catch (err) {
-                    Logger.warn('更新Token统计失败状态失败:', err);
+                    Logger.warn('Failed to update Token statistics status:', err);
                 }
             }
 
             throw error;
         } finally {
-            Logger.info(`✅ ${this.providerConfig.displayName}: ${model.name} 请求已完成`);
+            Logger.info(`✅ ${this.providerConfig.displayName}: ${model.name} request completed`);
 
-            // 如果使用的是 Coding Plan 密钥，延时更新状态栏使用量
+            // If using Coding Plan key, delayed update status bar usage
             if (providerKey === 'minimax-coding') {
                 const statusBar = MiniMaxProvider.getMiniMaxStatusBar();
                 statusBar?.delayedUpdate();

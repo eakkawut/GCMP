@@ -11,8 +11,8 @@ import { URI } from '@vscode/chat-lib/dist/src/_internal/util/vs/base/common/uri
 import { getCompletionLogger } from './singletons';
 
 /**
- * VS Code 文档到 ObservableWorkspace 的适配器
- * 管理 MutableObservableWorkspace 和文档同步
+ * Adapter from VS Code Document to ObservableWorkspace
+ * Manages MutableObservableWorkspace and document synchronization
  */
 export class WorkspaceAdapter implements vscode.Disposable {
     private readonly workspace: MutableObservableWorkspace;
@@ -25,21 +25,21 @@ export class WorkspaceAdapter implements vscode.Disposable {
     constructor() {
         this.workspace = new MutableObservableWorkspace();
 
-        // // 监听文档变化
+        // // Listen for document changes
         // this.disposables.push(
         //     vscode.workspace.onDidChangeTextDocument(() => {
-        //         // 不在此处处理文档变化，触发提示前再进行同步
+        //         // Do not handle document changes here, sync before triggering suggestions
         //     })
         // );
 
-        // 监听文档打开
+        // Listen for document open
         this.disposables.push(
             vscode.workspace.onDidOpenTextDocument(doc => {
                 this.syncDocument(doc);
             })
         );
 
-        // 监听文档关闭
+        // Listen for document close
         this.disposables.push(
             vscode.workspace.onDidCloseTextDocument(doc => {
                 const CompletionLogger = getCompletionLogger();
@@ -48,12 +48,12 @@ export class WorkspaceAdapter implements vscode.Disposable {
                 if (docToRemove) {
                     docToRemove.dispose();
                     this.documentMap.delete(uriStr);
-                    CompletionLogger.trace(`[VSCodeWorkspaceAdapter] 移除文档: ${uriStr}`);
+                    CompletionLogger.trace(`[VSCodeWorkspaceAdapter] Remove document: ${uriStr}`);
                 }
             })
         );
 
-        // 监听选择变化
+        // Listen for selection changes
         this.disposables.push(
             vscode.window.onDidChangeTextEditorSelection(e => {
                 const doc = this.documentMap.get(e.textEditor.document.uri.toString());
@@ -68,7 +68,7 @@ export class WorkspaceAdapter implements vscode.Disposable {
             })
         );
 
-        // 同步已打开的文档
+        // Sync already open documents
         for (const doc of vscode.workspace.textDocuments) {
             this.syncDocument(doc);
         }
@@ -79,13 +79,13 @@ export class WorkspaceAdapter implements vscode.Disposable {
     }
 
     /**
-     * 同步 VS Code 文档到 ObservableWorkspace
+     * Sync VS Code document to ObservableWorkspace
      */
     syncDocument(vscodeDoc: vscode.TextDocument): MutableObservableDocument {
         const CompletionLogger = getCompletionLogger();
         const uriStr = vscodeDoc.uri.toString();
 
-        // 如果文档已存在，更新内容
+        // If document already exists, update content
         let doc = this.documentMap.get(uriStr);
         if (doc) {
             const newContent = vscodeDoc.getText();
@@ -96,7 +96,7 @@ export class WorkspaceAdapter implements vscode.Disposable {
             return doc;
         }
 
-        // 创建新的 ObservableDocument
+        // Create new ObservableDocument
         const documentId = DocumentId.create(uriStr);
         const languageId = LanguageId.create(vscodeDoc.languageId);
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(vscodeDoc.uri);
@@ -110,20 +110,20 @@ export class WorkspaceAdapter implements vscode.Disposable {
         });
 
         this.documentMap.set(uriStr, doc);
-        CompletionLogger.trace(`[VSCodeWorkspaceAdapter] 同步文档: ${vscodeDoc.fileName}`);
+        CompletionLogger.trace(`[VSCodeWorkspaceAdapter] Sync document: ${vscodeDoc.fileName}`);
 
         return doc;
     }
 
     /**
-     * 获取文档 ID
+     * Get document ID
      */
     getDocumentId(uri: vscode.Uri): DocumentId {
         return DocumentId.create(uri.toString());
     }
 
     dispose(): void {
-        // 清除防抖定时器
+        // Clear debounce timer
         if (this.documentChangeTimer) {
             clearTimeout(this.documentChangeTimer);
             this.documentChangeTimer = null;

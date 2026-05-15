@@ -15,7 +15,7 @@ CHINESE_PATTERN = re.compile(r'[\u4e00-\u9fff\u3400-\u4dbf\U00020000-\U0002a6df\
 BASE_DIR = '/home/guokoko/github/GCMP'
 
 # Output directory
-OUTPUT_DIR = '/home/guokoko/github/GCMP/found_cn'
+OUTPUT_DIR = '/home/guokoko/github/found_cn'
 
 # Directories to exclude
 EXCLUDE_DIRS = {'node_modules', '.git', 'working', '.vscode', '.roo', '.github', 'fonts'}

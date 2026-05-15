@@ -1,19 +1,19 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  提交模块导出
- *  AI 驱动的提交消息生成功能
+ *  Commit Module Exports
+ *  AI-driven commit message generation feature
  *--------------------------------------------------------------------------------------------*/
 
-// 类型导出
+// Type exports
 export * from './types';
 
-// 服务导出
+// Service exports
 export { GitService, checkGitAvailability } from './gitService';
 export { PromptService } from './promptService';
 export { GeneratorService } from './generatorService';
 
-// 模板导出
+// Template exports
 export { getTemplate } from './templates';
 
-// 命令导出
+// Command exports
 export { registerCommitCommands } from './commands';
 export { CommitMessage } from './commitMessage';

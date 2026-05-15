@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------------------------
- *  日志索引管理器
- *  负责 index.json 的读取、写入、更新和重建
- *  索引文件路径: <baseDir>/usages/index.json
- *  用于快速浏览日期列表，无需加载每个日期的完整统计
+ *  Log Index Manager
+ *  Responsible for reading, writing, updating and rebuilding index.json
+ *  Index file path: <baseDir>/usages/index.json
+ *  Used for quickly browsing date list without loading complete statistics for each date
  *--------------------------------------------------------------------------------------------*/
 
 import * as fs from 'fs/promises';
@@ -13,8 +13,8 @@ import { AtomicJsonFile } from '../atomicJsonFile';
 import type { DateIndex, DateIndexEntry, TokenUsageStatsFromFile, TokenStats } from './types';
 
 /**
- * 日志索引管理器
- * 管理 index.json 文件的读写操作
+ * Log Index Manager
+ * Manages read/write operations for index.json file
  */
 export class LogIndexManager {
     private readonly baseDir: string;
@@ -24,16 +24,16 @@ export class LogIndexManager {
     }
 
     /**
-     * 获取索引文件路径
-     * 路径: <baseDir>/usages/index.json
+     * Get Index File Path
+     * Path: <baseDir>/usages/index.json
      */
     getIndexPath(): string {
         return path.join(this.baseDir, 'index.json');
     }
 
     /**
-     * 获取缓存时间戳信息
-     * @returns 版本时间戳和缓存创建时间戳
+     * Get Cache Timestamp Information
+     * @returns Version timestamp and cache creation timestamp
      */
     async getCacheTimestamps(): Promise<{ versionTimestamp: number | null; cacheTimestamp: number | null }> {
         const index = await this.readIndex();
@@ -47,10 +47,10 @@ export class LogIndexManager {
     }
 
     /**
-     * 设置缓存时间戳
-     * 同时设置版本时间戳和缓存创建时间戳
-     * @param versionTimestamp 代码版本时间戳
-     * @param cacheTimestamp 缓存创建时间戳（通常为 Date.now()）
+     * Set Cache Timestamp
+     * Sets both version timestamp and cache creation timestamp
+     * @param versionTimestamp Code version timestamp
+     * @param cacheTimestamp Cache creation timestamp (usually Date.now())
      */
     async setCacheTimestamps(versionTimestamp: number, cacheTimestamp: number): Promise<void> {
         const indexPath = this.getIndexPath();
@@ -66,17 +66,17 @@ export class LogIndexManager {
             });
 
             StatusLogger.debug(
-                `[LogIndexManager] 已更新缓存时间戳: version=${new Date(versionTimestamp).toISOString()}, cache=${new Date(cacheTimestamp).toISOString()}`
+                `[LogIndexManager] Updated cache timestamp: version=${new Date(versionTimestamp).toISOString()}, cache=${new Date(cacheTimestamp).toISOString()}`
             );
         } catch (err) {
-            StatusLogger.warn('[LogIndexManager] 设置缓存时间戳失败', err);
+            StatusLogger.warn('[LogIndexManager] Failed to set cache timestamp', err);
             throw err;
         }
     }
 
     /**
-     * 读取日期索引
-     * 用于快速获取所有日期的摘要信息
+     * Read Date Index
+     * Used to quickly get summary information for all dates
      */
     private async readIndex(): Promise<DateIndex | null> {
         const indexPath = this.getIndexPath();
@@ -91,24 +91,24 @@ export class LogIndexManager {
         try {
             const content = await fs.readFile(indexPath, 'utf-8');
             const index: DateIndex = JSON.parse(content);
-            StatusLogger.debug(`[LogIndexManager] 已读取日期索引，共 ${Object.keys(index.dates).length} 个日期`);
+            StatusLogger.debug(`[LogIndexManager] Read date index, total ${Object.keys(index.dates).length} dates`);
             return index;
         } catch (err) {
-            StatusLogger.warn('[LogIndexManager] 读取日期索引失败', err);
+            StatusLogger.warn('[LogIndexManager] Failed to read date index', err);
             return null;
         }
     }
 
     private async saveIndexUnlocked(indexPath: string, index: DateIndex): Promise<void> {
         try {
-            // 确保基础目录存在
+            // Ensure base directory exists
             await this.ensureDirectoryExists(this.baseDir);
 
-            // 写入索引文件
+            // Write index file
             await AtomicJsonFile.writeJsonAtomically(indexPath, index);
-            StatusLogger.debug(`[LogIndexManager] 已保存日期索引，共 ${Object.keys(index.dates).length} 个日期`);
+            StatusLogger.debug(`[LogIndexManager] Saved date index, total ${Object.keys(index.dates).length} dates`);
         } catch (err) {
-            StatusLogger.warn('[LogIndexManager] 保存日期索引失败', err);
+            StatusLogger.warn('[LogIndexManager] Failed to save date index', err);
             throw err;
         }
     }
@@ -133,8 +133,8 @@ export class LogIndexManager {
     }
 
     /**
-     * 更新日期索引
-     * 在保存统计数据后调用，更新索引文件
+     * Update Date Index
+     * Called after saving statistics data, updates index file
      */
     async updateIndex(dateStr: string, total: TokenStats): Promise<void> {
         const indexPath = this.getIndexPath();
@@ -148,14 +148,14 @@ export class LogIndexManager {
                 await this.saveIndexUnlocked(indexPath, index);
             });
         } catch (err) {
-            StatusLogger.warn(`[LogIndexManager] 更新日期索引失败: ${dateStr}`, err);
-            // 不抛出错误，索引更新失败不影响主流程
+            StatusLogger.warn(`[LogIndexManager] Failed to update date index: ${dateStr}`, err);
+            // Do not throw error, index update failure does not affect main flow
         }
     }
 
     /**
-     * 从索引中删除指定日期
-     * 在删除统计数据后调用
+     * Delete Specified Date from Index
+     * Called after deleting statistics data
      */
     async removeDate(dateStr: string): Promise<void> {
         const indexPath = this.getIndexPath();
@@ -172,32 +172,32 @@ export class LogIndexManager {
 
                 delete index.dates[dateStr];
                 await this.saveIndexUnlocked(indexPath, index);
-                StatusLogger.debug(`[LogIndexManager] 已从索引中删除日期: ${dateStr}`);
+                StatusLogger.debug(`[LogIndexManager] Deleted date from index: ${dateStr}`);
             });
         } catch (err) {
-            StatusLogger.warn(`[LogIndexManager] 从索引中删除日期失败: ${dateStr}`, err);
-            // 不抛出错误，索引更新失败不影响主流程
+            StatusLogger.warn(`[LogIndexManager] Failed to delete date from index: ${dateStr}`, err);
+            // Do not throw error, index update failure does not affect main flow
         }
     }
 
     /**
-     * 获取所有日期的摘要信息
-     * 自动同步索引与实际日期文件夹，添加缺失的日期，移除不存在的日期
+     * Get Summary Information for All Dates
+     * Automatically synchronizes index with actual date folders, adds missing dates, removes non-existent dates
      */
     async getIndex(): Promise<Record<string, DateIndexEntry>> {
         const indexPath = this.getIndexPath();
 
         return AtomicJsonFile.runExclusive(indexPath, async () => {
-            // 获取所有实际的日期文件夹
+            // Get all actual date folders
             const actualDates = await this.getAllStatsDates();
             const actualDateSet = new Set(actualDates);
 
-            // 读取现有索引
+            // Read existing index
             const index = await this.readIndexFile(indexPath);
             const summaries: Record<string, DateIndexEntry> = {};
             let hasChanges = false;
 
-            // 基于实际 stats.json 对账全部索引条目，修复先前更新失败留下的脏摘要
+            // Reconcile all index entries based on actual stats.json, fix dirty summaries left by previous update failures
             for (const dateStr of actualDates) {
                 actualDateSet.delete(dateStr);
 
@@ -213,17 +213,17 @@ export class LogIndexManager {
 
                     if (!this.isSameDateIndexEntry(indexedEntry, actualEntry)) {
                         hasChanges = true;
-                        StatusLogger.debug(`[LogIndexManager] 日期摘要已对账修复: ${dateStr}`);
+                        StatusLogger.debug(`[LogIndexManager] Date summary reconciled and fixed: ${dateStr}`);
                     }
                 } catch (err) {
-                    StatusLogger.warn(`[LogIndexManager] 获取日期摘要失败: ${dateStr}`, err);
+                    StatusLogger.warn(`[LogIndexManager] Failed to get date summary: ${dateStr}`, err);
                 }
             }
 
             if (index) {
-                // 验证索引中的日期条目：移除目录不存在或 stats.json 缺失的脏条目
+                // Validate date entries in index: remove dirty entries where directory doesn't exist or stats.json is missing
                 for (const dateStr of Object.keys(index.dates)) {
-                    // 已通过对账覆盖的条目无需再检
+                    // Entries already reconciled do not need further checking
                     if (dateStr in summaries) {
                         continue;
                     }
@@ -231,20 +231,20 @@ export class LogIndexManager {
                     const dateFolder = path.join(this.baseDir, dateStr);
                     if (!fsSync.existsSync(dateFolder)) {
                         hasChanges = true;
-                        StatusLogger.debug(`[LogIndexManager] 索引中的日期文件夹不存在，已移除: ${dateStr}`);
+                        StatusLogger.debug(`[LogIndexManager] Date folder doesn't exist in index, removed: ${dateStr}`);
                         continue;
                     }
 
-                    // 目录在但 stats.json 缺失或不可读，也属于脏条目
+                    // Directory exists but stats.json is missing or unreadable, also considered dirty entry
                     const statsFile = path.join(dateFolder, 'stats.json');
                     if (!fsSync.existsSync(statsFile)) {
                         hasChanges = true;
-                        StatusLogger.debug(`[LogIndexManager] 索引中日期的 stats.json 缺失，已移除: ${dateStr}`);
+                        StatusLogger.debug(`[LogIndexManager] stats.json missing for date in index, removed: ${dateStr}`);
                     }
                 }
             }
 
-            // 如果有变化（新增或删除），更新索引文件
+            // If there are changes (additions or deletions), update index file
             if (hasChanges) {
                 const nextIndex: DateIndex = { dates: summaries };
                 if (index?.versionTimestamp !== undefined) {
@@ -261,7 +261,7 @@ export class LogIndexManager {
     }
 
     /**
-     * 获取所有已保存的日期列表
+     * Get All Saved Date List
      */
     private async getAllStatsDates(): Promise<string[]> {
         if (!fsSync.existsSync(this.baseDir)) {
@@ -269,16 +269,16 @@ export class LogIndexManager {
         }
 
         try {
-            // 读取所有日期目录
+            // Read all date directories
             const entries = await fs.readdir(this.baseDir, { withFileTypes: true });
             const dates: string[] = [];
 
             for (const entry of entries) {
                 if (entry.isDirectory()) {
                     const dateStr = entry.name;
-                    // 检查是否是有效的日期格式
+                    // Check if it's a valid date format
                     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                        // 检查该日期目录下是否有统计文件
+                        // Check if there's a statistics file in that date directory
                         const statsFile = path.join(this.baseDir, dateStr, 'stats.json');
                         if (fsSync.existsSync(statsFile)) {
                             dates.push(dateStr);
@@ -287,15 +287,15 @@ export class LogIndexManager {
                 }
             }
 
-            return dates.sort().reverse(); // 倒序(最新的在前)
+            return dates.sort().reverse(); // Descending order (newest first)
         } catch (err) {
-            StatusLogger.error('[LogIndexManager] 获取统计日期列表失败', err);
+            StatusLogger.error('[LogIndexManager] Failed to get statistics date list', err);
             return [];
         }
     }
 
     /**
-     * 加载日期统计
+     * Load Date Statistics
      */
     private async loadStats(dateStr: string): Promise<TokenUsageStatsFromFile | null> {
         const statsPath = path.join(this.baseDir, dateStr, 'stats.json');
@@ -307,23 +307,23 @@ export class LogIndexManager {
             const content = await fs.readFile(statsPath, 'utf-8');
             return JSON.parse(content) as TokenUsageStatsFromFile;
         } catch (err) {
-            StatusLogger.warn(`[LogIndexManager] 读取日期统计失败: ${dateStr}`, err);
+            StatusLogger.warn(`[LogIndexManager] Failed to read date statistics: ${dateStr}`, err);
             return null;
         }
     }
 
     /**
-     * 确保目录存在(递归创建)
+     * Ensure Directory Exists (recursive creation)
      */
     private async ensureDirectoryExists(dirPath: string): Promise<void> {
         try {
-            // 同步检查避免竞态条件
+            // Synchronous check to avoid race conditions
             if (!fsSync.existsSync(dirPath)) {
                 await fs.mkdir(dirPath, { recursive: true });
-                StatusLogger.debug(`[LogIndexManager] 创建目录: ${dirPath}`);
+                StatusLogger.debug(`[LogIndexManager] Created directory: ${dirPath}`);
             }
         } catch (err) {
-            // 忽略已存在错误
+            // Ignore already exists error
             const error = err as NodeJS.ErrnoException;
             if (error.code !== 'EEXIST') {
                 throw err;

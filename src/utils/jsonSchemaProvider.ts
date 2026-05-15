@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  JSON Schema 提供者
- *  动态生成 CCMP 配置的 JSON Schema，为 settings.json 提供智能提示
+ *  JSON Schema Provider
+ *  Dynamically generates JSON Schema for CCMP configuration to provide intelligent suggestions for settings.json
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -12,7 +12,7 @@ import { KnownProviders } from './knownProviders';
 import { CompatibleModelManager } from './compatibleModelManager';
 
 /**
- * 扩展的 JSON Schema 接口，支持 VS Code 特有的 enumDescriptions 属性
+ * Extended JSON Schema interface supporting VS Code-specific enumDescriptions property
  */
 declare module 'json-schema' {
     interface JSONSchema7 {
@@ -23,8 +23,8 @@ declare module 'json-schema' {
 }
 
 /**
- * JSON Schema 提供者类
- * 动态生成 CCMP 配置的 JSON Schema，为 settings.json 提供智能提示
+ * JSON Schema Provider class
+ * Dynamically generates JSON Schema for CCMP configuration to provide intelligent suggestions for settings.json
  */
 export class JsonSchemaProvider {
     private static readonly SCHEMA_URI = 'ccmp-settings://root/schema.json';
@@ -33,7 +33,7 @@ export class JsonSchemaProvider {
     private static onDidChangeFileEmitter: vscode.EventEmitter<vscode.FileChangeEvent[]> | null = null;
     private static eventDisposables: vscode.Disposable[] = [];
 
-    // 仅用于 FileSystemProvider.stat 的文件元信息：避免每次 stat 都 Date.now() 抖动
+    // File metadata only used for FileSystemProvider.stat: avoid Date.now() jitter on every stat
     private static schemaCtime = Date.now();
     private static schemaMtime = Date.now();
 
@@ -45,7 +45,7 @@ export class JsonSchemaProvider {
     }
 
     /**
-     * 初始化 JSON Schema 提供者
+     * Initialize JSON Schema Provider
      */
     static initialize(): void {
         if (this.fsProviderDisposable) {
@@ -55,17 +55,17 @@ export class JsonSchemaProvider {
         this.schemaCtime = Date.now();
         this.schemaMtime = Date.now();
 
-        // 清理之前注册的事件监听
+        // Clean up previously registered event listeners
         this.eventDisposables.forEach(d => d.dispose());
         this.eventDisposables = [];
 
-        // 重建文件变更通知 emitter
+        // Rebuild file change notification emitter
         if (this.onDidChangeFileEmitter) {
             this.onDidChangeFileEmitter.dispose();
         }
         this.onDidChangeFileEmitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
 
-        // 注册只读文件系统提供者：让 JSON 语言服务用“文件读取”的方式获取 schema
+        // Register read-only file system provider: let JSON language service get schema via "file read"
         const provider: vscode.FileSystemProvider = {
             onDidChangeFile: this.onDidChangeFileEmitter.event,
             watch: () => new vscode.Disposable(() => undefined),
@@ -77,12 +77,12 @@ export class JsonSchemaProvider {
                     type: vscode.FileType.File,
                     ctime: this.schemaCtime,
                     mtime: this.schemaMtime,
-                    // schema 实际是动态内容；这里给一个非 0 的 size，避免被误判为空文件
+                    // Schema is actually dynamic content; give a non-zero size here to avoid being mistaken for an empty file
                     size: 1
                 };
             },
             readDirectory: (uri: vscode.Uri) => {
-                // 仅支持 root 目录
+                // Only support root directory
                 if (
                     uri.scheme !== 'ccmp-settings' ||
                     uri.authority !== 'root' ||
@@ -111,7 +111,7 @@ export class JsonSchemaProvider {
             isCaseSensitive: true
         });
 
-        // 监听配置变化，及时更新 schema
+        // Listen for configuration changes and update schema promptly
         this.eventDisposables.push(
             vscode.workspace.onDidChangeConfiguration(e => {
                 if (e.affectsConfiguration('ccmp')) {
@@ -120,22 +120,22 @@ export class JsonSchemaProvider {
             })
         );
 
-        Logger.debug('动态 JSON Schema 提供者已初始化');
+        Logger.debug('Dynamic JSON Schema Provider initialized');
     }
 
     /**
-     * 使缓存失效，触发 schema 更新
+     * Invalidate cache and trigger schema update
      */
     private static invalidateCache(): void {
         this.updateSchema();
     }
 
     /**
-     * 更新 Schema
+     * Update Schema
      */
     private static updateSchema(): void {
         try {
-            // 配置变更是小概率事件：直接通知 VS Code 重新获取 schema 内容
+            // Configuration changes are rare events: directly notify VS Code to re-fetch schema content
             this.schemaMtime = Date.now();
             this.onDidChangeFileEmitter?.fire([
                 {
@@ -143,58 +143,58 @@ export class JsonSchemaProvider {
                     uri: this.SCHEMA_VSCODE_URI
                 }
             ]);
-            Logger.info('JSON Schema 已更新');
+            Logger.info('JSON Schema updated');
         } catch (error) {
-            Logger.error('更新 JSON Schema 失败:', error);
+            Logger.error('Failed to update JSON Schema:', error);
         }
     }
 
     /**
-     * 获取 family 字段的基础 JSON Schema
-     * 用于模型配置中的 family 字段定义
+     * Get base JSON Schema for family field
+     * Used for family field definition in model configuration
      */
     private static getFamilySchema(): JSONSchema7 {
         return {
             type: 'string',
             description: [
-                '模型的 family 标识，用于确定编辑工具模式。',
-                '如果未设置，将根据 sdkMode 自动推断默认值：',
+                'Model family identifier used to determine editing tool mode.',
+                'If not set, default value will be automatically inferred from sdkMode:',
                 '- anthropic → claude-sonnet-4.6',
                 '- openai/openai-sse/openai-responses → claude-sonnet-4.6',
                 '- gemini-sse → gemini-3-pro'
             ].join('\n'),
             enum: ['claude-sonnet-4.6', 'gpt-5.2', 'gemini-3-pro'],
             enumDescriptions: [
-                'Claude 风格编辑工具 (replace_string_in_file) - 高效精确的单次替换，支持多文件替换',
-                'GPT-5 风格编辑工具 (apply_patch) - 批量差异应用，支持复杂重构',
-                'Gemini 风格编辑工具 (replace_string_in_file) - 高效精确的单次替换'
+                'Claude-style editing tool (replace_string_in_file) - efficient and precise single replacement, supports multi-file replacement',
+                'GPT-5-style editing tool (apply_patch) - batch diff application, supports complex refactoring',
+                'Gemini-style editing tool (replace_string_in_file) - efficient and precise single replacement'
             ]
         };
     }
 
     /**
-     * 获取 CCMP 配置的完整 JSON Schema
-     * 为 settings.json 提供智能提示和验证
+     * Get complete JSON Schema for CCMP configuration
+     * Provide intelligent suggestions and validation for settings.json
      */
     static getSettingsSchema(): JSONSchema7 {
         const providerConfigs = ConfigManager.getConfigProvider();
         const patternProperties: Record<string, JSONSchema7> = {};
         const propertyNames: JSONSchema7 = {
             type: 'string',
-            description: '提供商配置键名',
+            description: 'Provider configuration key name',
             enum: Object.keys(providerConfigs),
             enumDescriptions: Object.entries(providerConfigs).map(([key, config]) => config.displayName || key)
         };
 
-        // 为每个提供商生成 schema
+        // Generate schema for each provider
         for (const [providerKey, config] of Object.entries(providerConfigs)) {
             patternProperties[`^${providerKey}$`] = this.createProviderSchema(providerKey, config);
         }
 
-        // 获取所有可用的提供商ID（用于其它配置项，如 fim/nes/compatibleModels.provider）
+        // Get all available provider IDs (used for other configuration items, e.g., fim/nes/compatibleModels.provider)
         const { providerIds, enumDescriptions: allProviderDescriptions } = this.getAllAvailableProviders();
 
-        // Commit 模型选择：provider 是 VS Code Language Model API 的 vendor（注册给 VS Code 的提供商ID）
+        // Commit model selection: provider is the vendor of VS Code Language Model API (provider ID registered with VS Code)
         const commitSchema = this.getCommitModelSchema();
 
         return {
@@ -206,7 +206,7 @@ export class JsonSchemaProvider {
             properties: {
                 'ccmp.retry.maxAttempts': {
                     type: 'number',
-                    description: '请求失败后的最大自动重试次数，仅对可重试错误生效。默认 3 次，最大 5 次。',
+                    description: 'Maximum number of automatic retry attempts after request failure, only effective for retryable errors. Default 3, maximum 5.',
                     default: 3,
                     minimum: 1,
                     maximum: 5
@@ -214,17 +214,17 @@ export class JsonSchemaProvider {
                 'ccmp.providerOverrides': {
                     type: 'object',
                     description:
-                        '提供商配置覆盖。允许覆盖提供商的baseUrl和模型配置，支持添加新模型或覆盖现有模型的参数。',
+                        'Provider configuration override. Allows overriding provider baseUrl and model configuration, supports adding new models or overriding existing model parameters.',
                     patternProperties,
                     propertyNames
                 },
                 'ccmp.fimCompletion.modelConfig': {
                     type: 'object',
-                    description: 'FIM (Fill-in-the-Middle) 补全模式配置',
+                    description: 'FIM (Fill-in-the-Middle) completion mode configuration',
                     properties: {
                         provider: {
                             type: 'string',
-                            description: 'FIM补全使用的提供商ID',
+                            description: 'Provider ID used for FIM completion',
                             enum: providerIds,
                             enumDescriptions: allProviderDescriptions
                         }
@@ -233,11 +233,11 @@ export class JsonSchemaProvider {
                 },
                 'ccmp.nesCompletion.modelConfig': {
                     type: 'object',
-                    description: 'NES (Next Edit Suggestion) 补全模式配置',
+                    description: 'NES (Next Edit Suggestion) completion mode configuration',
                     properties: {
                         provider: {
                             type: 'string',
-                            description: 'NES补全使用的提供商ID',
+                            description: 'Provider ID used for NES completion',
                             enum: providerIds,
                             enumDescriptions: allProviderDescriptions
                         }
@@ -246,42 +246,42 @@ export class JsonSchemaProvider {
                 },
                 'ccmp.compatibleModels': {
                     type: 'array',
-                    description: 'Compatible Provider 的自定义模型配置。',
+                    description: 'Custom model configuration for Compatible Provider.',
                     default: [],
                     items: {
                         type: 'object',
                         properties: {
                             id: {
                                 type: 'string',
-                                description: '模型ID',
+                                description: 'Model ID',
                                 minLength: 1
                             },
                             name: {
                                 type: 'string',
-                                description: '模型显示名称',
+                                description: 'Model display name',
                                 minLength: 1
                             },
                             tooltip: {
                                 type: 'string',
-                                description: '模型描述'
+                                description: 'Model description'
                             },
                             provider: {
                                 description:
-                                    '模型提供商标识符。从下拉列表选择现有提供商ID，或输入新ID创建自定义提供商。',
+                                    'Model provider identifier. Select an existing provider ID from the dropdown, or enter a new ID to create a custom provider.',
                                 allOf: [
                                     {
                                         anyOf: [
                                             {
                                                 type: 'string',
                                                 enum: providerIds,
-                                                description: '选择现有提供商ID'
+                                                description: 'Select an existing provider ID'
                                             },
                                             {
                                                 type: 'string',
                                                 minLength: 3,
                                                 maxLength: 100,
                                                 pattern: '^[a-zA-Z0-9_-]+$',
-                                                description: '新增自定义提供商ID（允许字母、数字、下划线、连字符）'
+                                                description: 'Add new custom provider ID (allows letters, numbers, underscores, hyphens)'
                                             }
                                         ]
                                     },
@@ -289,7 +289,7 @@ export class JsonSchemaProvider {
                                         not: {
                                             anyOf: [{ const: 'codex' }, { const: 'gemini' }]
                                         },
-                                        errorMessage: '"codex" 和 "gemini" 为 CLI 专用提供商，不可在自定义模型中使用'
+                                        errorMessage: '"codex" and "gemini" are CLI-specialized providers and cannot be used in custom models'
                                     }
                                 ]
                             },
@@ -297,43 +297,43 @@ export class JsonSchemaProvider {
                                 type: 'string',
                                 enum: ['openai', 'openai-sse', 'openai-responses', 'anthropic', 'gemini-sse'],
                                 enumDescriptions: [
-                                    'OpenAI SDK 标准模式，使用官方 OpenAI SDK 进行请求响应处理',
-                                    'OpenAI SSE 兼容模式，使用插件内实现的SSE解析逻辑进行流式响应处理',
-                                    'OpenAI Responses API 模式，使用 Responses API 进行请求响应处理',
-                                    'Anthropic SDK 标准模式，使用官方 Anthropic SDK 进行请求响应处理',
-                                    'Gemini HTTP SSE 模式（实验性），使用纯 HTTP + SSE 解析，兼容第三方 Gemini 网关'
+                                    'OpenAI SDK standard mode, using official OpenAI SDK for request-response handling',
+                                    'OpenAI SSE compatible mode, using plugin-implemented SSE parsing logic for streaming response handling',
+                                    'OpenAI Responses API mode, using Responses API for request-response handling',
+                                    'Anthropic SDK standard mode, using official Anthropic SDK for request-response handling',
+                                    'Gemini HTTP SSE mode (experimental), using pure HTTP + SSE parsing, compatible with third-party Gemini gateways'
                                 ],
-                                description: 'SDK模式默认为 openai。',
+                                description: 'SDK mode defaults to openai.',
                                 default: 'openai'
                             },
                             baseUrl: {
                                 type: 'string',
-                                description: 'API基础URL',
+                                description: 'API base URL',
                                 format: 'uri'
                             },
                             model: {
                                 type: 'string',
-                                description: 'API请求时使用的模型名称（可选，默认使用模型ID）'
+                                description: 'Model name used for API requests (optional, defaults to model ID)'
                             },
                             maxInputTokens: {
                                 type: 'number',
-                                description: '最大输入token数量',
+                                description: 'Maximum input token count',
                                 minimum: 128
                             },
                             maxOutputTokens: {
                                 type: 'number',
-                                description: '最大输出token数量',
+                                description: 'Maximum output token count',
                                 minimum: 8
                             },
                             useInstructions: {
                                 type: 'boolean',
                                 description:
-                                    '是否在 Responses API 中使用 instructions 参数（可选）\n- false: 使用用户消息传递系统消息（默认）\n- true: 使用 instructions 参数传递系统消息',
+                                    'Whether to use instructions parameter in Responses API (optional)\n- false: Pass system messages via user messages (default)\n- true: Pass system messages via instructions parameter',
                                 default: false
                             },
                             webSearchTool: {
                                 type: 'boolean',
-                                description: '是否启用 Anthropic 原生 web_search 工具（仅 sdkMode=anthropic 时生效）',
+                                description: 'Whether to enable Anthropic native web_search tool (only effective when sdkMode=anthropic)',
                                 default: false
                             },
                             family: this.getFamilySchema(),
@@ -343,24 +343,24 @@ export class JsonSchemaProvider {
                                     type: 'string',
                                     enum: ['disabled', 'enabled', 'auto', 'adaptive'],
                                     enumDescriptions: [
-                                        '强制关闭深度思考能力，模型不输出思维链内容',
-                                        '强制开启深度思考能力，模型强制输出思维链内容',
-                                        '模型自行判断是否需要进行深度思考',
-                                        '模型根据上下文自适应调整深度思考模式'
+                                        'Force disable deep thinking, model will not output chain of thought',
+                                        'Force enable deep thinking, model will be forced to output chain of thought',
+                                        'Model decides whether deep thinking is needed',
+                                        'Model adaptively adjusts deep thinking mode based on context'
                                     ]
                                 },
-                                description: '深度思考配置，控制模型是否输出思维链内容'
+                                description: 'Deep thinking configuration, controls whether model outputs chain of thought'
                             },
                             thinkingFormat: {
                                 type: 'string',
                                 enum: ['boolean', 'object'],
                                 enumDescriptions: [
-                                    '使用布尔值格式: { enable_thinking: true/false }',
-                                    "使用对象格式: { thinking: { type: 'enabled' | 'disabled' } }"
+                                    'Use boolean format: { enable_thinking: true/false }',
+                                    "Use object format: { thinking: { type: 'enabled' | 'disabled' } }"
                                 ],
                                 default: 'boolean',
                                 description:
-                                    '思考模式参数的传递格式，用于兼容不同模型的API格式要求（仅 openai/openai-sse 模式生效）'
+                                    'Passing format for thinking mode parameters, for compatibility with different model API format requirements (only effective in openai/openai-sse mode)'
                             },
                             reasoningEffort: {
                                 type: 'array',
@@ -368,62 +368,62 @@ export class JsonSchemaProvider {
                                     type: 'string',
                                     enum: ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
                                     enumDescriptions: [
-                                        '关闭思考，直接回答',
-                                        '关闭思考，直接回答',
-                                        '轻量思考，侧重快速响应',
-                                        '均衡模式，兼顾速度与深度',
-                                        '深度分析，处理复杂问题',
-                                        '最大推理深度，速度较慢',
-                                        '绝对最高能力，对 token 消耗没有限制'
+                                        'Disable thinking, direct answer',
+                                        'Disable thinking, direct answer',
+                                        'Lightweight thinking, focus on fast response',
+                                        'Balanced mode, balance speed and depth',
+                                        'Deep analysis, handle complex problems',
+                                        'Maximum reasoning depth, slower speed',
+                                        'Absolute highest capability, no limit on token consumption'
                                     ]
                                 },
-                                description: '调节思维链长度，平衡不同场景对效果、时延、成本的需求'
+                                description: 'Adjust chain of thought length, balance effects, latency, and cost requirements across different scenarios'
                             },
                             capabilities: {
                                 type: 'object',
                                 properties: {
                                     toolCalling: {
                                         type: 'boolean',
-                                        description: '是否支持工具调用'
+                                        description: 'Whether tool calls are supported'
                                     },
                                     imageInput: {
                                         type: 'boolean',
-                                        description: '是否支持图像输入'
+                                        description: 'Whether image input is supported'
                                     }
                                 },
                                 required: ['toolCalling', 'imageInput']
                             },
                             customHeader: {
                                 type: 'object',
-                                description: '自定义HTTP头部配置，支持 ${APIKEY} 占位符替换',
+                                description: 'Custom HTTP header configuration, supports ${APIKEY} placeholder replacement',
                                 additionalProperties: {
                                     type: 'string',
-                                    description: 'HTTP头部值'
+                                    description: 'HTTP header value'
                                 }
                             },
                             extraBody: {
                                 type: 'object',
-                                description: '额外的请求体参数，将在API请求中合并到请求体中',
+                                description: 'Additional request body parameters, will be merged into request body in API requests',
                                 additionalProperties: {
-                                    description: '额外的请求体参数值'
+                                    description: 'Additional request body parameter value'
                                 }
                             },
                             includeThinking: {
                                 type: 'boolean',
-                                description: '是否包含思考内容（已弃用，此参数已移除）',
-                                deprecationMessage: 'includeThinking 已被弃用，此参数不再被支持'
+                                description: 'Whether to include thinking content (deprecated, this parameter has been removed)',
+                                deprecationMessage: 'includeThinking is deprecated, this parameter is no longer supported'
                             },
                             outputThinking: {
                                 type: 'boolean',
-                                description: '是否输出思考内容（已弃用，此参数已移除）',
-                                deprecationMessage: 'outputThinking 已被弃用，此参数不再被支持'
+                                description: 'Whether to output thinking content (deprecated, this parameter has been removed)',
+                                deprecationMessage: 'outputThinking is deprecated, this parameter is no longer supported'
                             }
                         },
                         required: ['id', 'name', 'provider', 'maxInputTokens', 'maxOutputTokens', 'capabilities'],
                         allOf: [
                             {
-                                // endpoint 仅对 openai / openai-sse / openai-responses 生效
-                                // anthropic 和 gemini-sse 不提示，且已配置时标红警告
+                                // endpoint is only effective for openai / openai-sse / openai-responses
+                                // anthropic and gemini-sse do not prompt, and show red warning when configured
                                 if: {
                                     anyOf: [
                                         { not: { required: ['sdkMode'] } },
@@ -440,11 +440,11 @@ export class JsonSchemaProvider {
                                         endpoint: {
                                             type: 'string',
                                             description: [
-                                                '自定义 API 端点路径（可选）。',
-                                                '用于替换默认附加到 baseUrl 后的路径（如 /chat/completions、/responses）。',
-                                                '- 相对路径（如 /custom/path）：与 baseUrl 拼接使用',
-                                                '- 完整 URL：直接填写完整的地址作为请求地址',
-                                                '仅对 openai、openai-sse、openai-responses 模式生效'
+                                                'Custom API endpoint path (optional).',
+                                                'Used to replace the path default appended to baseUrl (e.g., /chat/completions, /responses).',
+                                                '- Relative path (e.g., /custom/path): concatenated with baseUrl',
+                                                '- Full URL: enter the complete address directly as the request URL',
+                                                'Only effective for openai, openai-sse, openai-responses modes'
                                             ].join('\n')
                                         }
                                     }
@@ -453,13 +453,13 @@ export class JsonSchemaProvider {
                                     properties: {
                                         endpoint: {
                                             deprecationMessage:
-                                                'endpoint 仅对 openai、openai-sse、openai-responses 模式生效'
+                                                'endpoint is only effective for openai, openai-sse, openai-responses modes'
                                         }
                                     }
                                 }
                             },
                             {
-                                // useInstructions 仅对 openai-responses 生效
+                                // useInstructions is only effective for openai-responses
                                 if: {
                                     properties: {
                                         sdkMode: { const: 'openai-responses' }
@@ -471,7 +471,7 @@ export class JsonSchemaProvider {
                                         useInstructions: {
                                             type: 'boolean',
                                             description:
-                                                '是否在 Responses API 中使用 instructions 参数（可选）\n- false: 使用用户消息传递系统消息（默认）\n- true: 使用 instructions 参数传递系统消息',
+                                                'Whether to use instructions parameter in Responses API (optional)\n- false: Pass system messages via user messages (default)\n- true: Pass system messages via instructions parameter',
                                             default: false
                                         }
                                     }
@@ -479,13 +479,13 @@ export class JsonSchemaProvider {
                                 else: {
                                     properties: {
                                         useInstructions: {
-                                            deprecationMessage: 'useInstructions 仅对 openai-responses 模式生效'
+                                            deprecationMessage: 'useInstructions is only effective for openai-responses mode'
                                         }
                                     }
                                 }
                             },
                             {
-                                // webSearchTool 仅对 anthropic 生效
+                                // webSearchTool is only effective for anthropic
                                 if: {
                                     properties: {
                                         sdkMode: { const: 'anthropic' }
@@ -497,7 +497,7 @@ export class JsonSchemaProvider {
                                         webSearchTool: {
                                             type: 'boolean',
                                             description:
-                                                '是否启用 Anthropic 原生 web_search 工具。启用后会自动向模型暴露 web_search。',
+                                                'Whether to enable Anthropic native web_search tool. When enabled, web_search will be automatically exposed to the model.',
                                             default: false
                                         }
                                     }
@@ -505,13 +505,13 @@ export class JsonSchemaProvider {
                                 else: {
                                     properties: {
                                         webSearchTool: {
-                                            deprecationMessage: 'webSearchTool 仅对 anthropic 模式生效'
+                                            deprecationMessage: 'webSearchTool is only effective for anthropic mode'
                                         }
                                     }
                                 }
                             },
                             {
-                                // thinkingFormat 仅对 openai/openai-sse 生效
+                                // thinkingFormat is only effective for openai/openai-sse
                                 if: {
                                     anyOf: [
                                         { not: { required: ['sdkMode'] } },
@@ -529,25 +529,25 @@ export class JsonSchemaProvider {
                                             type: 'string',
                                             enum: ['boolean', 'object'],
                                             enumDescriptions: [
-                                                '使用布尔值格式: { enable_thinking: true/false }',
-                                                "使用对象格式: { thinking: { type: 'enabled' | 'disabled' } }"
+                                                'Use boolean format: { enable_thinking: true/false }',
+                                                "Use object format: { thinking: { type: 'enabled' | 'disabled' } }"
                                             ],
                                             default: 'boolean',
-                                            description: '思考模式参数的传递格式，用于兼容不同模型的API格式要求'
+                                            description: 'Passing format for thinking mode parameters, for compatibility with different model API format requirements'
                                         }
                                     }
                                 },
                                 else: {
                                     properties: {
                                         thinkingFormat: {
-                                            deprecationMessage: 'thinkingFormat 仅对 openai 和 openai-sse 模式生效'
+                                            deprecationMessage: 'thinkingFormat is only effective for openai and openai-sse modes'
                                         }
                                     }
                                 }
                             },
                             {
-                                // family 条件建议：根据 sdkMode 推荐默认值
-                                // anthropic 模式推荐 claude-sonnet-4.6
+                                // family conditional suggestion: recommend default value based on sdkMode
+                                // anthropic mode recommends claude-sonnet-4.6
                                 if: {
                                     properties: {
                                         sdkMode: { const: 'anthropic' }
@@ -559,22 +559,22 @@ export class JsonSchemaProvider {
                                         family: {
                                             type: 'string',
                                             description: [
-                                                '模型的 family 标识。anthropic 模式默认: claude-sonnet-4.6',
-                                                'Claude 风格编辑工具 (replace_string_in_file) - 高效精确的单次替换'
+                                                'Model family identifier. Default for anthropic mode: claude-sonnet-4.6',
+                                                'Claude-style editing tool (replace_string_in_file) - efficient and precise single replacement'
                                             ].join('\n'),
                                             default: 'claude-sonnet-4.6',
                                             enum: ['claude-sonnet-4.6', 'gpt-5.2', 'gemini-3-pro'],
                                             enumDescriptions: [
-                                                'Claude 风格编辑工具 (replace_string_in_file) - 推荐',
-                                                'GPT-5 风格编辑工具 (apply_patch)',
-                                                'Gemini 风格编辑工具 (replace_string_in_file)'
+                                                'Claude-style editing tool (replace_string_in_file) - Recommended',
+                                                'GPT-5-style editing tool (apply_patch)',
+                                                'Gemini-style editing tool (replace_string_in_file)'
                                             ]
                                         }
                                     }
                                 }
                             },
                             {
-                                // gemini-sse 模式推荐 gemini-3-pro
+                                // gemini-sse mode recommends gemini-3-pro
                                 if: {
                                     properties: {
                                         sdkMode: { const: 'gemini-sse' }
@@ -586,22 +586,22 @@ export class JsonSchemaProvider {
                                         family: {
                                             type: 'string',
                                             description: [
-                                                '模型的 family 标识。gemini-sse 模式默认: gemini-3-pro',
-                                                'Gemini 风格编辑工具 (replace_string_in_file) - 高效精确的单次替换'
+                                                'Model family identifier. Default for gemini-sse mode: gemini-3-pro',
+                                                'Gemini-style editing tool (replace_string_in_file) - efficient and precise single replacement'
                                             ].join('\n'),
                                             default: 'gemini-3-pro',
                                             enum: ['gemini-3-pro', 'claude-sonnet-4.6', 'gpt-5.2'],
                                             enumDescriptions: [
-                                                'Gemini 风格编辑工具 (replace_string_in_file) - 推荐',
-                                                'Claude 风格编辑工具 (replace_string_in_file)',
-                                                'GPT-5 风格编辑工具 (apply_patch)'
+                                                'Gemini-style editing tool (replace_string_in_file) - Recommended',
+                                                'Claude-style editing tool (replace_string_in_file)',
+                                                'GPT-5-style editing tool (apply_patch)'
                                             ]
                                         }
                                     }
                                 }
                             },
                             {
-                                // openai/openai-sse/openai-responses 模式（默认）
+                                // openai/openai-sse/openai-responses mode (default)
                                 if: {
                                     anyOf: [
                                         { not: { required: ['sdkMode'] } },
@@ -618,15 +618,15 @@ export class JsonSchemaProvider {
                                         family: {
                                             type: 'string',
                                             description: [
-                                                '模型的 family 标识。',
-                                                'openai/openai-sse/openai-responses 模式默认: claude-sonnet-4.6',
-                                                'Claude 风格编辑工具 (replace_string_in_file) - 高效精确的单次替换'
+                                                'Model family identifier.',
+                                                'Default for openai/openai-sse/openai-responses mode: claude-sonnet-4.6',
+                                                'Claude-style editing tool (replace_string_in_file) - efficient and precise single replacement'
                                             ].join('\n'),
                                             enum: ['claude-sonnet-4.6', 'gpt-5.2', 'gemini-3-pro'],
                                             enumDescriptions: [
-                                                'Claude 风格编辑工具 (replace_string_in_file) - 推荐',
-                                                'GPT-5 风格编辑工具 (apply_patch) - 批量差异应用',
-                                                'Gemini 风格编辑工具 (replace_string_in_file)'
+                                                'Claude-style editing tool (replace_string_in_file) - Recommended',
+                                                'GPT-5-style editing tool (apply_patch) - batch diff application',
+                                                'Gemini-style editing tool (replace_string_in_file)'
                                             ]
                                         }
                                     }
@@ -635,7 +635,7 @@ export class JsonSchemaProvider {
                         ]
                     }
                 },
-                // Commit 模型选择：保存 provider + model
+                // Commit model selection: save provider + model
                 'ccmp.commit.model': commitSchema
             },
             additionalProperties: true
@@ -643,61 +643,61 @@ export class JsonSchemaProvider {
     }
 
     /**
-     * 为特定提供商创建 JSON Schema
+     * Create JSON Schema for specific provider
      */
     private static createProviderSchema(providerKey: string, config: ProviderConfig): JSONSchema7 {
         const modelIds = config.models?.map(model => model.id) || [];
 
-        // 创建 id 属性的 schema，支持选择现有模型ID或输入自定义ID
+        // Create id property schema, supports selecting existing model ID or entering custom ID
         const idProperty: JSONSchema7 = {
             anyOf: [
                 {
                     type: 'string',
                     enum: modelIds,
-                    description: '覆盖现有模型ID'
+                    description: 'Override existing model ID'
                 },
                 {
                     type: 'string',
                     minLength: 3,
                     maxLength: 100,
                     pattern: '^[a-zA-Z0-9._-]+$',
-                    description: '新增自定义模型ID（允许字母、数字、下划线、连字符和点号）'
+                    description: 'Add new custom model ID (allows letters, numbers, underscores, hyphens, and dots)'
                 }
             ],
-            description: '从下拉列表选择现有模型ID，或输入新ID创建自定义配置'
+            description: 'Select an existing model ID from the dropdown, or enter a new ID to create custom configuration'
         };
 
-        // 为 streamlake 的 model 字段添加正则验证
+        // Add regex validation for streamlake model field
         const modelProperty: JSONSchema7 = {
             type: 'string',
             minLength: 1,
-            description: '覆盖API请求时使用的模型名称或端点ID'
+            description: 'Model name or endpoint ID used for API requests'
         };
         if (providerKey === 'streamlake') {
             modelProperty.pattern = '^ep-[a-zA-Z0-9]{6}-\\d{19}$';
-            modelProperty.description = '必须符合格式 ep-xxxxxx-xxxxxxxxxxxxxxxxxxx';
+            modelProperty.description = 'Must match format ep-xxxxxx-xxxxxxxxxxxxxxxxxxx';
         }
 
         return {
             type: 'object',
-            description: `${config.displayName || providerKey} 配置覆盖`,
+            description: `${config.displayName || providerKey} configuration override`,
             properties: {
                 baseUrl: {
                     type: 'string',
-                    description: '覆盖提供商级别的API基础URL',
+                    description: 'Override provider-level API base URL',
                     format: 'uri'
                 },
                 customHeader: {
                     type: 'object',
-                    description: '提供商级别的自定义HTTP头部，支持 ${APIKEY} 占位符替换',
+                    description: 'Provider-level custom HTTP headers, supports ${APIKEY} placeholder replacement',
                     additionalProperties: {
                         type: 'string',
-                        description: 'HTTP头部值'
+                        description: 'HTTP header value'
                     }
                 },
                 models: {
                     type: 'array',
-                    description: '模型覆盖配置列表',
+                    description: 'Model override configuration list',
                     minItems: 1,
                     items: {
                         type: 'object',
@@ -708,54 +708,54 @@ export class JsonSchemaProvider {
                                 type: 'string',
                                 minLength: 1,
                                 description:
-                                    '在模型选择器中显示的友好名称。\r\n对于自定义模型ID有效，不会覆盖预置模型的名称。'
+                                    'Friendly name displayed in model selector.\r\nValid for custom model IDs, does not override preset model names.'
                             },
                             tooltip: {
                                 type: 'string',
                                 minLength: 1,
                                 description:
-                                    '作为悬停工具提示显示的详细描述。\r\n对于自定义模型ID有效，不会覆盖预置模型的描述。'
+                                    'Detailed description shown as hover tooltip.\r\nValid for custom model IDs, does not override preset model descriptions.'
                             },
                             maxInputTokens: {
                                 type: 'number',
                                 minimum: 1,
                                 maximum: 2000000,
-                                description: '覆盖最大输入token数量'
+                                description: 'Override maximum input token count'
                             },
                             maxOutputTokens: {
                                 type: 'number',
                                 minimum: 1,
                                 maximum: 200000,
-                                description: '覆盖最大输出token数量'
+                                description: 'Override maximum output token count'
                             },
                             sdkMode: {
                                 type: 'string',
                                 enum: ['openai', 'openai-sse', 'openai-responses', 'anthropic', 'gemini-sse'],
                                 enumDescriptions: [
-                                    'OpenAI SDK 标准模式',
-                                    'OpenAI SSE 兼容模式（自定义流式处理）',
-                                    'OpenAI Responses API 模式',
-                                    'Anthropic SDK 标准模式',
-                                    'Gemini HTTP SSE 模式（实验性）'
+                                    'OpenAI SDK standard mode',
+                                    'OpenAI SSE compatible mode (custom streaming)',
+                                    'OpenAI Responses API mode',
+                                    'Anthropic SDK standard mode',
+                                    'Gemini HTTP SSE mode (experimental)'
                                 ],
-                                description: '覆盖SDK模式，默认为 openai'
+                                description: 'Override SDK mode, defaults to openai'
                             },
                             baseUrl: {
                                 type: 'string',
-                                description: '覆盖模型级别的API基础URL',
+                                description: 'Override model-level API base URL',
                                 format: 'uri'
                             },
                             capabilities: {
                                 type: 'object',
-                                description: '模型能力配置',
+                                description: 'Model capability configuration',
                                 properties: {
                                     toolCalling: {
                                         type: 'boolean',
-                                        description: '是否支持工具调用'
+                                        description: 'Whether tool calls are supported'
                                     },
                                     imageInput: {
                                         type: 'boolean',
-                                        description: '是否支持图像输入'
+                                        description: 'Whether image input is supported'
                                     }
                                 },
                                 required: ['toolCalling', 'imageInput'],
@@ -763,28 +763,28 @@ export class JsonSchemaProvider {
                             },
                             customHeader: {
                                 type: 'object',
-                                description: '模型自定义HTTP头部，支持 ${APIKEY} 占位符替换',
+                                description: 'Model custom HTTP headers, supports ${APIKEY} placeholder replacement',
                                 additionalProperties: {
                                     type: 'string',
-                                    description: 'HTTP头部值'
+                                    description: 'HTTP header value'
                                 }
                             },
                             extraBody: {
                                 type: 'object',
-                                description: '额外的请求体参数（可选）',
+                                description: 'Additional request body parameters (optional)',
                                 additionalProperties: {
-                                    description: '额外的请求体参数值'
+                                    description: 'Additional request body parameter value'
                                 }
                             },
                             useInstructions: {
                                 type: 'boolean',
                                 description:
-                                    '是否在 Responses API 中使用 instructions 参数（可选）\n- false: 使用用户消息传递系统消息（默认）\n- true: 使用 instructions 参数传递系统消息',
+                                    'Whether to use instructions parameter in Responses API (optional)\n- false: Pass system messages via user messages (default)\n- true: Pass system messages via instructions parameter',
                                 default: false
                             },
                             webSearchTool: {
                                 type: 'boolean',
-                                description: '是否启用 Anthropic 原生 web_search 工具（仅 sdkMode=anthropic 时生效）',
+                                description: 'Whether to enable Anthropic native web_search tool (only effective when sdkMode=anthropic)',
                                 default: false
                             },
                             family: this.getFamilySchema(),
@@ -794,24 +794,24 @@ export class JsonSchemaProvider {
                                     type: 'string',
                                     enum: ['disabled', 'enabled', 'auto', 'adaptive'],
                                     enumDescriptions: [
-                                        '强制关闭深度思考能力，模型不输出思维链内容',
-                                        '强制开启深度思考能力，模型强制输出思维链内容',
-                                        '模型自行判断是否需要进行深度思考',
-                                        '模型根据上下文自适应调整深度思考模式'
+                                        'Force disable deep thinking, model will not output chain of thought',
+                                        'Force enable deep thinking, model will be forced to output chain of thought',
+                                        'Model decides whether deep thinking is needed',
+                                        'Model adaptively adjusts deep thinking mode based on context'
                                     ]
                                 },
-                                description: '深度思考配置，控制模型是否输出思维链内容'
+                                description: 'Deep thinking configuration, controls whether model outputs chain of thought'
                             },
                             thinkingFormat: {
                                 type: 'string',
                                 enum: ['boolean', 'object'],
                                 enumDescriptions: [
-                                    '使用布尔值格式: { enable_thinking: true/false }',
-                                    "使用对象格式: { thinking: { type: 'enabled' | 'disabled' } }"
+                                    'Use boolean format: { enable_thinking: true/false }',
+                                    "Use object format: { thinking: { type: 'enabled' | 'disabled' } }"
                                 ],
                                 default: 'boolean',
                                 description:
-                                    '思考模式参数的传递格式，用于兼容不同模型的API格式要求（仅 openai/openai-sse 模式生效）'
+                                    'Passing format for thinking mode parameters, for compatibility with different model API format requirements (only effective in openai/openai-sse mode)'
                             },
                             reasoningEffort: {
                                 type: 'array',
@@ -819,26 +819,26 @@ export class JsonSchemaProvider {
                                     type: 'string',
                                     enum: ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
                                     enumDescriptions: [
-                                        '关闭思考，直接回答',
-                                        '关闭思考，直接回答',
-                                        '轻量思考，侧重快速响应',
-                                        '均衡模式，兼顾速度与深度',
-                                        '深度分析，处理复杂问题',
-                                        '最大推理深度，速度较慢',
-                                        '绝对最高能力，对 token 消耗没有限制'
+                                        'Disable thinking, direct answer',
+                                        'Disable thinking, direct answer',
+                                        'Lightweight thinking, focus on fast response',
+                                        'Balanced mode, balance speed and depth',
+                                        'Deep analysis, handle complex problems',
+                                        'Maximum reasoning depth, slower speed',
+                                        'Absolute highest capability, no limit on token consumption'
                                     ]
                                 },
-                                description: '调节思维链长度，平衡不同场景对效果、时延、成本的需求'
+                                description: 'Adjust chain of thought length, balance effects, latency, and cost requirements across different scenarios'
                             },
                             includeThinking: {
                                 type: 'boolean',
-                                description: '是否包含思考内容（已弃用，此参数已移除）',
-                                deprecationMessage: 'includeThinking 已被弃用，此参数不再被支持'
+                                description: 'Whether to include thinking content (deprecated, this parameter has been removed)',
+                                deprecationMessage: 'includeThinking is deprecated, this parameter is no longer supported'
                             },
                             outputThinking: {
                                 type: 'boolean',
-                                description: '是否输出思考内容（已弃用，此参数已移除）',
-                                deprecationMessage: 'outputThinking 已被弃用，此参数不再被支持'
+                                description: 'Whether to output thinking content (deprecated, this parameter has been removed)',
+                                deprecationMessage: 'outputThinking is deprecated, this parameter is no longer supported'
                             }
                         },
                         required: ['id'],
@@ -855,7 +855,7 @@ export class JsonSchemaProvider {
                                         webSearchTool: {
                                             type: 'boolean',
                                             description:
-                                                '是否启用 Anthropic 原生 web_search 工具。启用后会自动向模型暴露 web_search。',
+                                                'Whether to enable Anthropic native web_search tool. When enabled, web_search will be automatically exposed to the model.',
                                             default: false
                                         }
                                     }
@@ -863,7 +863,7 @@ export class JsonSchemaProvider {
                                 else: {
                                     properties: {
                                         webSearchTool: {
-                                            deprecationMessage: 'webSearchTool 仅对 anthropic 模式生效'
+                                            deprecationMessage: 'webSearchTool is only effective for anthropic mode'
                                         }
                                     }
                                 }
@@ -880,7 +880,7 @@ export class JsonSchemaProvider {
                                         useInstructions: {
                                             type: 'boolean',
                                             description:
-                                                '是否在 Responses API 中使用 instructions 参数（可选）\n- false: 使用用户消息传递系统消息（默认）\n- true: 使用 instructions 参数传递系统消息',
+                                                'Whether to use instructions parameter in Responses API (optional)\n- false: Pass system messages via user messages (default)\n- true: Pass system messages via instructions parameter',
                                             default: false
                                         }
                                     }
@@ -888,7 +888,7 @@ export class JsonSchemaProvider {
                                 else: {
                                     properties: {
                                         useInstructions: {
-                                            deprecationMessage: 'useInstructions 仅对 openai-responses 模式生效'
+                                            deprecationMessage: 'useInstructions is only effective for openai-responses mode'
                                         }
                                     }
                                 }
@@ -911,18 +911,18 @@ export class JsonSchemaProvider {
                                             type: 'string',
                                             enum: ['boolean', 'object'],
                                             enumDescriptions: [
-                                                '使用布尔值格式: { enable_thinking: true/false }',
-                                                "使用对象格式: { thinking: { type: 'enabled' | 'disabled' } }"
+                                                'Use boolean format: { enable_thinking: true/false }',
+                                                "Use object format: { thinking: { type: 'enabled' | 'disabled' } }"
                                             ],
                                             default: 'boolean',
-                                            description: '思考模式参数的传递格式，用于兼容不同模型的API格式要求'
+                                            description: 'Passing format for thinking mode parameters, for compatibility with different model API format requirements'
                                         }
                                     }
                                 },
                                 else: {
                                     properties: {
                                         thinkingFormat: {
-                                            deprecationMessage: 'thinkingFormat 仅对 openai 和 openai-sse 模式生效'
+                                            deprecationMessage: 'thinkingFormat is only effective for openai and openai-sse modes'
                                         }
                                     }
                                 }
@@ -936,19 +936,19 @@ export class JsonSchemaProvider {
         };
     }
 
-    /** CLI 专用的提供商 ID，禁止在通用配置中使用 */
+    /** Provider IDs reserved for CLI, prohibited from use in general configuration */
     private static readonly CLI_RESERVED_PROVIDERS = ['codex', 'gemini'];
 
     /**
-     * 获取所有可用的提供商ID（包括内置、已知、自定义和历史提供商）
-     * 注意：会过滤掉 CLI 专用的提供商（codex、gemini）
+     * Get all available provider IDs (including built-in, known, custom, and historical providers)
+     * Note: CLI-specialized providers (codex, gemini) will be filtered out
      */
     private static getAllAvailableProviders(): { providerIds: string[]; enumDescriptions: string[] } {
         const providerIds: string[] = [];
         const enumDescriptions: string[] = [];
 
         try {
-            // 1. 获取内置提供商
+            // 1. Get built-in providers
             for (const [providerId, config] of Object.entries(ConfigManager.getConfigProvider())) {
                 if (this.CLI_RESERVED_PROVIDERS.includes(providerId)) {
                     continue;
@@ -957,7 +957,7 @@ export class JsonSchemaProvider {
                 enumDescriptions.push(config.displayName || providerId);
             }
 
-            // 2. 获取已知提供商
+            // 2. Get known providers
             for (const [providerId, config] of Object.entries(KnownProviders)) {
                 if (!providerIds.includes(providerId)) {
                     providerIds.push(providerId);
@@ -965,7 +965,7 @@ export class JsonSchemaProvider {
                 }
             }
 
-            // 3. 获取自定义模型中的历史提供商
+            // 3. Get historical providers from custom models
             const customModels = CompatibleModelManager.getModels();
             const customProviders = new Set<string>();
 
@@ -980,28 +980,28 @@ export class JsonSchemaProvider {
                 }
             }
 
-            // 添加自定义提供商
+            // Add custom providers
             for (const providerId of Array.from(customProviders).sort()) {
                 providerIds.push(providerId);
-                enumDescriptions.push('自定义提供商：' + providerId);
+                enumDescriptions.push('Custom provider: ' + providerId);
             }
         } catch (error) {
-            Logger.error('获取可用提供商列表失败:', error);
+            Logger.error('Failed to get available providers list:', error);
         }
 
         return { providerIds, enumDescriptions };
     }
 
     private static getCommitModelSchema(): JSONSchema7 {
-        // Commit 的 provider 为用户友好的 providerKey（不包含 ccmp. 前缀）。
-        // 在运行时根据该 providerKey 自动拼接为 VS Code Language Model vendor：ccmp.<providerKey>。
+        // Commit provider is user-friendly providerKey (without ccmp. prefix).
+        // At runtime, automatically concatenate to VS Code Language Model vendor based on this providerKey: ccmp.<providerKey>.
         const commitProviderIds: string[] = [];
         const commitProviderDescriptions: string[] = [];
 
         const providerModelIdsMap: Record<string, string[]> = {};
 
-        // 内置提供商（providerKey）+ 用户 providerOverrides 合并后的模型列表
-        // 注意：commit 模型下拉应包含用户通过 override 新增的模型，而不是仅限于内置 configProviders。
+        // Built-in providers (providerKey) + model list after merging user providerOverrides
+        // Note: commit model dropdown should include models added by users via override, not limited to built-in configProviders.
         const providerConfigs = ConfigManager.getConfigProvider();
         for (const [providerKey, originalConfig] of Object.entries(providerConfigs)) {
             commitProviderIds.push(providerKey);
@@ -1011,7 +1011,7 @@ export class JsonSchemaProvider {
             providerModelIdsMap[providerKey] = (effectiveConfig.models ?? []).map(m => m.id).filter(Boolean);
         }
 
-        // Compatible Provider（providerKey = compatible）
+        // Compatible Provider (providerKey = compatible)
         const compatibleModelIds = CompatibleModelManager.getModels()
             .map(m => m.id)
             .filter(Boolean);
@@ -1023,17 +1023,17 @@ export class JsonSchemaProvider {
 
         const base: JSONSchema7 = {
             type: 'object',
-            description: 'Commit 消息生成模型配置（provider + model）',
+            description: 'Commit message generation model configuration (provider + model)',
             properties: {
                 provider: {
                     type: 'string',
-                    description: '语言模型提供商（vendor）',
+                    description: 'Language model provider (vendor)',
                     enum: commitProviderIds,
                     enumDescriptions: commitProviderDescriptions
                 },
                 model: {
                     type: 'string',
-                    description: '模型 ID（对应 Language Model API 的 model.id）',
+                    description: 'Model ID (corresponds to Language Model API model.id)',
                     minLength: 1
                 }
             },
@@ -1043,7 +1043,7 @@ export class JsonSchemaProvider {
 
         const linkedRules: JSONSchema7[] = [];
         for (const [provider, modelIds] of Object.entries(providerModelIdsMap)) {
-            // Copilot 或无可枚举模型：仅验证 provider
+            // Copilot or no enumerable models: only validate provider
             if (!modelIds || modelIds.length === 0) {
                 continue;
             }
@@ -1075,7 +1075,7 @@ export class JsonSchemaProvider {
     }
 
     /**
-     * 清理资源
+     * Clean up resources
      */
     static dispose(): void {
         if (this.fsProviderDisposable) {
@@ -1091,6 +1091,6 @@ export class JsonSchemaProvider {
             this.onDidChangeFileEmitter = null;
         }
 
-        Logger.trace('动态 JSON Schema 提供者已清理');
+        Logger.trace('Dynamic JSON Schema Provider cleaned up');
     }
 }

@@ -1,15 +1,15 @@
 ﻿/*---------------------------------------------------------------------------------------------
- *  Copilot Log Target - 日志目标实现
- *  实现 ILogTarget 接口
- *  参考: getInlineCompletions.spec.ts 中的 NullLogTarget
- *  参考: nesProvider.spec.ts 中的 TestLogTarget
+ *  Copilot Log Target - Log Target Implementation
+ *  Implements ILogTarget interface
+ *  Reference: NullLogTarget in getInlineCompletions.spec.ts
+ *  Reference: TestLogTarget in nesProvider.spec.ts
  *--------------------------------------------------------------------------------------------*/
 
 import { ILogTarget, LogLevel } from '@vscode/chat-lib';
 import { getCompletionLogger } from './singletons';
 
 /**
- * 日志目标实现
+ * Log Target Implementation
  */
 export class CopilotLogTarget implements ILogTarget {
     logIt(level: LogLevel, metadataStr: string, ...extra: unknown[]): void {

@@ -1,22 +1,22 @@
 ﻿/**
- * 日期列表组件
- * 负责渲染和交互左侧日期列表
+ * Date List Component
+ * Responsible for rendering and interacting with the left-side date list
  */
 
 import { DateSummary } from '../types';
 import { formatTokens, postToVSCode } from '../utils';
 import { createElement } from '../../utils';
 
-// ============= 工具函数 =============
+// ============= Utility Functions =============
 
 /**
- * 打开存储目录
+ * Open storage directory
  */
 function openStorageDir(): void {
     postToVSCode({ command: 'openStorageDir' });
 }
 
-// ============= 组件渲染 =============
+// ============= Component Rendering =============
 
 function createDateListItem(summary: DateSummary): HTMLElement {
     const item = createElement('div', 'date-item');
@@ -24,7 +24,7 @@ function createDateListItem(summary: DateSummary): HTMLElement {
 
     const isSelected = window.usagesState?.selectedDate === summary.date;
     const isDateToday = summary.date === window.usagesState?.today;
-    const displayDate = isDateToday ? `今日 (${summary.date})` : summary.date;
+    const displayDate = isDateToday ? `Today (${summary.date})` : summary.date;
     const totalTokens = summary.total_input + summary.total_output;
 
     if (isSelected) {
@@ -37,7 +37,7 @@ function createDateListItem(summary: DateSummary): HTMLElement {
             console.log('selectDate:', summary.date, 'current:', window.usagesState.selectedDate);
             window.usagesState.selectedDate = summary.date;
         }
-        // 设置加载状态
+        // Set loading state
         if (window.usagesSetLoading) {
             window.usagesSetLoading('dateDetails', true);
         }
@@ -48,7 +48,7 @@ function createDateListItem(summary: DateSummary): HTMLElement {
     title.textContent = displayDate;
 
     const stats = createElement('div', 'date-item-stats');
-    stats.textContent = `请求: ${summary.total_requests} | Token: ${formatTokens(totalTokens)}`;
+    stats.textContent = `Requests: ${summary.total_requests} | Tokens: ${formatTokens(totalTokens)}`;
 
     inner.appendChild(title);
     inner.appendChild(stats);
@@ -61,20 +61,20 @@ function createDateListItem(summary: DateSummary): HTMLElement {
 export function createSidebar(): HTMLElement {
     const sidebar = createElement('div', 'sidebar');
 
-    // 侧边栏头部
+    // Sidebar header
     const header = createElement('div', 'sidebar-header');
     const headerTop = createElement('div', 'sidebar-header-top');
     const h1 = createElement('h1');
-    h1.textContent = 'Token 消耗统计';
+    h1.textContent = 'Token Consumption Statistics';
     const openBtn = createElement('button', 'open-storage-button');
     openBtn.textContent = '📁';
-    openBtn.title = '打开存储目录';
+    openBtn.title = 'Open Storage Directory';
     openBtn.onclick = openStorageDir;
     headerTop.appendChild(h1);
     headerTop.appendChild(openBtn);
     header.appendChild(headerTop);
 
-    // 日期列表容器
+    // Date list container
     const dateListContainer = createElement('div', 'date-list');
     dateListContainer.id = 'date-list';
 
@@ -94,17 +94,17 @@ export function updateDateList(dateList: DateSummary[]): void {
     const firstItem = existingItems[0] as HTMLElement;
     const firstItemDate = firstItem?.dataset.date;
 
-    // 检查是否需要全量重新渲染
+    // Check if full re-render is needed
     const needsFullRender = existingItems.length !== dateList.length || firstItemDate !== dateList[0]?.date;
 
     if (needsFullRender) {
-        // 全量重新渲染
+        // Full re-render
         dateListEl.innerHTML = '';
         dateList.forEach(summary => {
             dateListEl.appendChild(createDateListItem(summary));
         });
     } else {
-        // 差分更新：更新第一个元素的内容
+        // Differential update: update the first element's content
         if (existingItems.length > 0 && dateList.length > 0) {
             const todaySummary = dateList[0];
             firstItem.dataset.date = todaySummary.date;
@@ -116,15 +116,15 @@ export function updateDateList(dateList: DateSummary[]): void {
 
             if (title) {
                 const isToday = todaySummary.date === window.usagesState?.today;
-                title.textContent = isToday ? `今日 (${todaySummary.date})` : todaySummary.date;
+                title.textContent = isToday ? `Today (${todaySummary.date})` : todaySummary.date;
                 title.className = isToday ? 'date-item-title today' : 'date-item-title';
             }
             if (stats) {
-                stats.textContent = `请求: ${todaySummary.total_requests} | Token: ${formatTokens(totalTokens)}`;
+                stats.textContent = `Requests: ${todaySummary.total_requests} | Tokens: ${formatTokens(totalTokens)}`;
             }
         }
 
-        // 更新所有项的选中状态高亮
+        // Update selection highlight for all items
         Array.from(existingItems).forEach(item => {
             const el = item as HTMLElement;
             const date = el.dataset.date;

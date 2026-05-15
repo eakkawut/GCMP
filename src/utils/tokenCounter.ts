@@ -1,6 +1,6 @@
 ﻿/*---------------------------------------------------------------------------------------------
  *  Token Counter
- *  处理所有 token 计数相关的逻辑
+ *  Handles all token counting related logic
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -17,28 +17,28 @@ import { sanitizeToolSchemaForSdkMode } from './schemaSanitizer';
 import { CustomDataPartMimeTypes } from '../handlers/types';
 
 /* ---------------------------------------------------------------------------------------------
- *  Token Counter 主类
- *  负责计算消息、系统消息和工具定义的 token 数量
+ *  Token Counter Main Class
+ *  Responsible for calculating token counts for messages, system messages, and tool definitions
  *------------------------------------------------------------------------------------------- */
 
 /**
- * 全局共享的 tokenizer 实例和扩展路径
+ * Globally shared tokenizer instance and extension path
  */
 let sharedTokenizerPromise: TikTokenizer | null = null;
 let extensionPath: string | null = null;
 let sharedTokenCounterInstance: TokenCounter | null = null;
 
 /**
- * 简单的 LRU 缓存实现
+ * Simple LRU cache implementation
  */
 class LRUCache<T> {
     private cache = new Map<string, T>();
-    constructor(private maxSize: number) {}
+    constructor(private maxSize: number) { }
 
     get(key: string): T | undefined {
         const value = this.cache.get(key);
         if (value !== undefined) {
-            // 将访问过的项移到最后（最近使用）
+            // Move accessed item to end (most recently used)
             this.cache.delete(key);
             this.cache.set(key, value);
         }
@@ -49,7 +49,7 @@ class LRUCache<T> {
         if (this.cache.has(key)) {
             this.cache.delete(key);
         } else if (this.cache.size >= this.maxSize) {
-            // 删除最老的项（第一个）
+            // Delete oldest item (first)
             const firstKey = this.cache.keys().next().value;
             if (firstKey) {
                 this.cache.delete(firstKey);
@@ -60,44 +60,44 @@ class LRUCache<T> {
 }
 
 /**
- * Token 计数器类
- * 负责计算消息、系统消息和工具定义的 token 数量
- * 同时管理全局共享的 tokenizer 实例
+ * Token Counter class
+ * Responsible for calculating token counts for messages, system messages, and tool definitions
+ * Also manages globally shared tokenizer instance
  */
 export class TokenCounter {
     /**
-     * 文本 token 数的缓存（LRU，容量 5000）
+     * Text token cache (LRU, capacity 5000)
      */
     private tokenCache = new LRUCache<number>(5000);
 
     /**
-     * 设置扩展路径
-     * 必须在创建 TokenCounter 实例之前调用
+     * Set extension path
+     * Must be called before creating TokenCounter instance
      */
     static setExtensionPath(path: string): void {
         extensionPath = path;
-        Logger.trace('✓ [TokenCounter] 扩展路径已设置');
+        Logger.trace('\u2713 [TokenCounter] Extension path set');
     }
 
     /**
-     * 获取全局共享的 TokenCounter 实例（单例）
+     * Get globally shared TokenCounter instance (singleton)
      */
     static getInstance(): TokenCounter {
         if (!sharedTokenCounterInstance) {
             sharedTokenCounterInstance = new TokenCounter();
-            Logger.trace('✓ [TokenCounter] 全局实例已创建');
+            Logger.trace('\u2713 [TokenCounter] Global instance created');
         }
         return sharedTokenCounterInstance;
     }
 
     /**
-     * 获取共享的 tokenizer 实例（懒加载，全局单例）
+     * Get shared tokenizer instance (lazy loaded, global singleton)
      */
     static getSharedTokenizer(): TikTokenizer {
         if (!sharedTokenizerPromise) {
-            Logger.trace('🔧 [TokenCounter] 首次请求 tokenizer，正在初始化全局共享实例...');
+            Logger.trace('\u{1F527} [TokenCounter] First tokenizer request, initializing global shared instance...');
             if (!extensionPath) {
-                throw new Error('[TokenCounter] 扩展路径未初始化，请先调用 TokenCounter.setExtensionPath()');
+                throw new Error('[TokenCounter] Extension path not initialized, please call TokenCounter.setExtensionPath() first');
             }
             const basePath = vscode.Uri.file(extensionPath!);
             const tokenizerPath = vscode.Uri.joinPath(basePath, 'dist', 'o200k_base.tiktoken').fsPath;
@@ -106,45 +106,45 @@ export class TokenCounter {
                 getSpecialTokensByEncoder('o200k_base'),
                 getRegexByEncoder('o200k_base')
             );
-            Logger.trace('✓ [TokenCounter] tokenizer 初始化完成');
+            Logger.trace('\u2713 [TokenCounter] Tokenizer initialization complete');
         }
         return sharedTokenizerPromise;
     }
 
     constructor(private tokenizer?: TikTokenizer) {
-        // 如果没有传入 tokenizer，则使用共享实例
+        // If no tokenizer passed, use shared instance
         if (!this.tokenizer) {
             this.tokenizer = TokenCounter.getSharedTokenizer();
         }
     }
 
     /**
-     * 计算文本的 token 数（带缓存）
+     * Calculate token count for text (with cache)
      */
     private getTextTokenLength(text: string): number {
         if (!text) {
             return 0;
         }
 
-        // 先查缓存
+        // Check cache first
         const cacheValue = this.tokenCache.get(text);
         if (cacheValue !== undefined) {
-            // Logger.trace(`[缓存命中] "${text.substring(0, 20)}..." -> ${cacheValue} tokens`);
+            // Logger.trace(`[Cache hit] "${text.substring(0, 20)}..." -> ${cacheValue} tokens`);
             return cacheValue;
         }
 
-        // 缓存未命中，计算 token 数
+        // Cache miss, calculate token count
         const tokenCount = this.tokenizer!.encode(text).length;
 
-        // 存入缓存
+        // Store in cache
         this.tokenCache.put(text, tokenCount);
-        // Logger.trace(`[缓存写入] "${text.substring(0, 20)}..." -> ${tokenCount} tokens`);
+        // Logger.trace(`[Cache write] "${text.substring(0, 20)}..." -> ${tokenCount} tokens`);
 
         return tokenCount;
     }
 
     /**
-     * 从消息 part 中提取文本内容
+     * Extract text content from message part
      */
     private extractPartText(part: unknown): string | null {
         if (!part || typeof part !== 'object') {
@@ -153,7 +153,7 @@ export class TokenCounter {
 
         const partObj = part as Record<string, unknown>;
 
-        // 处理 LanguageModelTextPart / LanguageModelThinkingPart
+        // Handle LanguageModelTextPart / LanguageModelThinkingPart
         if ('value' in partObj) {
             if (typeof partObj.value === 'string') {
                 return partObj.value;
@@ -163,13 +163,13 @@ export class TokenCounter {
             }
         }
 
-        // 处理二进制/DataPart（尤其是图片）：避免 JSON.stringify 把 Uint8Array/Buffer 展开成巨大数组导致 token 被夸大
+        // Handle binary/DataPart (especially images): avoid JSON.stringify expanding Uint8Array/Buffer into huge array causing inflated tokens
         if ('mimeType' in partObj && typeof partObj.mimeType === 'string' && 'data' in partObj) {
             const byteLength = getBinaryByteLength(partObj.data);
             return JSON.stringify({ mimeType: partObj.mimeType, byteLength });
         }
 
-        // 处理其他类型的 part，转换为 JSON 字符串
+        // Handle other types of parts, convert to JSON string
         if ('name' in partObj || 'input' in partObj || 'callId' in partObj) {
             return JSON.stringify(partObj);
         }
@@ -181,7 +181,7 @@ export class TokenCounter {
         if (!byteLength) {
             return 0;
         }
-        // 对非图片二进制载荷做一个小且有上限的估算
+        // Make a small capped estimate for non-image binary payloads
         const base = 20;
         const per16Kb = Math.ceil(byteLength / 16384);
         return Math.min(200, base + per16Kb);
@@ -191,17 +191,17 @@ export class TokenCounter {
         try {
             return estimateImageTokensFromBytes(bytes, mimeType, detail);
         } catch {
-            // 最佳降级方案：如果无法解析尺寸，避免计数爆炸
+            // Best degradation: if unable to parse dimensions, avoid count explosion
             return this.estimateNonImageBinaryTokens(bytes.byteLength);
         }
     }
 
     private estimateImagePartTotalTokens(bytes: Uint8Array, mimeType: string, detail: ImageDetail): number {
-        // 1) 图片本体成本：对齐 vscode-copilot-chat（tiles*170+85）
+        // 1) Image body cost: aligned with vscode-copilot-chat (tiles*170+85)
         const imageCost = this.estimateImageTokensFromBytes(bytes, mimeType, detail);
 
-        // 2) 包装成本：请求里仍然需要携带结构化的"图片 part"。
-        // 这里刻意不包含 base64 载荷，只用最小 JSON 骨架估算包装开销。
+        // 2) Wrapper cost: request still needs to carry structured "image part"
+        // Here deliberately exclude base64 payload, only estimate wrapper overhead with minimal JSON skeleton
         const wrapperSkeleton = `{"type":"image_url","image_url":{"url":"data:${mimeType};base64,"}}`;
         const wrapperTokens = this.getTextTokenLength(wrapperSkeleton);
 
@@ -209,47 +209,47 @@ export class TokenCounter {
     }
 
     /**
-     * 计算单个文本或消息对象的 token 数
+     * Calculate token count for single text or message object
      */
     async countTokens(_model: LanguageModelChatInformation, text: string | LanguageModelChatMessage): Promise<number> {
         if (typeof text === 'string') {
             const stringTokens = this.tokenizer!.encode(text).length;
-            // Logger.trace(`[Token计数] 字符串: ${stringTokens} tokens (长度: ${text.length})`);
+            // Logger.trace(`[Token count] String: ${stringTokens} tokens (length: ${text.length})`);
             return stringTokens;
         }
 
-        // 处理 LanguageModelChatMessage 对象
+        // Handle LanguageModelChatMessage object
         try {
             const objectTokens = await this.countMessageObjectTokens(text as unknown as Record<string, unknown>);
-            // Logger.trace(`[Token计数] 对象消息: ${objectTokens} tokens`);
+            // Logger.trace(`[Token count] Object message: ${objectTokens} tokens`);
             return objectTokens;
         } catch (error) {
-            Logger.warn('[Token计数] 计算消息对象 token 失败，使用简化计算:', error);
-            // 降级处理：将消息对象转为 JSON 字符串计算
+            Logger.warn('[Token count] Failed to calculate message object tokens, using simplified calculation:', error);
+            // Fallback: convert message object to JSON string for calculation
             const fallbackTokens = this.tokenizer!.encode(JSON.stringify(text)).length;
-            Logger.trace(`[Token计数] 降级计算: ${fallbackTokens} tokens`);
+            Logger.trace(`[Token count] Fallback calculation: ${fallbackTokens} tokens`);
             return fallbackTokens;
         }
     }
 
     /**
-     * 递归计算消息对象中的 token 数量
-     * 支持文本、图片、工具调用、思考内容等复杂内容
+     * Recursively calculate token count in message object
+     * Supports complex content like text, images, tool calls, thinking content, etc.
      */
     async countMessageObjectTokens(obj: Record<string, unknown>, depth: number = 0): Promise<number> {
-        // ThinkingPart: 仅统计文本内容，不递归 metadata
+        // ThinkingPart: only count text content, don't recurse into metadata
         if (obj instanceof vscode.LanguageModelThinkingPart) {
             const thinkingText = this.extractPartText(obj);
             return thinkingText ? this.getTextTokenLength(thinkingText) : 0;
         }
 
-        // DataPart / 二进制 part：不要展开 data 数组逐字节计数
+        // DataPart / binary part: don't expand data array for byte-by-byte counting
         if (obj && typeof obj.mimeType === 'string' && 'data' in obj) {
             if (obj.mimeType === CustomDataPartMimeTypes.CacheControl) {
-                return 0; // cache_control 类型的 part 不计入 token
+                return 0; // cache_control type parts don't count towards tokens
             }
             if (obj.mimeType === CustomDataPartMimeTypes.StatefulMarker) {
-                return 0; // stateful_marker 类型的 part 不计入 token
+                return 0; // stateful_marker type parts don't count towards tokens
             }
             const bytes = getBinaryUint8Array(obj.data);
             if (bytes) {
@@ -264,12 +264,12 @@ export class TokenCounter {
         let numTokens = 0;
         // const indent = '  '.repeat(depth);
 
-        // 每个对象/消息都需要一些额外的 token 用于分隔和格式化
+        // Each object/message needs some extra tokens for separation and formatting
         if (depth === 0) {
-            // 消息分隔符和基础格式化开销（3个token比1个更准确）
+            // Message separator and base formatting overhead (3 tokens is more accurate than 1)
             const overheadTokens = 3;
             numTokens += overheadTokens;
-            // Logger.trace(`${indent}[开销] 消息分隔符: ${overheadTokens} tokens`);
+            // Logger.trace(`${indent}[Overhead] Message separator: ${overheadTokens} tokens`);
         }
 
         for (const [, value] of Object.entries(obj)) {
@@ -277,8 +277,8 @@ export class TokenCounter {
                 continue;
             }
 
-            // 大块二进制（Uint8Array / Buffer JSON / number[]）：用估算代替递归遍历，避免 token 夸大与性能问题
-            // 注意：DataPart（包括图片）已在方法开头统一处理，这里只处理其他二进制数据
+            // Large binary data (Uint8Array / Buffer JSON / number[]): use estimation instead of recursive traversal to avoid token inflation and performance issues
+            // Note: DataPart (including images) is already handled uniformly at the beginning of this method, here only handles other binary data
             const binaryByteLength = getBinaryByteLength(value);
             if (binaryByteLength > 0) {
                 numTokens += this.estimateNonImageBinaryTokens(binaryByteLength);
@@ -286,29 +286,29 @@ export class TokenCounter {
             }
 
             if (typeof value === 'string') {
-                // 字符串内容直接计算 token（使用缓存）
+                // String content directly calculate tokens (using cache)
                 const tokens = this.getTextTokenLength(value);
                 numTokens += tokens;
-                // Logger.trace(`${indent}[${key}] 字符串: ${tokens} tokens`);
+                // Logger.trace(`${indent}[${key}] String: ${tokens} tokens`);
             } else if (typeof value === 'number' || typeof value === 'boolean') {
-                // 数字和布尔值也计算 token（使用缓存）
+                // Numbers and booleans also calculate tokens (using cache)
                 const tokens = this.getTextTokenLength(String(value));
                 numTokens += tokens;
                 // Logger.trace(`${indent}[${key}] ${typeof value}: ${tokens} tokens`);
             } else if (Array.isArray(value)) {
-                // 数组处理
-                // Logger.trace(`${indent}[${key}] 数组 (${value.length} 项)`);
+                // Array handling
+                // Logger.trace(`${indent}[${key}] Array (${value.length} items)`);
                 for (const item of value) {
                     if (typeof item === 'string') {
                         const tokens = this.getTextTokenLength(item);
                         numTokens += tokens;
-                        // Logger.trace(`${indent}  [value] 字符串: ${tokens} tokens`);
+                        // Logger.trace(`${indent}  [value] String: ${tokens} tokens`);
                     } else if (typeof item === 'number' || typeof item === 'boolean') {
                         const tokens = this.getTextTokenLength(String(item));
                         numTokens += tokens;
                         // Logger.trace(`${indent}  [${typeof item}] ${typeof item}: ${tokens} tokens`);
                     } else if (item && typeof item === 'object') {
-                        // 嵌套对象数组
+                        // Nested object array
                         const itemTokens = await this.countMessageObjectTokens(
                             item as Record<string, unknown>,
                             depth + 2
@@ -317,7 +317,7 @@ export class TokenCounter {
                     }
                 }
             } else if (typeof value === 'object') {
-                // Logger.trace(`${indent}[${key}] 对象类型`);
+                // Logger.trace(`${indent}[${key}] Object type`);
                 const nestedTokens = await this.countMessageObjectTokens(value as Record<string, unknown>, depth + 1);
                 numTokens += nestedTokens;
             }
@@ -327,8 +327,8 @@ export class TokenCounter {
     }
 
     /**
-     * 计算多条消息的总 token 数
-     * 包括常规消息、系统消息、工具定义和思考内容（基于配置）
+     * Calculate total token count for multiple messages
+     * Includes regular messages, system messages, tool definitions, and thinking content (based on configuration)
      */
     async countMessagesTokens(
         model: LanguageModelChatInformation,
@@ -337,9 +337,9 @@ export class TokenCounter {
         options?: ProvideLanguageModelChatResponseOptions
     ): Promise<number> {
         let totalTokens = 0;
-        // Logger.trace(`[Token计数] 开始计算 ${messages.length} 条消息的 token...`);
+        // Logger.trace(`[Token count] Starting to calculate tokens for ${messages.length} messages...`);
 
-        // 计算消息 token
+        // Calculate message tokens
         // eslint-disable-next-line @typescript-eslint/prefer-for-of
         for (let i = 0; i < messages.length; i++) {
             const message = messages[i];
@@ -349,39 +349,39 @@ export class TokenCounter {
                 message as unknown as string | LanguageModelChatMessage
             );
             totalTokens += messageTokens;
-            // Logger.trace(`[Token计数] 消息 #${i + 1}: ${messageTokens} tokens (累计: ${totalTokens})`);
+            // Logger.trace(`[Token count] Message #${i + 1}: ${messageTokens} tokens (cumulative: ${totalTokens})`);
         }
 
         const sdkMode = modelConfig?.sdkMode || 'openai';
 
         if (sdkMode === 'anthropic') {
-            // 为 Anthropic SDK 模式添加系统消息和工具的 token 成本
-            // 计算系统消息的 token 成本
+            // Add system message and tool token costs for Anthropic SDK mode
+            // Calculate system message token cost
             const systemMessageTokens = this.countSystemMessageTokens(messages);
             if (systemMessageTokens > 0) {
                 totalTokens += systemMessageTokens;
-                // Logger.trace(`[Token计数] 系统消息: ${systemMessageTokens} tokens (累计: ${totalTokens})`);
+                // Logger.trace(`[Token count] System messages: ${systemMessageTokens} tokens (cumulative: ${totalTokens})`);
             }
         }
 
-        // 工具成本（都使用 1.1 倍）
+        // Tool costs (all use 1.1x)
         const toolsTokens = this.countToolsTokens(options?.tools, modelConfig);
         if (toolsTokens > 0) {
             totalTokens += toolsTokens;
             // Logger.trace(
-            //     `[Token计数] 工具定义 (${options?.tools?.length || 0} 个): ${toolsTokens} tokens (累计: ${totalTokens})`
+            //     `[Token count] Tool definitions (${options?.tools?.length || 0} tools): ${toolsTokens} tokens (cumulative: ${totalTokens})`
             // );
         }
 
         // Logger.info(
-        //     `[Token计数] 总计: ${messages.length} 条消息${sdkMode === 'anthropic' ? ' + 系统消息 + 工具定义' : ' (OpenAI SDK)'}, ${totalTokens} tokens`
+        //     `[Token count] Total: ${messages.length} messages${sdkMode === 'anthropic' ? ' + system messages + tool definitions' : ' (OpenAI SDK)'}, ${totalTokens} tokens`
         // );
         return totalTokens;
     }
 
     /**
-     * 计算系统消息的 token 数
-     * 从消息列表中提取所有系统消息并合并计算
+     * Calculate token count for system messages
+     * Extract all system messages from message list and calculate combined
      */
     private countSystemMessageTokens(messages: Array<LanguageModelChatMessage>): number {
         let systemText = '';
@@ -398,26 +398,26 @@ export class TokenCounter {
             return 0;
         }
 
-        // 计算系统消息的 token 数 - 使用缓存机制
+        // Calculate system message token count - use caching mechanism
         const systemTokens = this.getTextTokenLength(systemText);
 
-        // Anthropic 的系统消息处理会添加一些额外的格式化 token
-        // 经实际测试，系统消息包装开销约为 25-30 tokens
+        // Anthropic's system message processing adds some extra formatting tokens
+        // Actual testing shows system message wrapper overhead is approximately 25-30 tokens
         const systemOverhead = 28;
         const totalSystemTokens = systemTokens + systemOverhead;
 
         Logger.debug(
-            `[Token计数] 系统消息详情: 内容 ${systemTokens} tokens + 包装开销 ${systemOverhead} tokens = ${totalSystemTokens} tokens`
+            `[Token count] System message details: content ${systemTokens} tokens + wrapper overhead ${systemOverhead} tokens = ${totalSystemTokens} tokens`
         );
         return totalSystemTokens;
     }
 
     /**
-     * 计算工具定义的 token 数
-     * 遵循官方 VS Code Copilot 实现：
-     * - 基础开销：16 tokens（工具数组开销）
-     * - 每个工具：8 tokens + 对象内容 token 数
-     * - 最后乘以 1.1 的安全系数（官方标准）
+     * Calculate token count for tool definitions
+     * Follows official VS Code Copilot implementation:
+     * - Base overhead: 16 tokens (tool array overhead)
+     * - Per tool: 8 tokens + object content tokens
+     * - Finally multiply by 1.1 safety factor (official standard)
      */
     private countToolsTokens(tools?: readonly LanguageModelChatTool[], modelConfig?: { sdkMode?: string }): number {
         const baseToolTokens = 16;
@@ -434,31 +434,31 @@ export class TokenCounter {
             const serializedSchema = tool.inputSchema
                 ? sanitizeToolSchemaForSdkMode(tool.inputSchema, modelConfig?.sdkMode)
                 : undefined;
-            // 计算工具对象的 token 数（name、description、parameters）
+            // Calculate tool object tokens (name, description, parameters)
             const toolObj = {
                 name: tool.name,
                 description: tool.description || '',
                 input_schema: serializedSchema
             };
-            // 简单的启发式方法：遍历对象并计算 token（使用缓存）
+            // Simple heuristic: iterate object and calculate tokens (using cache)
             for (const [, value] of Object.entries(toolObj)) {
                 if (typeof value === 'string') {
                     numTokens += this.getTextTokenLength(value);
                 } else if (value && typeof value === 'object') {
-                    // 对于 JSON 对象，使用 JSON 字符串编码（使用缓存）
+                    // For JSON objects, use JSON string encoding (using cache)
                     numTokens += this.getTextTokenLength(JSON.stringify(value));
                 }
             }
         }
 
-        // 使用官方标准的 1.1 安全系数
+        // Use official standard 1.1 safety factor
         return Math.floor(numTokens * 1.1);
     }
 }
 
 /* ---------------------------------------------------------------------------------------------
- *  二进制数据工具
- *  用于安全处理 Uint8Array/ArrayBuffer/Buffer 等二进制载荷
+ *  Binary Data Utilities
+ *  For safely handling Uint8Array/ArrayBuffer/Buffer and other binary payloads
  *------------------------------------------------------------------------------------------- */
 
 function isBufferJson(value: unknown): value is { type: 'Buffer'; data: number[] } {
@@ -514,8 +514,8 @@ function getBinaryUint8Array(value: unknown): Uint8Array | undefined {
 }
 
 /* ---------------------------------------------------------------------------------------------
- *  图片 Token 估算器
- *  对齐 microsoft/vscode-copilot-chat 的实现（OpenAI Vision 图片成本估算）
+ *  Image Token Estimator
+ *  Aligned with microsoft/vscode-copilot-chat implementation (OpenAI Vision image cost estimation)
  *------------------------------------------------------------------------------------------- */
 
 type ImageDetail = 'low' | 'high' | 'auto' | undefined;
@@ -673,38 +673,38 @@ function getImageDimensionsFromBytes(bytes: Uint8Array, mimeType: string): { wid
     throw new Error(`Unsupported image format: ${mimeType}`);
 }
 
-// 对齐 microsoft/vscode-copilot-chat 的实现
+// Aligned with microsoft/vscode-copilot-chat implementation
 // https://platform.openai.com/docs/guides/vision#calculating-costs
 //
-// 计算示例：
-// 1. 低 detail 模式：固定 85 tokens
+// Calculation examples:
+// 1. Low detail mode: fixed 85 tokens
 //    calculateOpenAIVisionImageTokenCost(1920, 1080, 'low') = 85
 //
-// 2. 小图片（512x512，无需缩放）：
+// 2. Small image (512x512, no scaling needed):
 //    - tiles = ceil(512/512) * ceil(512/512) = 1 * 1 = 1
 //    - tokens = 1 * 170 + 85 = 255
 //    calculateOpenAIVisionImageTokenCost(512, 512, 'auto') = 255
 //
-// 3. 中等图片（1024x768）：
-//    - 最短边缩放到 768：scaleFactor = 768/768 = 1，无需缩放
+// 3. Medium image (1024x768):
+//    - Shortest side scaled to 768: scaleFactor = 768/768 = 1, no scaling needed
 //    - tiles = ceil(1024/512) * ceil(768/512) = 2 * 2 = 4
 //    - tokens = 4 * 170 + 85 = 765
 //    calculateOpenAIVisionImageTokenCost(1024, 768, 'auto') = 765
 //
-// 4. 大图片（3000x2000，需要先缩放到 2048x2048 内）：
-//    - 第一步：scaleFactor = 2048/3000 ≈ 0.683
-//      缩放后：2048 x 1365
-//    - 第二步：scaleFactor = 768/1365 ≈ 0.563
-//      缩放后：1153 x 768
+// 4. Large image (3000x2000, first scale to within 2048x2048):
+//    - Step 1: scaleFactor = 2048/3000 ≈ 0.683
+//      Scaled: 2048 x 1365
+//    - Step 2: scaleFactor = 768/1365 ≈ 0.563
+//      Scaled: 1153 x 768
 //    - tiles = ceil(1153/512) * ceil(768/512) = 3 * 2 = 6
 //    - tokens = 6 * 170 + 85 = 1105
 //    calculateOpenAIVisionImageTokenCost(3000, 2000, 'auto') = 1105
 //
-// 5. 超大图片（4000x3000）：
-//    - 第一步：scaleFactor = 2048/4000 = 0.512
-//      缩放后：2048 x 1536
-//    - 第二步：scaleFactor = 768/1536 = 0.5
-//      缩放后：1024 x 768
+// 5. Extra large image (4000x3000):
+//    - Step 1: scaleFactor = 2048/4000 = 0.512
+//      Scaled: 2048 x 1536
+//    - Step 2: scaleFactor = 768/1536 = 0.5
+//      Scaled: 1024 x 768
 //    - tiles = ceil(1024/512) * ceil(768/512) = 2 * 2 = 4
 //    - tokens = 4 * 170 + 85 = 765
 //    calculateOpenAIVisionImageTokenCost(4000, 3000, 'auto') = 765

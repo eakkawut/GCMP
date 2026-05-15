@@ -6,20 +6,20 @@ import { UserActivityService } from './userActivityService';
 interface LeaderInfo {
     instanceId: string;
     lastHeartbeat: number;
-    electedAt: number; // 竞选成功的时间戳，用于解决竞态条件
+    electedAt: number; // Timestamp of election success, used to resolve race conditions
 }
 
 /**
- * 主实例竞选服务（纯静态类）
- * 确保在多 VS Code 实例中只有一个主实例负责执行周期性任务
+ * Leader election service (pure static class)
+ * Ensures that only one leader instance is responsible for executing periodic tasks across multiple VS Code instances
  */
 export class LeaderElectionService {
     private static readonly LEADER_KEY = 'ccmp.leader.info';
-    private static readonly HEARTBEAT_INTERVAL = 5000; // 5秒心跳
-    private static readonly LEADER_TIMEOUT = 15000; // 15秒超时
-    private static readonly TASK_INTERVAL = 60 * 1000; // 默认任务执行间隔（1分钟）
+    private static readonly HEARTBEAT_INTERVAL = 5000; // 5 second heartbeat
+    private static readonly LEADER_TIMEOUT = 15000; // 15 second timeout
+    private static readonly TASK_INTERVAL = 60 * 1000; // Default task execution interval (1 minute)
 
-    // 静态成员变量
+    // Static member variables
     private static instanceId: string;
     private static context: vscode.ExtensionContext | undefined;
     private static heartbeatTimer: NodeJS.Timeout | undefined;
@@ -30,14 +30,14 @@ export class LeaderElectionService {
     private static periodicTasks: Array<() => Promise<void>> = [];
 
     /**
-     * 私有构造函数 - 防止实例化
+     * Private constructor - prevent instantiation
      */
     private constructor() {
         throw new Error('LeaderElectionService is a static class and cannot be instantiated');
     }
 
     /**
-     * 初始化竞选服务（必须在扩展激活时调用）
+     * Initialize election service (must be called when extension activates)
      */
     public static initialize(context: vscode.ExtensionContext): void {
         if (this.initialized) {
@@ -45,17 +45,17 @@ export class LeaderElectionService {
         }
 
         this.registerPeriodicTask(async () => {
-            StatusLogger.trace('[LeaderElectionService] 主实例周期性任务：记录存活日志');
+            StatusLogger.trace('[LeaderElectionService] Leader periodic task: record liveness log');
         });
 
         this.instanceId = crypto.randomUUID();
         this.context = context;
-        StatusLogger.info(`[LeaderElectionService] 初始化主实例竞选服务，当前实例ID: ${this.instanceId}`);
+        StatusLogger.info(`[LeaderElectionService] Initializing leader election service, current instance ID: ${this.instanceId}`);
 
-        // 初始化用户活跃检测服务
+        // Initialize user activity detection service
         UserActivityService.initialize(context, this.instanceId);
 
-        // 添加随机延迟 (0-1000ms)，避免多个实例同时启动时的竞态条件
+        // Add random delay (0-1000ms) to avoid race conditions when multiple instances start simultaneously
         const startDelay = Math.random() * 1000;
         setTimeout(() => {
             this.start();
@@ -65,18 +65,18 @@ export class LeaderElectionService {
     }
 
     /**
-     * 启动竞选服务
+     * Start election service
      */
     private static start(): void {
         if (!this.context) {
-            StatusLogger.warn('[LeaderElectionService] 竞选服务未初始化，无法启动');
+            StatusLogger.warn('[LeaderElectionService] Election service not initialized, cannot start');
             return;
         }
 
         this.checkLeader();
         this.heartbeatTimer = setInterval(() => this.checkLeader(), this.HEARTBEAT_INTERVAL);
 
-        // 启动周期性任务检查
+        // Start periodic task check
         this.taskTimer = setInterval(() => {
             if (this._isLeader) {
                 this.executePeriodicTasks();
@@ -85,7 +85,7 @@ export class LeaderElectionService {
     }
 
     /**
-     * 停止竞选服务
+     * Stop election service
      */
     public static stop(): void {
         if (this.heartbeatTimer) {
@@ -97,38 +97,38 @@ export class LeaderElectionService {
             this.taskTimer = undefined;
         }
 
-        // 停止用户活跃检测服务
+        // Stop user activity detection service
         UserActivityService.stop();
 
-        // 如果是 Leader，尝试主动释放
+        // If Leader, try to actively release
         this.resignLeader();
         this.initialized = false;
     }
 
     /**
-     * 注册周期性任务（仅在主实例执行）
-     * @param task 任务函数
+     * Register periodic task (only executed by leader instance)
+     * @param task Task function
      */
     public static registerPeriodicTask(task: () => Promise<void>): void {
         this.periodicTasks.push(task);
     }
 
     /**
-     * 获取当前实例是否为主实例
+     * Get whether current instance is leader
      */
     public static isLeader(): boolean {
         return this._isLeader;
     }
 
     /**
-     * 获取当前实例ID
+     * Get current instance ID
      */
     public static getInstanceId(): string {
         return this.instanceId;
     }
 
     /**
-     * 获取主实例的ID（如果存在）
+     * Get leader instance ID (if exists)
      */
     public static getLeaderId(): string | undefined {
         if (!this.context) {
@@ -146,42 +146,42 @@ export class LeaderElectionService {
         const now = Date.now();
         const leaderInfo = this.context.globalState.get<LeaderInfo>(this.LEADER_KEY);
         StatusLogger.trace(
-            `[LeaderElectionService] 心跳检查：leaderInfo=${leaderInfo ? `instanceId=${leaderInfo.instanceId}, lastHeartbeat=${leaderInfo.lastHeartbeat}` : 'null'}`
+            `[LeaderElectionService] Heartbeat check: leaderInfo=${leaderInfo ? `instanceId=${leaderInfo.instanceId}, lastHeartbeat=${leaderInfo.lastHeartbeat}` : 'null'}`
         );
 
         if (!leaderInfo) {
-            // 没有 Leader，尝试成为 Leader
-            StatusLogger.trace('[LeaderElectionService] 未发现 Leader，尝试竞选...');
+            // No Leader, try to become Leader
+            StatusLogger.trace('[LeaderElectionService] No Leader found, trying to election...');
             await this.becomeLeader();
             return;
         }
 
         if (leaderInfo.instanceId === this.instanceId) {
-            // 我是 Leader，更新心跳
-            StatusLogger.trace('[LeaderElectionService] 确认自己是 Leader，更新心跳');
+            // I am Leader, update heartbeat
+            StatusLogger.trace('[LeaderElectionService] Confirmed self as Leader, updating heartbeat');
             await this.updateHeartbeat();
             if (!this._isLeader) {
                 this._isLeader = true;
-                StatusLogger.info('[LeaderElectionService] 当前实例已成为主实例');
+                StatusLogger.info('[LeaderElectionService] Current instance has become leader');
             }
         } else {
-            // 别人是 Leader
-            StatusLogger.trace(`[LeaderElectionService] 检测到其他 Leader: ${leaderInfo.instanceId}`);
-            // 如果我之前是 Leader，但现在 globalState 中的 Leader 不是我，说明被其他实例覆盖了
+            // Someone else is Leader
+            StatusLogger.trace(`[LeaderElectionService] Detected other Leader: ${leaderInfo.instanceId}`);
+            // If I was Leader before, but Leader in globalState is not me now, it means I was overridden by another instance
             if (this._isLeader) {
                 this._isLeader = false;
                 StatusLogger.warn(
-                    `[LeaderElectionService] 检测到主实例被其他实例 ${leaderInfo.instanceId} 覆盖，当前实例退位`
+                    `[LeaderElectionService] Detected leader instance overridden by other instance ${leaderInfo.instanceId}, current instance stepping down`
                 );
             }
 
-            // 检查该 Leader 是否超时
+            // Check if this Leader has timed out
             const heartbeatAge = now - leaderInfo.lastHeartbeat;
             StatusLogger.trace(
-                `[LeaderElectionService] Leader 心跳年龄: ${heartbeatAge}ms (超时阈值: ${this.LEADER_TIMEOUT}ms)`
+                `[LeaderElectionService] Leader heartbeat age: ${heartbeatAge}ms (timeout threshold: ${this.LEADER_TIMEOUT}ms)`
             );
             if (heartbeatAge > this.LEADER_TIMEOUT) {
-                StatusLogger.info(`[LeaderElectionService] 主实例 ${leaderInfo.instanceId} 心跳超时，尝试接管...`);
+                StatusLogger.info(`[LeaderElectionService] Leader ${leaderInfo.instanceId} heartbeat timeout, trying to take over...`);
                 await this.becomeLeader();
             }
         }
@@ -192,17 +192,17 @@ export class LeaderElectionService {
             return;
         }
 
-        StatusLogger.trace('[LeaderElectionService] 开始竞选流程...');
-        // 读取当前 Leader 信息
+        StatusLogger.trace('[LeaderElectionService] Starting election process...');
+        // Read current Leader information
         const existingLeader = this.context.globalState.get<LeaderInfo>(this.LEADER_KEY);
 
-        // 如果已有 Leader 且未超时，不应该尝试竞选
+        // If there is already a Leader and not timed out, should not try to election
         if (existingLeader) {
             const now = Date.now();
             const heartbeatAge = now - existingLeader.lastHeartbeat;
             if (heartbeatAge <= this.LEADER_TIMEOUT) {
                 StatusLogger.trace(
-                    `[LeaderElectionService] 已有活跃的主实例 ${existingLeader.instanceId} (心跳年龄: ${heartbeatAge}ms)，放弃竞选`
+                    `[LeaderElectionService] Existing active leader ${existingLeader.instanceId} (heartbeat age: ${heartbeatAge}ms), giving up election`
                 );
                 return;
             }
@@ -215,26 +215,26 @@ export class LeaderElectionService {
             electedAt: now
         };
 
-        StatusLogger.trace(`[LeaderElectionService] 写入竞选信息: instanceId=${this.instanceId}, electedAt=${now}`);
-        // 尝试写入
+        StatusLogger.trace(`[LeaderElectionService] Writing election information: instanceId=${this.instanceId}, electedAt=${now}`);
+        // Try to write
         await this.context.globalState.update(this.LEADER_KEY, info);
 
-        // 等待一小段时间，让其他竞争者也完成写入
-        StatusLogger.trace('[LeaderElectionService] 等待其他竞争者写入...');
+        // Wait a short time for other competitors to complete writing
+        StatusLogger.trace('[LeaderElectionService] Waiting for other competitors to write...');
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        // 再次读取确认是谁最终成为 Leader
+        // Read again to confirm who ultimately becomes Leader
         const currentInfo = this.context.globalState.get<LeaderInfo>(this.LEADER_KEY);
 
         if (!currentInfo) {
-            StatusLogger.warn('[LeaderElectionService] 竞选失败：无法读取 Leader 信息');
+            StatusLogger.warn('[LeaderElectionService] Election failed: unable to read Leader information');
             return;
         }
 
         StatusLogger.trace(
-            `[LeaderElectionService] 竞选结果: 当前 Leader=${currentInfo.instanceId}, electedAt=${currentInfo.electedAt}`
+            `[LeaderElectionService] Election result: current Leader=${currentInfo.instanceId}, electedAt=${currentInfo.electedAt}`
         );
-        // 比较策略：先比较 electedAt 时间戳，再比较 instanceId 字符串
+        // Comparison strategy: first compare electedAt timestamp, then compare instanceId string
         const isWinner =
             currentInfo.instanceId === this.instanceId ||
             (currentInfo.electedAt === info.electedAt && currentInfo.instanceId < this.instanceId);
@@ -242,16 +242,16 @@ export class LeaderElectionService {
         if (isWinner && currentInfo.instanceId === this.instanceId) {
             if (!this._isLeader) {
                 this._isLeader = true;
-                StatusLogger.info('[LeaderElectionService] 竞选成功，当前实例成为主实例');
+                StatusLogger.info('[LeaderElectionService] Election successful, current instance becomes leader');
             }
         } else {
             StatusLogger.debug(
-                `[LeaderElectionService] 竞选失败，实例 ${currentInfo.instanceId} 成为主实例 (electedAt: ${currentInfo.electedAt})`
+                `[LeaderElectionService] Election failed, instance ${currentInfo.instanceId} becomes leader (electedAt: ${currentInfo.electedAt})`
             );
-            // 如果之前误以为自己是 Leader，现在退位
+            // If previously mistakenly thought self was Leader, now step down
             if (this._isLeader) {
                 this._isLeader = false;
-                StatusLogger.info(`[LeaderElectionService] 竞选失败，实例 ${currentInfo.instanceId} 成为主实例`);
+                StatusLogger.info(`[LeaderElectionService] Election failed, instance ${currentInfo.instanceId} becomes leader`);
             }
         }
     }
@@ -261,7 +261,7 @@ export class LeaderElectionService {
             return;
         }
 
-        // 读取当前 Leader 信息以保留 electedAt
+        // Read current Leader information to preserve electedAt
         const currentInfo = this.context.globalState.get<LeaderInfo>(this.LEADER_KEY);
         const newHeartbeat = Date.now();
 
@@ -270,39 +270,39 @@ export class LeaderElectionService {
             lastHeartbeat: newHeartbeat,
             electedAt: currentInfo?.electedAt || newHeartbeat
         };
-        StatusLogger.trace(`[LeaderElectionService] 更新心跳: lastHeartbeat=${newHeartbeat}`);
+        StatusLogger.trace(`[LeaderElectionService] Updating heartbeat: lastHeartbeat=${newHeartbeat}`);
         await this.context.globalState.update(this.LEADER_KEY, info);
     }
 
     private static async resignLeader(): Promise<void> {
         if (this._isLeader && this.context) {
             const currentInfo = this.context.globalState.get<LeaderInfo>(this.LEADER_KEY);
-            // 无条件清除 Leader 信息，确保释放时完全退出主实例
+            // Unconditionally clear Leader information, ensure complete exit from leader instance when releasing
             if (currentInfo && currentInfo.instanceId === this.instanceId) {
                 await this.context.globalState.update(this.LEADER_KEY, undefined);
-                StatusLogger.info('[LeaderElectionService] 实例释放：主实例身份已清除');
+                StatusLogger.info('[LeaderElectionService] Instance release: leader identity cleared');
             }
             this._isLeader = false;
-            StatusLogger.debug('[LeaderElectionService] 实例释放：已退出主实例身份');
+            StatusLogger.debug('[LeaderElectionService] Instance release: exited leader identity');
         }
     }
 
     private static async executePeriodicTasks(): Promise<void> {
-        // 检查用户是否在30分钟内有活跃（使用 UserActivityService）
+        // Check if user was active within 30 minutes (using UserActivityService)
         if (!UserActivityService.isUserActive()) {
             const inactiveMinutes = Math.floor(UserActivityService.getInactiveTime() / 60000);
-            StatusLogger.debug(`[LeaderElectionService] 用户已不活跃 ${inactiveMinutes} 分钟，暂停周期性任务执行`);
+            StatusLogger.debug(`[LeaderElectionService] User has been inactive for ${inactiveMinutes} minutes, pausing periodic task execution`);
             return;
         }
 
-        StatusLogger.trace(`[LeaderElectionService] 开始执行 ${this.periodicTasks.length} 个周期性任务...`);
+        StatusLogger.trace(`[LeaderElectionService] Starting to execute ${this.periodicTasks.length} periodic tasks...`);
         for (const task of this.periodicTasks) {
             try {
                 await task();
             } catch (error) {
-                StatusLogger.error('[LeaderElectionService] 执行周期性任务时出错:', error);
+                StatusLogger.error('[LeaderElectionService] Error executing periodic task:', error);
             }
         }
-        StatusLogger.trace('[LeaderElectionService] 周期性任务执行完成');
+        StatusLogger.trace('[LeaderElectionService] Periodic task execution complete');
     }
 }

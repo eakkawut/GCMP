@@ -1,6 +1,6 @@
 /*---------------------------------------------------------------------------------------------
- *  独立兼容提供商
- *  继承 GenericModelProvider，重写必要方法以支持完全用户配置
+ *  Standalone Compatible Provider
+ *  Extends GenericModelProvider, overriding necessary methods to support fully user-configurable
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -19,34 +19,34 @@ import { KnownProviders } from '../utils';
 import { configProviders } from './config';
 
 /**
- * 独立兼容模型提供商类
- * 继承 GenericModelProvider，重写模型配置获取方法
+ * Standalone Compatible Model Provider Class
+ * Extends GenericModelProvider, overriding model configuration retrieval method
  */
 export class CompatibleProvider extends GenericModelProvider {
     private static readonly PROVIDER_KEY = 'compatible';
     private modelsChangeListener?: vscode.Disposable;
 
     constructor(context: vscode.ExtensionContext) {
-        // 创建一个虚拟的 ProviderConfig，实际模型配置从 CompatibleModelManager 获取
+        // Create a virtual ProviderConfig, actual model configuration is retrieved from CompatibleModelManager
         const virtualConfig: ProviderConfig = {
             displayName: 'Compatible',
-            baseUrl: 'https://api.openai.com/v1', // 默认值，实际使用时会覆盖
+            baseUrl: 'https://api.openai.com/v1', // Default value, will be overridden in actual use
             apiKeyTemplate: 'sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-            models: [] // 空模型列表，实际从 CompatibleModelManager 获取
+            models: [] // Empty model list, actually retrieved from CompatibleModelManager
         };
         super(context, CompatibleProvider.PROVIDER_KEY, virtualConfig);
 
-        this.getProviderConfig(); // 初始化配置缓存
-        // 监听 CompatibleModelManager 的变更事件
+        this.getProviderConfig(); // Initialize configuration cache
+        // Listen to CompatibleModelManager change events
         this.modelsChangeListener = CompatibleModelManager.onDidChangeModels(() => {
-            Logger.debug('[compatible] 接收到模型变化事件，刷新配置和缓存');
-            this.getProviderConfig(); // 刷新配置缓存
-            // 清除模型缓存
+            Logger.debug('[compatible] Received model change event, refreshing configuration and cache');
+            this.getProviderConfig(); // Refresh configuration cache
+            // Clear model cache
             this.modelInfoCache
                 ?.invalidateCache(CompatibleProvider.PROVIDER_KEY)
-                .catch(err => Logger.warn('[compatible] 清除缓存失败:', err));
+                .catch(err => Logger.warn('[compatible] Failed to clear cache:', err));
             this._onDidChangeLanguageModelChatInformation.fire();
-            Logger.debug('[compatible] 已触发语言模型信息变化事件');
+            Logger.debug('[compatible] Language model information change event triggered');
         });
     }
 
@@ -56,13 +56,13 @@ export class CompatibleProvider extends GenericModelProvider {
     }
 
     /**
-     * 重写：获取动态的提供商配置
-     * 从 CompatibleModelManager 获取用户配置的模型
+     * Override: Get dynamic provider configuration
+     * Retrieve user-configured models from CompatibleModelManager
      */
     getProviderConfig(): ProviderConfig {
         try {
             const models = CompatibleModelManager.getModels();
-            // 将 CompatibleModelManager 的模型转换为 ModelConfig 格式
+            // Convert CompatibleModelManager's models to ModelConfig format
             const modelConfigs: ModelConfig[] = models.map(model => {
                 let customHeader = model.customHeader;
                 if (model.provider) {
@@ -108,17 +108,17 @@ export class CompatibleProvider extends GenericModelProvider {
                 };
             });
 
-            Logger.debug(`Compatible Provider 加载了 ${modelConfigs.length} 个用户配置的模型`);
+            Logger.debug(`Compatible Provider loaded ${modelConfigs.length} user-configured models`);
 
             this.cachedProviderConfig = {
                 displayName: 'Compatible',
-                baseUrl: 'https://api.openai.com/v1', // 默认值，模型级别的配置会覆盖
+                baseUrl: 'https://api.openai.com/v1', // Default value, model-level configuration will override
                 apiKeyTemplate: 'sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
                 models: modelConfigs
             };
         } catch (error) {
-            Logger.error('获取 Compatible Provider 配置失败:', error);
-            // 返回基础配置作为后备
+            Logger.error('Failed to get Compatible Provider configuration:', error);
+            // Return basic configuration as fallback
             this.cachedProviderConfig = {
                 displayName: 'Compatible',
                 baseUrl: 'https://api.openai.com/v1',
@@ -130,43 +130,43 @@ export class CompatibleProvider extends GenericModelProvider {
     }
 
     /**
-     * 重写：提供语言模型聊天信息
-     * 直接获取最新的动态配置，不依赖构造时的配置
-     * 检查所有模型涉及的提供商的 API Key
-     * 集成模型缓存机制以提高性能
+     * Override: Provide language model chat information
+     * Directly get the latest dynamic configuration, not dependent on configuration at construction
+     * Check API Keys for all providers involved in all models
+     * Integrate model caching mechanism to improve performance
      */
     async provideLanguageModelChatInformation(
         options: { silent: boolean },
         _token: vscode.CancellationToken
     ): Promise<LanguageModelChatInformation[]> {
         try {
-            // 获取 API 密钥的哈希值用于缓存验证
+            // Get API key hash for cache validation
             const apiKeyHash = await this.getApiKeyHash();
 
-            // 快速路径：检查缓存
+            // Fast path: Check cache
             const cachedModels = await this.modelInfoCache?.getCachedModels(
                 CompatibleProvider.PROVIDER_KEY,
                 apiKeyHash
             );
             if (options.silent && cachedModels) {
-                Logger.trace(`✓ Compatible Provider 缓存命中: ${cachedModels.length} 个模型`);
+                Logger.trace(`✓ Compatible Provider cache hit: ${cachedModels.length} models`);
 
-                // 后台异步更新缓存
+                // Asynchronously update cache in background
                 this.updateModelCacheAsync(apiKeyHash);
                 return cachedModels;
             }
 
-            // 获取最新的动态配置
+            // Get latest dynamic configuration
             const currentConfig = this.providerConfig;
-            // 如果没有模型，直接返回空列表
+            // If no models, directly return empty list
             if (currentConfig.models.length === 0) {
-                // 异步触发新增模型流程，但不阻塞配置获取
+                // Asynchronously trigger add model flow, but do not block configuration retrieval
                 if (!options.silent) {
                     setImmediate(async () => {
                         try {
                             await CompatibleModelManager.configureModelOrUpdateAPIKey();
                         } catch {
-                            Logger.debug('自动触发新增模型失败或被用户取消');
+                            Logger.debug('Automatically triggered add model failed or was cancelled by user');
                         }
                     });
                 }
@@ -175,7 +175,7 @@ export class CompatibleProvider extends GenericModelProvider {
                 await CompatibleModelManager.configureModelOrUpdateAPIKey();
             }
 
-            // 将最新配置中的模型转换为 VS Code 所需的格式
+            // Convert models in latest configuration to VS Code required format
             const modelInfos = currentConfig.models.map(model => {
                 const info = this.modelConfigToInfo(model);
                 const sdkModeDisplay = CompatibleModelManager.getSdkModeLabel(model.sdkMode);
@@ -194,19 +194,19 @@ export class CompatibleProvider extends GenericModelProvider {
                 return { ...info, detail: `${sdkModeDisplay} Compatible` };
             });
 
-            Logger.debug(`Compatible Provider 提供了 ${modelInfos.length} 个模型信息`); // 后台异步更新缓存
+            Logger.debug(`Compatible Provider provided ${modelInfos.length} model information`); // Asynchronously update cache in background
             this.updateModelCacheAsync(apiKeyHash);
 
             return modelInfos;
         } catch (error) {
-            Logger.error('获取 Compatible Provider 模型信息失败:', error);
+            Logger.error('Failed to get Compatible Provider model information:', error);
             return [];
         }
     }
 
     /**
-     * 重写：异步更新模型缓存
-     * 需要正确设置 detail 字段以显示 SDK 模式
+     * Override: Asynchronously update model cache
+     * Need to correctly set detail field to display SDK mode
      */
     protected override updateModelCacheAsync(apiKeyHash: string): void {
         (async () => {
@@ -233,36 +233,36 @@ export class CompatibleProvider extends GenericModelProvider {
 
                 await this.modelInfoCache?.cacheModels(CompatibleProvider.PROVIDER_KEY, models, apiKeyHash);
             } catch (err) {
-                Logger.trace('[compatible] 后台缓存更新失败:', err instanceof Error ? err.message : String(err));
+                Logger.trace('[compatible] Background cache update failed:', err instanceof Error ? err.message : String(err));
             }
         })();
     }
 
     /**
-     * 获取提供商的显示名称
-     * @param providerKey 提供商的 key
-     * @returns 提供商的显示名称，如果找不到则返回 providerKey
+     * Get provider's display name
+     * @param providerKey Provider's key
+     * @returns Provider's display name, returns providerKey if not found
      */
     private getProviderDisplayName(providerKey: string): string {
-        // 先从 KnownProviders 查找
+        // First look up in KnownProviders
         const knownProvider = KnownProviders[providerKey];
         if (knownProvider?.displayName) {
             return knownProvider.displayName;
         }
 
-        // 再从 configProviders 查找
+        // Then look up in configProviders
         const provider = configProviders[providerKey as keyof typeof configProviders];
         if (provider?.displayName) {
             return provider.displayName;
         }
 
-        // 找不到则返回 key 本身
+        // If not found, return the key itself
         return providerKey;
     }
 
     /**
-     * 重写：提供语言模型聊天响应
-     * 使用最新的动态配置处理请求，并添加失败重试机制
+     * Override: Provide language model chat response
+     * Use latest dynamic configuration to process requests, and add failure retry mechanism
      */
     async provideLanguageModelChatResponse(
         model: LanguageModelChatInformation,
@@ -272,42 +272,42 @@ export class CompatibleProvider extends GenericModelProvider {
         token: vscode.CancellationToken
     ): Promise<void> {
         try {
-            // 获取最新的动态配置
+            // Get latest dynamic configuration
             const currentConfig = this.providerConfig;
 
-            // 查找对应的模型配置
-            // 查找对应的模型配置
+            // Find corresponding model configuration
+            // Find corresponding model configuration
             const modelConfig = this.findModelConfigById(model);
             if (!modelConfig) {
-                const errorMessage = `Compatible Provider 未找到模型: ${model.id}`;
+                const errorMessage = `Compatible Provider model not found: ${model.id}`;
                 Logger.error(errorMessage);
                 throw new Error(errorMessage);
             }
 
-            // 检查 API 密钥（使用 throwError: false 允许静默失败）
+            // Check API key (use throwError: false to allow silent failure)
             const hasValidKey = await ApiKeyManager.ensureApiKey(
                 modelConfig.provider!,
                 currentConfig.displayName,
                 false
             );
             if (!hasValidKey) {
-                throw new Error(`模型 ${modelConfig.name} 的 API 密钥尚未设置`);
+                throw new Error(`API key for model ${modelConfig.name} has not been set`);
             }
 
-            // 根据模型的 sdkMode 选择使用的 handler
+            // Select handler based on model's sdkMode
             const sdkMode = modelConfig.sdkMode || 'openai';
             const sdkName = this.getSdkDisplayName(sdkMode);
-            Logger.info(`Compatible Provider 开始处理请求 (${sdkName}): ${modelConfig.name}`);
+            Logger.info(`Compatible Provider starting to process request (${sdkName}): ${modelConfig.name}`);
 
-            // 计算输入 token 数量并更新状态栏
+            // Calculate input token count and update status bar
             const totalInputTokens = await this.updateContextUsageStatusBar(model, messages, modelConfig, options);
 
-            // === Token 统计: 记录预估 token ===
+            // === Token Statistics: Record estimated token ===
             let requestId: string | null = null;
             try {
                 const usagesManager = TokenUsagesManager.instance;
 
-                // 获取实际提供商的 key 和显示名称
+                // Get actual provider's key and display name
                 const actualProviderKey = modelConfig.provider || this.providerKey;
                 const actualDisplayName = modelConfig.provider
                     ? this.getProviderDisplayName(modelConfig.provider)
@@ -321,7 +321,7 @@ export class CompatibleProvider extends GenericModelProvider {
                     estimatedInputTokens: totalInputTokens
                 });
             } catch (err) {
-                Logger.warn('记录预估Token失败:', err);
+                Logger.warn('Failed to record estimated Token:', err);
             }
 
             try {
@@ -336,10 +336,10 @@ export class CompatibleProvider extends GenericModelProvider {
                     modelConfig.provider || this.providerKey
                 );
             } catch (error) {
-                const errorMessage = `错误: ${error instanceof Error ? error.message : '未知错误'}`;
+                const errorMessage = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
                 Logger.error(errorMessage);
 
-                // === Token 统计: 更新失败状态 ===
+                // === Token Statistics: Update failed status ===
                 if (requestId) {
                     try {
                         const usagesManager = TokenUsagesManager.instance;
@@ -348,58 +348,58 @@ export class CompatibleProvider extends GenericModelProvider {
                             status: 'failed'
                         });
                     } catch (err) {
-                        Logger.warn('更新Token统计失败:', err);
+                        Logger.warn('Failed to update Token statistics:', err);
                     }
                 }
 
                 throw error;
             } finally {
-                Logger.info(`✅ Compatible Provider: ${model.name} 请求已完成`);
-                // 延时更新状态栏以反映最新余额
+                Logger.info(`✅ Compatible Provider: ${model.name} request completed`);
+                // Delayed update status bar to reflect latest balance
                 StatusBarManager.compatible?.delayedUpdate(modelConfig.provider!, 2000);
             }
         } catch (error) {
-            Logger.error('Compatible Provider 处理请求失败:', error);
+            Logger.error('Compatible Provider failed to process request:', error);
             throw error;
         }
     }
 
     /**
-     * 注册命令
+     * Register commands
      */
     private static registerCommands(context: vscode.ExtensionContext): vscode.Disposable[] {
         const disposables: vscode.Disposable[] = [];
-        // 注册 manageModels 命令
+        // Register manageModels command
         disposables.push(
             vscode.commands.registerCommand('ccmp.compatible.manageModels', async () => {
                 try {
                     await CompatibleModelManager.configureModelOrUpdateAPIKey();
                 } catch (error) {
-                    Logger.error('管理 Compatible 模型失败:', error);
+                    Logger.error('Failed to manage Compatible models:', error);
                     vscode.window.showErrorMessage(
-                        `管理模型失败: ${error instanceof Error ? error.message : '未知错误'}`
+                        `Failed to manage models: ${error instanceof Error ? error.message : 'Unknown error'}`
                     );
                 }
             })
         );
         disposables.forEach(disposable => context.subscriptions.push(disposable));
-        Logger.debug('Compatible Provider 命令已注册');
+        Logger.debug('Compatible Provider commands registered');
         return disposables;
     }
 
     /**
-     * 静态工厂方法 - 创建并激活提供商
+     * Static Factory Method - Create and Activate Provider
      */
     static createAndActivate(context: vscode.ExtensionContext): {
         provider: CompatibleProvider;
         disposables: vscode.Disposable[];
     } {
-        Logger.trace('Compatible Provider 已激活!');
-        // 创建提供商实例
+        Logger.trace('Compatible Provider Activated!');
+        // Create provider instance
         const provider = new CompatibleProvider(context);
-        // 注册语言模型聊天提供商
+        // Register language model chat provider
         const providerDisposable = vscode.lm.registerLanguageModelChatProvider('ccmp.compatible', provider);
-        // 注册命令
+        // Register commands
         const commandDisposables = this.registerCommands(context);
         const disposables = [providerDisposable, ...commandDisposables];
         disposables.forEach(disposable => context.subscriptions.push(disposable));

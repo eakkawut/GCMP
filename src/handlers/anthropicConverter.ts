@@ -1,12 +1,12 @@
 /*---------------------------------------------------------------------------------------------
- *  Anthropic 消息转换器
+ *  Anthropic Message Converter
  *
- *  主要功能:
- *  - VS Code API消息格式转换为 Anthropic API格式
- *  - 支持文本、图像、工具调用和工具结果
- *  - 支持思考内容（thinking）转换，保持多轮对话思维链连续性
- *  - 支持缓存控制和流式响应处理
- *  - 完整的错误处理和类型安全
+ *  Main Features:
+ *  - Convert VS Code API message format to Anthropic API format
+ *  - Support text, images, tool calls and tool results
+ *  - Support thinking block conversion to maintain chain-of-thought continuity across multi-turn conversations
+ *  - Support cache control and streaming response handling
+ *  - Complete error handling and type safety
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
@@ -27,7 +27,7 @@ import { ModelConfig } from '../types/sharedTypes';
 import { CacheType, CustomDataPartMimeTypes } from './types';
 
 /**
- * 思考部分的元数据接口
+ * Metadata interface for thinking parts
  */
 interface ThinkingPartMetadata {
     signature?: string;
@@ -36,14 +36,14 @@ interface ThinkingPartMetadata {
 }
 
 /**
- * 类型守卫 - 检查对象是否有 mimeType 和 data 属性
+ * Type guard - Check if object has mimeType and data properties
  */
 function isDataPart(part: unknown): part is vscode.LanguageModelDataPart2 {
     return typeof part === 'object' && part !== null && 'mimeType' in part && 'data' in part;
 }
 
 /**
- * 获取思考部分的元数据
+ * Get metadata from thinking part
  */
 function getThinkingMetadata(part: vscode.LanguageModelThinkingPart): ThinkingPartMetadata {
     return (part as unknown as { metadata?: ThinkingPartMetadata }).metadata ?? {};
@@ -81,8 +81,8 @@ function getCompleteThinkingFromStatefulMarker(
 }
 
 /**
- * 检查内容块是否支持缓存控制
- * thinking 和 redacted_thinking 块不支持缓存控制
+ * Check if content block supports cache control
+ * thinking and redacted_thinking blocks do not support cache control
  */
 function contentBlockSupportsCacheControl(
     block: ContentBlockParam
@@ -91,8 +91,8 @@ function contentBlockSupportsCacheControl(
 }
 
 /**
- * 将 VS Code API 消息内容转换为 Anthropic 格式
- * 支持 thinking 内容块以保持多轮对话中思维链的连续性
+ * Convert VS Code API message content to Anthropic format
+ * Supports thinking content blocks to maintain chain-of-thought continuity across multi-turn conversations
  */
 function apiMessageToAnthropicContent(
     message: vscode.LanguageModelChatMessage,
@@ -102,23 +102,23 @@ function apiMessageToAnthropicContent(
     const thinkingBlocks: ContentBlockParam[] = [];
     const otherBlocks: ContentBlockParam[] = [];
 
-    // 模型能力：不支持 imageInput 时，必须忽略所有 image/* 数据块。
+    // Model capability: when imageInput is not supported, must ignore all image/* data blocks.
     const allowImages = modelConfig.capabilities?.imageInput === true;
 
     for (const part of content) {
-        // 思考内容（thinking）- 用于保持多轮对话思维链连续性
+        // Thinking content (thinking) - used to maintain chain-of-thought continuity across multi-turn conversations
         if (part instanceof vscode.LanguageModelThinkingPart) {
             const metadata = getThinkingMetadata(part);
 
-            // 如果是加密的思考内容（redacted_thinking）
+            // If it's encrypted thinking content (redacted_thinking)
             if (metadata.data) {
                 thinkingBlocks.push({
                     type: 'redacted_thinking',
                     data: metadata.data
                 } as RedactedThinkingBlockParam);
             } else {
-                // mark: 2025/12/26 官方的数据传递有问题，_completeThinking的内容可能不完整
-                // // 普通思考内容 - 优先使用 _completeThinking（完整思考内容）
+                // mark: 2025/12/26 Official data transmission has issues, _completeThinking content may be incomplete
+                // // Normal thinking content - prefer using _completeThinking (complete thinking content)
                 // const thinkingBlock: ThinkingBlockParam = {
                 //     type: 'thinking',
                 //     thinking: metadata._completeThinking,
@@ -126,7 +126,7 @@ function apiMessageToAnthropicContent(
                 // };
                 // thinkingBlocks.push(thinkingBlock);
 
-                let thinking = metadata?._completeThinking || ''; // 先用_completeThinking
+                let thinking = metadata?._completeThinking || ''; // use _completeThinking first
                 if (typeof part.value === 'string' && part.value.trim() !== '') {
                     const partStr = part.value as string;
                     if (partStr.length > thinking.length) {
@@ -141,13 +141,13 @@ function apiMessageToAnthropicContent(
 
                 const thinkingBlock: ThinkingBlockParam = {
                     type: 'thinking',
-                    thinking: thinking || ' ', // Anthropic 不接受空字符串，使用空格
+                    thinking: thinking || ' ', // Anthropic does not accept empty strings, use space
                     signature: metadata.signature || ''
                 };
                 thinkingBlocks.push(thinkingBlock);
             }
         }
-        // 工具调用
+        // Tool call
         else if (part instanceof vscode.LanguageModelToolCallPart) {
             otherBlocks.push({
                 type: 'tool_use',
@@ -156,7 +156,7 @@ function apiMessageToAnthropicContent(
                 name: part.name
             });
         }
-        // 缓存控制标记
+        // Cache control marker
         else if (
             isDataPart(part) &&
             part.mimeType === CustomDataPartMimeTypes.CacheControl &&
@@ -168,7 +168,7 @@ function apiMessageToAnthropicContent(
                     type: CacheType
                 };
             } else {
-                // 空字符串无效，使用空格
+                // Empty string is invalid, use space
                 otherBlocks.push({
                     type: 'text',
                     text: ' ',
@@ -176,9 +176,9 @@ function apiMessageToAnthropicContent(
                 } as ContentBlockParam);
             }
         }
-        // 图像数据
+        // Image data
         else if (isDataPart(part) && part.mimeType.startsWith('image/')) {
-            // 跳过 StatefulMarker
+            // Skip StatefulMarker
             if (part.mimeType === CustomDataPartMimeTypes.StatefulMarker) {
                 continue;
             }
@@ -192,16 +192,16 @@ function apiMessageToAnthropicContent(
                     }
                 } as ImageBlockParam);
             } else {
-                // 模型不支持图片时，添加占位符
+                // When model does not support images, add placeholder
                 otherBlocks.push({ type: 'text', text: '[Image]' } as TextBlockParam);
             }
         }
-        // 工具结果
+        // Tool result
         else if (
             part instanceof vscode.LanguageModelToolResultPart ||
             (part as unknown as { callId?: string }).callId !== undefined
         ) {
-            // 支持 LanguageModelToolResultPart 和 LanguageModelToolResultPart2
+            // Support LanguageModelToolResultPart and LanguageModelToolResultPart2
             const toolPart = part as unknown as {
                 callId: string;
                 content: (vscode.LanguageModelTextPart | vscode.LanguageModelDataPart)[];
@@ -223,7 +223,7 @@ function apiMessageToAnthropicContent(
                     if (previousBlock) {
                         previousBlock.cache_control = { type: CacheType };
                     } else {
-                        // 空字符串无效，使用空格
+                        // Empty string is invalid, use space
                         convertedContents.push({ type: 'text', text: ' ', cache_control: { type: CacheType } });
                     }
                     continue;
@@ -231,7 +231,7 @@ function apiMessageToAnthropicContent(
 
                 if (isDataPart(p) && p.mimeType.startsWith('image/')) {
                     if (!allowImages) {
-                        // 模型不支持图片时，添加占位符
+                        // When model does not support images, add placeholder
                         convertedContents.push({ type: 'text', text: '[Image]' });
                         continue;
                     }
@@ -254,9 +254,9 @@ function apiMessageToAnthropicContent(
             };
             otherBlocks.push(block);
         }
-        // 文本内容
+        // Text content
         else if (part instanceof vscode.LanguageModelTextPart) {
-            // Anthropic 在空字符串时会报错，跳过空文本部分
+            // Anthropic throws error on empty strings, skip empty text parts
             if (part.value === '') {
                 continue;
             }
@@ -272,7 +272,7 @@ function apiMessageToAnthropicContent(
             providerKey: modelConfig.provider,
             modelConfig
         });
-        // 如果 VS Code 剥离了 ThinkingPart，则对需要回放思考内容的兼容模型从 StatefulMarker 恢复。
+        // If VS Code stripped the ThinkingPart, recover from StatefulMarker for compatible models that need reasoning replay.
         if (thinkingBlocks.length === 0 && reasoningReplayPolicy.restoreFromStatefulMarker) {
             const markerThinking = getCompleteThinkingFromStatefulMarker(content);
             const hasToolCalls = otherBlocks.some(block => block.type === 'tool_use');
@@ -289,12 +289,12 @@ function apiMessageToAnthropicContent(
         }
     }
 
-    // 重要：thinking 块必须在最前面（Anthropic API 要求）
+    // Important: thinking blocks must be at the beginning (Anthropic API requirement)
     return [...thinkingBlocks, ...otherBlocks];
 }
 
 /**
- * 将 VS Code API 消息转换为 Anthropic 格式
+ * Convert VS Code API message to Anthropic format
  */
 export function apiMessageToAnthropicMessage(
     model: ModelConfig,
@@ -341,7 +341,7 @@ export function apiMessageToAnthropicMessage(
         }
     }
 
-    // 合并连续的相同角色消息
+    // Merge consecutive messages with the same role
     const mergedMessages: MessageParam[] = [];
     for (const message of unmergedMessages) {
         if (mergedMessages.length === 0 || mergedMessages[mergedMessages.length - 1].role !== message.role) {
@@ -354,9 +354,9 @@ export function apiMessageToAnthropicMessage(
         }
     }
 
-    // 清理 cache_control 的统一逻辑
-    // 1. 嵌套+每个 block 内：把嵌套内的 cache_control 移到外层，同时每个 block 内只保留最后一个
-    // 2. 全局：每个 message 的 blocks 内只保留最后一个（i>0 时跨 message 也只保留一个）
+    // Unified logic for cleaning up cache_control
+    // 1. Nested + within each block: move cache_control from nested to outer level, and keep only the last one within each block
+    // 2. Global: keep only the last cache_control within blocks of each message (across messages when i>0, keep only one)
     let foundLastBlock = false;
     for (let i = mergedMessages.length - 1; i >= 0; i--) {
         const msg = mergedMessages[i];
@@ -365,7 +365,7 @@ export function apiMessageToAnthropicMessage(
         }
         const blocks = msg.content;
 
-        // 1. 处理嵌套 content，同时每个 block 内只保留最后一个 cache
+        // 1. Handle nested content, and keep only the last cache within each block
         for (const block of blocks) {
             if ('content' in block && Array.isArray(block.content)) {
                 let foundInBlock = false;
@@ -382,20 +382,20 @@ export function apiMessageToAnthropicMessage(
             }
         }
 
-        // 2. 全局：每个 message 的 blocks 内只保留最后一个（i>0 时跨 message 也只保留一个）
+        // 2. Global: keep only the last cache_control within blocks of each message (across messages when i>0, keep only one)
         let foundInMessage = false;
         for (let k = blocks.length - 1; k >= 0; k--) {
             const block = blocks[k];
             if ('cache_control' in block && block.cache_control) {
                 if (i === 0) {
-                    // i=0 时，每个 message 内部只保留最后一个
+                    // When i=0, keep only the last one within each message
                     if (foundInMessage) {
                         delete block.cache_control;
                     } else {
                         foundInMessage = true;
                     }
                 } else {
-                    // i>0 时，跨 message 只保留一个
+                    // When i>0, keep only one across messages
                     if (foundLastBlock || foundInMessage) {
                         delete block.cache_control;
                     } else {
@@ -411,7 +411,7 @@ export function apiMessageToAnthropicMessage(
 }
 
 /**
- * 转换工具定义为 Anthropic 格式
+ * Convert tool definitions to Anthropic format
  */
 export function convertToAnthropicTools(tools: readonly vscode.LanguageModelChatTool[]): Anthropic.Messages.Tool[] {
     return tools.map(tool => {
